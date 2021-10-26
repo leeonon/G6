@@ -57,11 +57,13 @@
     "@antv/dom-util": "^2.0.1",
     "@antv/event-emitter": "~0.1.0",
     "@antv/g": "1.0.0-alpha.19",
+    "@antv/g-canvas": "1.0.0-alpha.19",
     "@antv/g-math": "1.0.0-alpha.2",
     "@antv/matrix-util": "^3.1.0-beta.2",
     "tslib": "^2.1.0"
   },
   "devDependencies": {
+    "@antv/g-plugin-html-renderer": "1.0.0-alpha.6",
     "@babel/core": "^7.7.7",
     "@turf/turf": "^5.1.6",
     "@types/jest": "^25.2.1",
