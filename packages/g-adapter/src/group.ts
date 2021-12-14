@@ -1,8 +1,12 @@
-import { Group as GGroup, Circle } from '@antv/g';
+import { Group as GGroup, DisplayObject as GShape, Circle } from '@antv/g';
+import { isArray, isFunction, isString } from '@antv/util';
+import CloneUtil from './utils/clone';
+import { CLONE_CFGS, SHAPE_CLASS_MAP, SYMBOL_PATH_FUNC_MAP } from './constants';
+import { getPathBySymbol } from './utils/shape';
 
 // 内容见 https://yuque.antfin-inc.com/shiwu.wyy/go1ec6/ghv1we#vJTCy
 
-export default abstract class Group extends GGroup {
+export default class Group extends GGroup {
 
     public matrix: number[] = [1, 0, 0, 0, 1, 0, 0, 0, 1];
   
@@ -22,68 +26,76 @@ export default abstract class Group extends GGroup {
     }
 
     /**
-     * TODO: add a shape to the canvas
+     * @param shapeType the shape type, circle, rect, ellipse, polygon, image, marker, path, text, dom
      * @param cfg configurations for the added group
      * @returns the newly added group
      */
     public addShape(shapeType, cfg) {
       let shape;
-      switch(shapeType) {
-        case 'circle':
-            // TODO
-            break;
-        case 'rect':
-          // TODO
-          break;
-        // more cases
-        default:
-          shape = new Circle(cfg);
+      const attrs = cfg.attrs || {};
+      delete cfg.attrs;
+      const param = {
+        style: attrs,
+        ...cfg
+      };
+      // 将 marker 用 path 封装
+      if (shapeType === 'marker') {
+        const path = getPathBySymbol(attrs);
+        if (!path) {
+          console.warn('The symbol for the marker shape is invalid!');
+          return;
+        }
+        attrs.path = path;
+        delete attrs.symbol;
       }
+      const Shape = SHAPE_CLASS_MAP[shapeType] || Circle;
+      shape = new Shape(param);
+      // TODO: 这里的 shape 要加上 ./shape 中复写的方法们
+
       this.appendChild(shape);
       return shape;
     }
 
     /**
-     * TODO: sort the children according to the zIndex
+     * sort the children according to the zIndex
      */
-    public sort() {}
+    public sort() {
+      // G will sorts the shapes automatically. This empty function is used for avoiding calling error
+      return;
+    }
 
-    /**
-     * TODO: find the children according to the function
-     */
-    public find(func) {
-      return this.children.find(child => func(child));
+    public getCanvas() {
+
     }
 
     /**
-     * TODO: find the children according to the function
+     * find the child according to the function
      */
-    public findAll(func) {
-      return this.children.filter(child => func(child));
-    }
+    // public find(func) {
+    //   return this.children.find(child => func(child));
+    // }
+
+    // /**
+    //  * find the children according to the function
+    //  */
+    // public findAll(func) {
+    //   return this.children.filter(child => func(child));
+    // }
 
     /**
-     * TODO: find the children according to the function
+     * find the child by id
      */
     public findById(id: string) {
       return this.children.find(child => child.get('id') === id);
     }
 
     /**
-     * TODO: find the children according to the function
+     * find the children by name
      */
     public findAllByName(name: string) {
       return this.children.filter(child => child.get('name') === name);
     }
     
-    public getMatrix() {
-      return this.matrix;
-    }
-  
-    public setMatrix(newMatrix) {
-      // TODO：如何根据 newMatrix 设定转换为 setOrigin、rotateLocal、translate/setPosition
-    }
-  
     public applyMatrix(newMatrix) {
       this.setMatrix(newMatrix);
     }
@@ -99,8 +111,8 @@ export default abstract class Group extends GGroup {
         maxX: aabb.max[0],
         minY: aabb.min[1],
         maxY: aabb.max[1],
-        x: aabb.center[0],
-        y: aabb.center[1]
+        x: aabb.min[0],
+        y: aabb.min[1],
       }
     }
   
@@ -115,8 +127,8 @@ export default abstract class Group extends GGroup {
         maxX: aabb.max[0],
         minY: aabb.min[1],
         maxY: aabb.max[1],
-        x: aabb.center[0],
-        y: aabb.center[1]
+        x: aabb.min[0],
+        y: aabb.min[1],
       }
     }
   
@@ -128,7 +140,9 @@ export default abstract class Group extends GGroup {
         // animate(toAttrs, animateCfg)
       }
     }
-
+    public stopAnimate() {}
+    public resumeAnimate() {}
+    public pauseAnimate() {}
     /**
      * destroy and remove all the sub shapes
      */
@@ -147,11 +161,15 @@ export default abstract class Group extends GGroup {
      * TODO: clone
      */
     public clone() {
-      // ???
-      return { ...this };
+      return this.cloneNode(true);
     }
 
     public isCanvas() {
       return false;
+    }
+
+    public get(name) {
+      if (name === 'children') return this.childNodes;
+      else return super.get(name);
     }
   }

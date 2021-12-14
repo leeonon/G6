@@ -1,4 +1,5 @@
-import { Canvas as GCanvas, Group } from '@antv/g';
+import { Canvas as GCanvas } from '@antv/g';
+import Group from './group';
 
 // https://yuque.antfin-inc.com/shiwu.wyy/go1ec6/ghv1we#u0T2w
 
@@ -16,9 +17,9 @@ import { Canvas as GCanvas, Group } from '@antv/g';
 // ● clone
 // 深拷贝一份
 
-export default abstract class Canvas extends GCanvas {
+export default class Canvas extends GCanvas {
 
-  public destroyed: boolean = this.document?.destroyed;
+  public destroyed: boolean = this.document?.destroyed || false;
 
   constructor(cfg) {
     super(cfg);
@@ -31,6 +32,7 @@ export default abstract class Canvas extends GCanvas {
    */
   public addGroup(cfg) {
     const group = new Group(cfg);
+    console.log('addGroup ', group);
     this.appendChild(group);
     return group;
   }
@@ -62,15 +64,6 @@ export default abstract class Canvas extends GCanvas {
    */
   public isCanvas() {
     return true;
-    // return !!this.document;
-  }
-
-  /**
-   * TODO: clone
-   */
-  public clone() {
-    // ???
-    return { ...this };
   }
   
   /**
