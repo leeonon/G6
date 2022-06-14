@@ -3,11 +3,10 @@
  * @author dxq613@gmai.com
  */
 
-import { Canvas } from '@antv/g-canvas';
+import { Canvas, IGroup } from '@antv/g6-g-adapter';
 import { Shape, Node, Util } from '@antv/g6-core';
 import { Graph, Global } from '../../../src';
 import '../../../src';
-import { IGroup } from '@antv/g-base';
 const { translate } = Util;
 
 const div = document.createElement('div');

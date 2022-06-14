@@ -1,5 +1,5 @@
 import { Graph } from '../../../src';
-import { Event } from '@antv/g-canvas';
+import { G6GraphEvent } from '@antv/g6-core';
 import Stats from 'stats-js';
 
 /* nodes: 55000, edges: 4933, shapes: 114933 */
@@ -21,13 +21,13 @@ function createWheelEvent(canvas, delta, x, y) {
 
 const generateData = (nodeNum, edgeNum) => {
   const nodes = [], edges = [];
-  for (let i = 0; i < nodeNum; i ++) {
+  for (let i = 0; i < nodeNum; i++) {
     nodes.push({
       id: `${i}`,
       label: `${i}`
     });
   }
-  for (let i = 0; i < edgeNum; i ++) {
+  for (let i = 0; i < edgeNum; i++) {
     edges.push({
       source: `${Math.floor(Math.random() * nodeNum)}`,
       target: `${Math.floor(Math.random() * nodeNum)}`,
@@ -36,10 +36,11 @@ const generateData = (nodeNum, edgeNum) => {
   return { nodes, edges };
 }
 
-class G6Event extends Event {
+class G6Event extends G6GraphEvent {
   wheelDelta: number;
+  preventDefault = () => { }
+  defaultPrevented: boolean = false;
 }
-
 describe('graph', () => {
   const graph = new Graph({
     container: div,
@@ -76,8 +77,8 @@ describe('graph', () => {
   stats.showPanel(0);
   document.body.appendChild(stats.dom);
 
-  
-  it('first render', done => {
+
+  xit('first render', done => {
     const data = generateData(50000, 20000);
     data.nodes.forEach(node => {
       node.label = node.id
@@ -91,9 +92,9 @@ describe('graph', () => {
     console.log('nodes:', graph.getNodes().length, 'edges:', graph.getEdges().length)
     done();
   });
-  it('global refresh: drag', done => {
+  xit('global refresh: drag', done => {
     let begin, duration = 0;
-    for (let i = 0; i < TIMES; i ++) {
+    for (let i = 0; i < TIMES; i++) {
       begin = performance.now();
       graph.emit('dragstart', { clientX: 150, clientY: 150, target: graph.get('canvas') });
       graph.emit('drag', { clientX: 200, clientY: 200, target: graph.get('canvas') });
@@ -119,11 +120,11 @@ describe('graph', () => {
     // requestAnimationFrame( animate );
     done()
   });
-  it('global refresh: zoom', done => {
+  xit('global refresh: zoom', done => {
     const eIn = createWheelEvent(graph.get('canvas').get('el'), 1, 100, 100);
     const eOut = createWheelEvent(graph.get('canvas').get('el'), -1, 100, 100);
     let begin, duration = 0;
-    for (let i = 0; i < TIMES; i ++) {
+    for (let i = 0; i < TIMES; i++) {
       begin = performance.now();
       graph.emit('wheel', i > TIMES / 2 ? eIn : eOut);
       duration += (performance.now() - begin);
@@ -146,7 +147,7 @@ describe('graph', () => {
     // requestAnimationFrame( animate );
     done()
   });
-  it('local refresh: update one item', done => {
+  xit('local refresh: update one item', done => {
     const nodeTargetConfig = {
       size: 10,
       style: {
@@ -165,12 +166,12 @@ describe('graph', () => {
     let begin, duration = 0;
     const nodeNum = graph.getNodes().length;
     const edgeNum = graph.getEdges().length;
-    for (let i = 0; i < TIMES; i ++) {
+    for (let i = 0; i < TIMES; i++) {
       const item = i < TIMES / 2 ?
         graph.getNodes()[Math.floor(Math.random() * nodeNum)] :
         graph.getEdges()[Math.floor(Math.random() * edgeNum)];
       if (!item) continue;
-      const config = i < TIMES / 2 ? {...nodeTargetConfig} : {...edgeTargetConfig};
+      const config = i < TIMES / 2 ? { ...nodeTargetConfig } : { ...edgeTargetConfig };
       begin = performance.now();
       graph.updateItem(item, config);
       duration += (performance.now() - begin);
@@ -182,20 +183,20 @@ describe('graph', () => {
     graph.fitView();
     let count = 0;
     let currentPos = 150;
-    function animate() {
-      stats.update();
-      let config;
-      const seed = Math.random() > 0.5
-      if (seed) config = {...nodeTargetConfig};
-      else config = {...edgeTargetConfig};
-      const item = seed ? 
-        graph.getNodes()[Math.floor(Math.random() * nodeNum)] :
-        graph.getEdges()[Math.floor(Math.random() * edgeNum)];
-      graph.updateItem(item, config);
-      count ++;
-      requestAnimationFrame( animate );
-    }
-    requestAnimationFrame( animate );
+    // function animate() {
+    //   stats.update();
+    //   let config;
+    //   const seed = Math.random() > 0.5
+    //   if (seed) config = { ...nodeTargetConfig };
+    //   else config = { ...edgeTargetConfig };
+    //   const item = seed ?
+    //     graph.getNodes()[Math.floor(Math.random() * nodeNum)] :
+    //     graph.getEdges()[Math.floor(Math.random() * edgeNum)];
+    //   graph.updateItem(item, config);
+    //   count++;
+    //   requestAnimationFrame(animate);
+    // }
+    // requestAnimationFrame(animate);
 
     done()
   });
@@ -204,7 +205,7 @@ describe('graph', () => {
     const items = [];
     const nodeNum = graph.getNodes().length;
     const edgeNum = graph.getEdges().length;
-    for (let i = 0; i < TIMES; i ++) {
+    for (let i = 0; i < TIMES; i++) {
       const item = i < TIMES / 2 ?
         graph.getNodes()[Math.floor(Math.random() * nodeNum)] :
         graph.getEdges()[Math.floor(Math.random() * edgeNum)];
@@ -223,7 +224,7 @@ describe('graph', () => {
       duration += (performance.now() - begin);
     })
     console.log(`ave time (${TIMES} times) for clearing one item with one state: `, duration / TIMES, 'ms')
-    
+
     duration = 0;
     items.forEach(item => {
       begin = performance.now();
@@ -252,17 +253,17 @@ describe('graph', () => {
     graph.updateLayout({
       type: 'force',
       tick: () => {
-        funcs.push(() => {});
+        funcs.push(() => { });
       }
     });
 
-    function animate() {
-      stats.update();
-      const func = funcs.pop();
-      if (func) func();
-      requestAnimationFrame( animate );
-    }
-    requestAnimationFrame(animate);
+    // function animate() {
+    //   stats.update();
+    //   const func = funcs.pop();
+    //   if (func) func();
+    //   requestAnimationFrame(animate);
+    // }
+    // requestAnimationFrame(animate);
     done();
   });
 });

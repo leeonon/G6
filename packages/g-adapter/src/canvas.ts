@@ -13,6 +13,7 @@ import { ICanvas, IElement } from './interface';
 import { AnimateCfg, Cursor, ElementCfg, Renderer, OnFrame, Point, ElementFilterFn } from './types';
 import { EVENTS, IGroup } from '.';
 import { unitMatrix } from './utils/matrix';
+import { createShape } from './utils/shape';
 
 // https://yuque.antfin-inc.com/shiwu.wyy/go1ec6/ghv1we#u0T2w
 

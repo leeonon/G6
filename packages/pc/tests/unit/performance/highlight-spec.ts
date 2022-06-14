@@ -9,13 +9,13 @@ document.body.appendChild(div);
 
 const generateData = (nodeNum, edgeNum) => {
   const nodes = [], edges = [];
-  for (let i = 0; i < nodeNum; i ++) {
+  for (let i = 0; i < nodeNum; i++) {
     nodes.push({
       id: `${i}`,
       // label: `${i}`
     });
   }
-  for (let i = 0; i < edgeNum; i ++) {
+  for (let i = 0; i < edgeNum; i++) {
     edges.push({
       source: `${Math.floor(Math.random() * nodeNum)}`,
       target: `${Math.floor(Math.random() * nodeNum)}`,
@@ -45,18 +45,18 @@ describe('graph', () => {
   stats.showPanel(0);
   document.body.appendChild(stats.dom);
 
-  it('first render', () => {
+  xit('first render', () => {
     fetch('https://gw.alipayobjects.com/os/antvdemo/assets/data/xiaomi.json')
-    .then((res) => res.json())
-    .then((data) => {
-      // data.nodes.forEach(node => {
-      //   node.label = node.olabel
-      // })
-      graph.data(data);
-      graph.render();
-    });
+      .then((res) => res.json())
+      .then((data) => {
+        // data.nodes.forEach(node => {
+        //   node.label = node.olabel
+        // })
+        graph.data(data);
+        graph.render();
+      });
   });
-  it('move nodes and refresh edges', () => {
+  xit('move nodes and refresh edges', () => {
     const gdata = generateData(1000, 2000);
     graph.data(gdata);
     graph.render();
@@ -71,12 +71,12 @@ describe('graph', () => {
     //       y: model.y + (Math.random() - 0.5) * 20,
     //     })
     //   });
-      
+
     //   requestAnimationFrame( animate );
     // }
     // requestAnimationFrame( animate );
   });
-  it('updateItem', () => {
+  xit('updateItem', () => {
     const gdata = generateData(500, 1000);
     graph.data(gdata);
     graph.render();
@@ -94,7 +94,7 @@ describe('graph', () => {
     //       }
     //     })
     //   });
-      
+
     //   requestAnimationFrame( animate );
     // }
     // requestAnimationFrame( animate );

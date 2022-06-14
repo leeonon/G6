@@ -196,8 +196,8 @@ describe('graph', () => {
     globalGraph.moveTo(10, 10);
     const viewcenter = globalGraph.get('canvas').getCamera().getPosition();
     console.log('viewcenter', viewcenter);
-    expect(viewcenter[0]).toBe(290);
-    expect(viewcenter[1]).toBe(240);
+    expect(numberEqual(viewcenter[0], 390, 1)).toBe(true);
+    expect(numberEqual(viewcenter[1], 340, 1)).toBe(true);
 
     // reset
     globalGraph.get('canvas').getCamera().setPosition(250, 250);
@@ -1349,8 +1349,8 @@ describe('auto rotate label on edge', () => {
     graph.moveTo(100, 120);
     expect(graph.getZoom()).toBe(0.5);
     const viewPoint = graph.get('canvas').getCamera().getPosition()
-    expect(numberEqual(viewPoint[0], 525, 1)).toBe(true);
-    expect(numberEqual(viewPoint[1], 505, 0.1)).toBe(true);
+    expect(numberEqual(viewPoint[0], 425, 1)).toBe(true);
+    expect(numberEqual(viewPoint[1], 385, 0.1)).toBe(true);
     graph.destroy();
   });
 });

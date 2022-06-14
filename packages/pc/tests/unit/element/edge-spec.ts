@@ -1,4 +1,4 @@
-import { Canvas } from '@antv/g-canvas';
+import { Canvas } from '@antv/g6-g-adapter';
 import { Shape } from '@antv/g6-core';
 import { Graph } from '../../../src';
 import '../../../src';
@@ -568,11 +568,11 @@ describe('shape edge test', () => {
       canvasGroup.setMatrix([0.8, 0, 0, 0, 0.8, 0, 200, 200, 1]);
       canvas.draw();
       const label = canvasGroup.get('children')[1].get('children')[1];
-      expect(label.attr('rotate')).toBe(undefined);
-      expect(label.attr('matrix')[0]).toBe(0.7071067811865476);
-      expect(label.attr('matrix')[3]).toBe(-0.7071067811865475);
-      expect(label.attr('matrix')[6]).toBe(128.2842712474619);
-      expect(label.attr('matrix')[7]).toBe(-53.13708498984761);
+      expect(label.attr('rotate')).toBe(null);
+      expect(label.attr('matrix')[0]).toBe(0.7071068286895752);
+      expect(label.attr('matrix')[3]).toBe(-0.7071067690849304);
+      expect(label.attr('matrix')[6]).toBe(128.28427124023438);
+      expect(label.attr('matrix')[7]).toBe(128.28427124023438);
     });
     it('not auto rotate, middle', () => {
       const center = { x: 100, y: 100 };
@@ -610,7 +610,7 @@ describe('shape edge test', () => {
 
     it('not auto rotate, start', () => {
       const center = { x: 250, y: 100 };
-      canvas.addShape('circle', {
+      canvas.getGroup().addShape('circle', {
         attrs: {
           x: center.x,
           y: center.y,
@@ -653,7 +653,7 @@ describe('shape edge test', () => {
 
     it('not auto rotate, end', () => {
       const center = { x: 450, y: 100 };
-      canvas.addShape('circle', {
+      canvas.getGroup().addShape('circle', {
         attrs: {
           x: center.x,
           y: center.y,
@@ -725,7 +725,7 @@ describe('shape edge test', () => {
 
     it('auto rotate, start', () => {
       const center = { x: 250, y: 300 };
-      canvas.addShape('circle', {
+      canvas.getGroup().addShape('circle', {
         attrs: {
           x: center.x,
           y: center.y,
@@ -769,7 +769,7 @@ describe('shape edge test', () => {
 
     it('auto rotate, end', () => {
       const center = { x: 450, y: 300 };
-      canvas.addShape('circle', {
+      canvas.getGroup().addShape('circle', {
         attrs: {
           x: center.x,
           y: center.y,
@@ -877,7 +877,7 @@ describe('shape edge test', () => {
 
     it('text on line, text refX and refY', () => {
       const center = { x: 250, y: 500 };
-      canvas.addShape('circle', {
+      canvas.getGroup().addShape('circle', {
         attrs: {
           x: center.x,
           y: center.y,

@@ -1,4 +1,4 @@
-import { Canvas } from '@antv/g-canvas';
+import { Canvas } from '@antv/g6-g-adapter';
 import { Graph } from '../../../src';
 import '../../../src';
 import { numberEqual } from '../layout/util';
@@ -11,6 +11,7 @@ const canvas = new Canvas({
   container: 'edge-shape',
   width: 600,
   height: 600,
+  renderer: 'canvas'
 });
 
 describe('text background label', () => {

@@ -198,11 +198,14 @@ export default {
   },
   updateBrush(e: IG6GraphEvent) {
     const { originPoint } = this;
+    debugger
+    const { x = 0, y = 0 } = e;
+    const { x: originX = 0, y: originY = 0 } = originPoint;
     this.brush.attr({
-      width: abs(e.x - originPoint.x),
-      height: abs(e.y - originPoint.y),
-      x: min(e.x, originPoint.x),
-      y: min(e.y, originPoint.y),
+      width: abs(x - originX),
+      height: abs(y - originY),
+      x: min(x, originX),
+      y: min(y, originY),
     });
   },
   onKeyDown(e: IG6GraphEvent) {

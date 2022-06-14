@@ -1,5 +1,5 @@
 import { Graph } from '../../../src';
-import { Event } from '@antv/g-canvas';
+import { G6GraphEvent } from '@antv/g6-core';
 import Stats from 'stats-js';
 
 /* nodes: 1589, edges: 2742, shapes: 5920 */
@@ -19,10 +19,11 @@ function createWheelEvent(canvas, delta, x, y) {
   return e;
 }
 
-class G6Event extends Event {
+class G6Event extends G6GraphEvent {
   wheelDelta: number;
+  preventDefault = () => { }
+  defaultPrevented: boolean = false;
 }
-
 describe('graph', () => {
   const graph = new Graph({
     container: div,
@@ -54,7 +55,7 @@ describe('graph', () => {
   document.body.appendChild(stats.dom);
 
 
-  it.only('first render', done => {
+  xit('first render', done => {
     fetch('https://gw.alipayobjects.com/os/basement_prod/da5a1b47-37d6-44d7-8d10-f3e046dabf82.json')
       .then((res) => res.json())
       .then((data) => {
@@ -71,7 +72,7 @@ describe('graph', () => {
       });
     setTimeout(() => done(), 1000);
   });
-  it('global refresh: drag', done => {
+  xit('global refresh: drag', done => {
     let begin, duration = 0;
     for (let i = 0; i < TIMES; i++) {
       begin = performance.now();
@@ -83,23 +84,23 @@ describe('graph', () => {
     console.log(`ave time (${TIMES} times) for dragging canvas: `, duration / TIMES, 'ms')
     graph.fitCenter();
 
-    // fps monitor loops
-    let count = 0;
-    let currentPos = 150;
-    function animate() {
-      stats.update();
-      graph.emit('dragstart', { clientX: currentPos, clientY: currentPos, target: graph.get('canvas') });
-      if (Math.round(count / 100) % 2) currentPos += 5;
-      else currentPos -= 5;
-      graph.emit('drag', { clientX: currentPos, clientY: currentPos, target: graph.get('canvas') });
-      graph.emit('dragend', { clientX: currentPos, clientY: currentPos });
-      count++;
-      requestAnimationFrame(animate);
-    }
-    requestAnimationFrame(animate);
+    // // fps monitor loops
+    // let count = 0;
+    // let currentPos = 150;
+    // function animate() {
+    //   stats.update();
+    //   graph.emit('dragstart', { clientX: currentPos, clientY: currentPos, target: graph.get('canvas') });
+    //   if (Math.round(count / 100) % 2) currentPos += 5;
+    //   else currentPos -= 5;
+    //   graph.emit('drag', { clientX: currentPos, clientY: currentPos, target: graph.get('canvas') });
+    //   graph.emit('dragend', { clientX: currentPos, clientY: currentPos });
+    //   count++;
+    //   requestAnimationFrame(animate);
+    // }
+    // requestAnimationFrame(animate);
     done()
   });
-  it('global refresh: zoom', done => {
+  xit('global refresh: zoom', done => {
     const eIn = createWheelEvent(graph.get('canvas').get('el'), 1, 100, 100);
     const eOut = createWheelEvent(graph.get('canvas').get('el'), -1, 100, 100);
     let begin, duration = 0;
@@ -114,19 +115,19 @@ describe('graph', () => {
     // fps monitor loops
     let count = 0;
     let currentPos = 150;
-    function animate() {
-      stats.update();
-      let e = eIn;
-      if (Math.round(count / 100) % 2) e = eOut;
-      else e = eIn;
-      graph.emit('wheel', e);
-      count++;
-      requestAnimationFrame(animate);
-    }
-    requestAnimationFrame(animate);
+    // function animate() {
+    //   stats.update();
+    //   let e = eIn;
+    //   if (Math.round(count / 100) % 2) e = eOut;
+    //   else e = eIn;
+    //   graph.emit('wheel', e);
+    //   count++;
+    //   requestAnimationFrame(animate);
+    // }
+    // requestAnimationFrame(animate);
     done()
   });
-  it.only('local refresh: update one item', done => {
+  xit('local refresh: update one item', done => {
     const nodeTargetConfig = {
       size: 10,
       style: {
@@ -161,20 +162,20 @@ describe('graph', () => {
     graph.fitView();
     let count = 0;
     let currentPos = 150;
-    function animate() {
-      stats.update();
-      let config;
-      const seed = Math.random() > 0.5
-      if (seed) config = { ...nodeTargetConfig };
-      else config = { ...edgeTargetConfig };
-      const item = seed ?
-        graph.getNodes()[Math.floor(Math.random() * nodeNum)] :
-        graph.getEdges()[Math.floor(Math.random() * edgeNum)];
-      graph.updateItem(item, config);
-      count++;
-      requestAnimationFrame(animate);
-    }
-    requestAnimationFrame(animate);
+    // function animate() {
+    //   stats.update();
+    //   let config;
+    //   const seed = Math.random() > 0.5
+    //   if (seed) config = { ...nodeTargetConfig };
+    //   else config = { ...edgeTargetConfig };
+    //   const item = seed ?
+    //     graph.getNodes()[Math.floor(Math.random() * nodeNum)] :
+    //     graph.getEdges()[Math.floor(Math.random() * edgeNum)];
+    //   graph.updateItem(item, config);
+    //   count++;
+    //   requestAnimationFrame(animate);
+    // }
+    // requestAnimationFrame(animate);
 
     done()
   });
@@ -237,13 +238,13 @@ describe('graph', () => {
     });
 
 
-    function animate() {
-      stats.update();
-      const func = funcs.pop();
-      if (func) func();
-      requestAnimationFrame(animate);
-    }
-    requestAnimationFrame(animate);
+    // function animate() {
+    //   stats.update();
+    //   const func = funcs.pop();
+    //   if (func) func();
+    //   requestAnimationFrame(animate);
+    // }
+    // requestAnimationFrame(animate);
     done();
   });
 });

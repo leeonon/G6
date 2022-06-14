@@ -104,7 +104,7 @@ describe('graph', () => {
   // })
   // graph.data(generateData(2, 0));
   graph.render();
-  it('update node', () => {
+  xit('update node', () => {
     // graph.updateItem(graph.getNodes()[0], {
     //     label: 'abc',
     //     size: 10,
