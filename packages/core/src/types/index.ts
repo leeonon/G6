@@ -176,6 +176,8 @@ export interface IG6GraphEvent { //  extends GraphEvent
   clientY: number;
   x: number;
   y: number;
+  pointX?: number;
+  pointY?: number;
   wheelDelta: number;
   detail: number;
   target: IShapeBase & ICanvas;

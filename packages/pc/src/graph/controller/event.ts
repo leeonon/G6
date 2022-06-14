@@ -209,7 +209,7 @@ export default class EventController extends AbstractEvent {
    * @param evt 事件句柄
    */
   private processDragEvents(evt: IG6GraphEvent, eventType: string) {
-    const draggingCanvas = this.dragging?.target?.nodeName === 'document';
+    const draggingCanvas = this.dragging === false ? false : this.dragging?.target?.nodeName === 'document';
     switch (eventType) {
       case 'mousedown':
         this.mousedown = true;
