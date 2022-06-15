@@ -3,6 +3,7 @@ import G6 from '../../../src';
 import '../../../src/behavior';
 import Core, { EdgeConfig } from '@antv/g6-core';
 import Plugin from '../../../src/plugin';
+import { numberEqual } from '../layout/util';
 
 const { scale, translate } = Core.Util;
 
@@ -13,8 +14,8 @@ const div2 = document.createElement('div');
 div2.id = 'graph-spec';
 document.body.appendChild(div2);
 
-xdescribe('graph', () => {
-  const globalGraph = new Graph({
+describe('graph', () => {
+  let globalGraph = new Graph({
     container: div,
     width: 500,
     height: 500,
@@ -69,7 +70,7 @@ xdescribe('graph', () => {
     }).toThrowError('invalid container');
   });
 
-  it('new & destroy graph', () => {
+  it('new & destroy graph', (done) => {
     const inst = new Graph({
       container: div,
       width: 500,
@@ -91,24 +92,27 @@ xdescribe('graph', () => {
     expect(inst.get('group').get('className')).toEqual('root-container');
     expect(inst.get('group').get('id').endsWith('-root')).toBe(true);
 
-    const children = inst.get('group').get('children');
-    expect(children.length).toBe(4);
-    expect(children[1].get('className')).toEqual('edge-container');
+    setTimeout(() => {
+      const children = inst.get('group').get('children');
+      expect(children.length).toBe(4);
+      expect(children[1].get('className')).toEqual('edge-container');
 
-    const nodes = inst.getNodes();
-    expect(nodes).not.toBe(undefined);
-    expect(nodes.length).toBe(0);
+      const nodes = inst.getNodes();
+      expect(nodes).not.toBe(undefined);
+      expect(nodes.length).toBe(0);
 
-    const edges = inst.getEdges();
-    expect(edges).not.toBe(undefined);
-    expect(edges.length).toBe(0);
+      const edges = inst.getEdges();
+      expect(edges).not.toBe(undefined);
+      expect(edges.length).toBe(0);
 
-    const canvas = inst.get('canvas');
-    inst.destroy();
+      const canvas = inst.get('canvas');
+      inst.destroy();
 
-    expect(inst.destroyed).toBe(true);
-    expect(canvas.destroyed).toBe(true);
-    expect(length - div.childNodes.length).toBe(1);
+      expect(inst.destroyed).toBe(true);
+      expect(canvas.destroyed).toBe(true);
+      expect(length - div.childNodes.length).toBe(1);
+      done()
+    });
   });
 
   it('render with data & toDataURL & downloadImage', () => {
@@ -178,6 +182,10 @@ xdescribe('graph', () => {
       height: 500,
       renderer: 'svg',
       groupByTypes: false,
+      linkCenter: true,
+      defaultEdge: {
+        color: '#f00'
+      }
     });
 
     const data = {
@@ -233,10 +241,20 @@ xdescribe('graph', () => {
     const group2 = edge.get('group').getParent();
 
     expect(group1).toEqual(group2);
+    edge.toFront()
     inst.destroy();
   });
 
   it('translate', () => {
+    globalGraph = new Graph({
+      container: div,
+      width: 500,
+      height: 500,
+      renderer: 'svg',
+      modes: {
+        default: ['drag-node'],
+      },
+    });
     const data = {
       nodes: [
         {
@@ -262,45 +280,39 @@ xdescribe('graph', () => {
     globalGraph.data(data);
     globalGraph.render();
 
-    const canvasMatrix = globalGraph.get('canvas').getMatrix();
-    globalGraph.translate(200, 100);
-
-    const matrix = globalGraph.get('group').getMatrix();
-
-    expect(canvasMatrix).toBe(null);
-    expect(matrix[6]).toBe(200);
-    expect(matrix[7]).toBe(100);
-
-    globalGraph.get('group').resetMatrix();
+    const viewcenter = globalGraph.get('canvas').getCamera().getPosition();
+    globalGraph.translate(100, 100);
+    const viewCenterAfterTranslate = globalGraph.get('canvas').getCamera().getPosition();
+    const expectCenter = [viewcenter[0] - 100, viewcenter[1] - 100];
+    expect(viewCenterAfterTranslate[0]).toBe(expectCenter[0]);
+    expect(viewCenterAfterTranslate[1]).toBe(expectCenter[1]);
   });
 
   it('moveTo', () => {
-    let group = globalGraph.get('group');
-    let bbox = group.getCanvasBBox();
+    globalGraph.moveTo(10, 10);
+    const viewcenter = globalGraph.get('canvas').getCamera().getPosition();
+    expect(numberEqual(viewcenter[0], 386, 1)).toBe(true);
+    expect(numberEqual(viewcenter[1], 360, 1)).toBe(true);
 
-    globalGraph.moveTo(100, 200);
-
-    group = globalGraph.get('group');
-    bbox = group.getCanvasBBox();
-
-    expect(bbox.minX).toBe(100);
-    expect(bbox.minY).toBe(200);
-
-    globalGraph.get('group').resetMatrix();
+    // reset
+    globalGraph.get('canvas').getCamera().setPosition(250, 250);
+    globalGraph.get('canvas').getCamera().setFocalPoint(250, 250);
   });
 
   it('zoom', () => {
-    globalGraph.zoom(3, { x: 100, y: 100 });
-
-    const matrix = globalGraph.get('group').getMatrix();
-
-    expect(matrix[0]).toBe(3);
-    expect(matrix[4]).toBe(3);
-    expect(matrix[6]).toBe(-200);
-    expect(matrix[7]).toBe(-200);
+    // 以 node1 为中心放缩
+    globalGraph.zoom(3, { x: 150, y: 50 });
     expect(globalGraph.getZoom()).toBe(3);
 
-    globalGraph.get('group').resetMatrix();
+    const camera = globalGraph.get('canvas').getCamera();
+    const viewCenter = globalGraph.get('canvas').getPointByCanvas(250, 250);
+    expect(numberEqual(viewCenter.x, 183, 1)).toBe(true);
+    expect(numberEqual(viewCenter.y, 116, 1)).toBe(true);
+
+    // reset
+    globalGraph.get('canvas').getCamera().setZoom(1);
+    globalGraph.get('canvas').getCamera().setPosition(250, 250);
+    globalGraph.get('canvas').getCamera().setFocalPoint(250, 250);
   });
 
   it('minZoom & maxZoom', () => {
@@ -324,43 +336,34 @@ xdescribe('graph', () => {
     graph.data(data2);
     graph.render();
 
-    let matrix = graph.get('group').getMatrix();
-    expect(matrix).toBe(null);
-
     graph.zoom(0.5, { x: 100, y: 100 });
-    matrix = graph.get('group').getMatrix();
-    expect(matrix).toBe(null);
+    expect(graph.getZoom()).toBe(1);
 
     graph.zoom(5.5);
-    matrix = graph.get('group').getMatrix();
-    expect(matrix).toBe(null);
+    expect(graph.getZoom()).toBe(1);
     graph.destroy();
   });
 
   it('zoomTo', () => {
-    let matrix = globalGraph.get('group').getMatrix();
-    expect(matrix).toBe(null);
-
     globalGraph.zoomTo(2);
-
-    matrix = globalGraph.get('group').getMatrix();
-    expect(matrix[0]).toBe(2);
-    expect(matrix[4]).toBe(2);
-    expect(matrix[6]).toBe(0);
-    expect(matrix[7]).toBe(0);
+    expect(globalGraph.getZoom()).toBe(2);
+    let viewcenter = globalGraph.get('canvas').getCanvasByPoint(250, 250);
+    // 中心坐标扩大两倍
+    expect(numberEqual(viewcenter.x, 500)).toBe(true);
+    expect(numberEqual(viewcenter.y, 500)).toBe(true);
 
     globalGraph.zoomTo(1.5, { x: 250, y: 250 });
-    matrix = globalGraph.get('group').getMatrix();
-
-    expect(matrix[0]).toBe(1.5);
-    expect(matrix[4]).toBe(1.5);
-    expect(matrix[6]).toBe(62.5);
-    expect(matrix[7]).toBe(62.5);
+    viewcenter = globalGraph.get('canvas').getCanvasByPoint(250, 250);
+    expect(numberEqual(viewcenter.x, 500)).toBe(true);
+    expect(numberEqual(viewcenter.y, 500)).toBe(true);
   });
 
   it('change size', () => {
+    const div2 = document.createElement('div');
+    div2.id = 'change-size-spec';
+    document.body.appendChild(div2);
     const graph = new Graph({
-      container: div,
+      container: div2,
       width: 500,
       height: 500,
       renderer: 'svg',
@@ -460,46 +463,46 @@ xdescribe('graph', () => {
   });
 
   it('canvas point & model point convert', () => {
-    const group = globalGraph.get('group');
     let point = globalGraph.getPointByCanvas(100, 100);
     expect(point.x).toBe(100);
     expect(point.y).toBe(100);
 
-    translate(group, {
-      x: 100,
-      y: 100,
-    });
+    globalGraph.translate(100, 100);
 
     point = globalGraph.getPointByCanvas(100, 100);
-    expect(point.x).toBe(0);
-    expect(point.y).toBe(0);
+    expect(numberEqual(point.x, 0, 0.001)).toBe(true);
+    expect(numberEqual(point.y, 0, 0.001)).toBe(true);
 
-    scale(group, [1.5, 1.5]);
+    globalGraph.zoom(1.5);
 
     point = globalGraph.getPointByCanvas(100, 100);
-    expect(point.x).toBe(-33.33333333333334);
-    expect(point.y).toBe(-33.33333333333334);
+    expect(numberEqual(point.x, 0, 0.001)).toBe(true);
+    expect(numberEqual(point.y, 0, 0.001)).toBe(true);
+    point = globalGraph.getPointByCanvas(0, 0);
+    expect(numberEqual(point.x, -66.7, 0.1)).toBe(true);
+    expect(numberEqual(point.y, -66.7, 0.1)).toBe(true);
 
-    group.resetMatrix();
+    // reset
+    const camera = globalGraph.get('canvas').getCamera();
+    camera.setZoom(1);
+    camera.setPosition(250, 250);
+    camera.setFocalPoint(250, 250);
+
+    point = globalGraph.getPointByCanvas(100, 100);
+    expect(point.x).toBe(100);
+    expect(point.y).toBe(100);
 
     point = globalGraph.getCanvasByPoint(100, 100);
-    expect(point.x).toBe(100);
-    expect(point.y).toBe(100);
+    expect(numberEqual(point.x, 100, 0.001)).toBe(true);
+    expect(numberEqual(point.y, 100, 0.001)).toBe(true);
 
-    translate(group, {
-      x: 100,
-      y: 100,
-    });
-
-    point = globalGraph.getCanvasByPoint(0, 0);
-    expect(point.x).toBe(100);
-    expect(point.y).toBe(100);
-
-    group.resetMatrix();
+    // reset
+    camera.setZoom(1);
+    camera.setPosition(250, 250);
+    camera.setFocalPoint(250, 250);
   });
 
   it('client point & model point convert', () => {
-    const group = globalGraph.get('group');
     const bbox = globalGraph.get('canvas').get('el').getBoundingClientRect();
 
     let point = globalGraph.getPointByClient(bbox.left + 100, bbox.top + 100);
@@ -507,37 +510,27 @@ xdescribe('graph', () => {
     expect(point.x).toBe(100);
     expect(point.y).toBe(100);
 
-    translate(group, {
-      x: 100,
-      y: 100,
-    });
+    globalGraph.translate(100, 100);
 
     point = globalGraph.getPointByClient(bbox.left + 100, bbox.top + 100);
-    expect(point.x).toBe(0);
-    expect(point.y).toBe(0);
+    expect(numberEqual(point.x, 0, 0.001)).toBe(true);
+    expect(numberEqual(point.y, 0, 0.001)).toBe(true);
 
-    scale(group, [1.5, 1.5]);
+    globalGraph.zoom(1.5)
     point = globalGraph.getPointByClient(bbox.left + 100, bbox.top + 100);
+    expect(numberEqual(point.x, 0, 0.001)).toBe(true);
+    expect(numberEqual(point.y, 0, 0.001)).toBe(true);
 
-    expect(point.x).toBe(-33.33333333333334);
-    expect(point.y).toBe(-33.33333333333334);
-
-    group.resetMatrix();
+    // reset
+    const camera = globalGraph.get('canvas').getCamera();
+    camera.setZoom(1);
+    camera.setPosition(250, 250);
+    camera.setFocalPoint(250, 250);
 
     point = globalGraph.getClientByPoint(100, 100);
 
-    expect(point.x).toBe(bbox.left + 100);
-    expect(point.y).toBe(bbox.top + 100);
-
-    translate(group, {
-      x: 100,
-      y: 100,
-    });
-
-    point = globalGraph.getClientByPoint(100, 100);
-
-    expect(point.x).toBe(bbox.left + 200);
-    expect(point.y).toBe(bbox.top + 200);
+    expect(numberEqual(point.x, bbox.left + 100, 0.1)).toBe(true);
+    expect(numberEqual(point.y, bbox.top + 100, 0.1)).toBe(true);
   });
 
   it('clear', () => {
@@ -546,9 +539,12 @@ xdescribe('graph', () => {
   });
 });
 
-xdescribe('all node link center', () => {
+describe('all node link center', () => {
+  const div2 = document.createElement('div');
+  div2.id = 'div2-spec';
+  document.body.appendChild(div2);
   const graph = new Graph({
-    container: div,
+    container: div2,
     width: 500,
     height: 500,
     linkCenter: true,
@@ -753,10 +749,12 @@ xdescribe('all node link center', () => {
     graph.destroy();
   });
 
-  // TODO:  svg edge shadow 相关没有恢复。
   it('default node & edge style', () => {
+    const div3 = document.createElement('div');
+    div3.id = 'div3-spec';
+    document.body.appendChild(div3);
     const defaultGraph = new Graph({
-      container: div,
+      container: div3,
       width: 500,
       height: 500,
       renderer: 'svg',
@@ -797,7 +795,6 @@ xdescribe('all node link center', () => {
       },
     });
 
-    // TODO addItem有style会直接覆盖defaultNode中定义的
     const node = defaultGraph.addItem('node', {
       id: 'node9',
       x: 100,
@@ -822,16 +819,16 @@ xdescribe('all node link center', () => {
     defaultGraph.setItemState(node, 'selected', true);
 
     expect(keyShape.attr('fill')).toEqual('green');
-    expect(keyShape.attr('fillStyle')).toBe(undefined);
+    expect(keyShape.attr('fillStyle')).toBe(null);
     expect(keyShape.attr('stroke')).toEqual('red');
-    expect(keyShape.attr('strokeStyle')).toBe(undefined);
+    expect(keyShape.attr('strokeStyle')).toBe(null);
 
     defaultGraph.setItemState(node, 'selected', false);
 
     // expect(keyShape.attr('fill')).toEqual('red');
-    expect(keyShape.attr('fillStyle')).toBe(undefined);
+    expect(keyShape.attr('fillStyle')).toBe(null);
     expect(keyShape.attr('stroke')).toEqual('#666');
-    expect(keyShape.attr('strokeStyle')).toBe(undefined);
+    expect(keyShape.attr('strokeStyle')).toBe(null);
 
     defaultGraph.updateItem(node, { style: { fill: '#ccc', stroke: '#444' } });
 
@@ -840,19 +837,19 @@ xdescribe('all node link center', () => {
     defaultGraph.setItemState(node, 'selected', true);
 
     expect(keyShape.attr('fill')).toEqual('green');
-    expect(keyShape.attr('fillStyle')).toBe(undefined);
+    expect(keyShape.attr('fillStyle')).toBe(null);
     expect(keyShape.attr('stroke')).toEqual('red');
-    expect(keyShape.attr('strokeStyle')).toBe(undefined);
+    expect(keyShape.attr('strokeStyle')).toBe(null);
 
     defaultGraph.setItemState(node, 'selected', false);
 
     expect(keyShape.attr('fill')).toEqual('#ccc');
-    expect(keyShape.attr('fillStyle')).toBe(undefined);
+    expect(keyShape.attr('fillStyle')).toBe(null);
     expect(keyShape.attr('stroke')).toEqual('#444');
-    expect(keyShape.attr('strokeStyle')).toBe(undefined);
+    expect(keyShape.attr('strokeStyle')).toBe(null);
 
-    defaultGraph.addItem('node', { id: 'node10' });
-    const edge = defaultGraph.addItem('edge', { id: 'edge', source: 'node9', target: 'node9' });
+    defaultGraph.addItem('node', { id: 'node10', x: 100, y: 50 });
+    const edge = defaultGraph.addItem('edge', { id: 'edge', source: 'node9', target: 'node9', type: 'loop' });
 
     const edgeKeyShape = edge.get('keyShape');
     expect(edgeKeyShape.attr('stroke')).toEqual('blue');
@@ -867,8 +864,6 @@ xdescribe('all node link center', () => {
     expect(edgeKeyShape.attr('stroke')).toEqual('blue');
     expect(edgeKeyShape.attr('strokeOpacity')).toEqual(0.5);
 
-    // 测试default状态不存在的属性
-    expect(edgeKeyShape.attr('shadowColor')).toBe(undefined);
     defaultGraph.setItemState(edge, 'active', true);
 
     expect(edgeKeyShape.attr('stroke')).toEqual('green');
@@ -877,15 +872,15 @@ xdescribe('all node link center', () => {
     defaultGraph.setItemState(edge, 'active', false);
 
     expect(edgeKeyShape.attr('stroke')).toEqual('blue');
-    // TODO: G svg 版本将 shadow 相关更新为 null，shadow 没有消失
-    // console.log(edgeKeyShape);
-    expect(edgeKeyShape.attr('shadowColor')).toBe(undefined);
-    // defaultGraph.destroy();
+    defaultGraph.destroy();
   });
 
   it('graph with default cfg', () => {
+    const div4 = document.createElement('div');
+    div4.id = 'div4-spec';
+    document.body.appendChild(div4);
     const defaultGraph = new Graph({
-      container: div,
+      container: div4,
       width: 500,
       height: 500,
       renderer: 'svg',
@@ -967,13 +962,19 @@ xdescribe('all node link center', () => {
   });
 });
 
-xdescribe('plugins & layout', () => {
+describe('plugins & layout', () => {
+  const div5 = document.createElement('div');
+  div5.id = 'div2-spec';
+  document.body.appendChild(div5);
   it('add & remove plugins', () => {
     const graph = new Graph({
-      container: div,
+      container: div5,
       height: 500,
       width: 500,
       renderer: 'svg',
+      modes: {
+        default: ['zoom-canvas', 'drag-canvas']
+      }
     });
 
     const data = {
@@ -1008,9 +1009,12 @@ xdescribe('plugins & layout', () => {
   });
 });
 
-xdescribe('auto rotate label on edge', () => {
+describe('auto rotate label on edge', () => {
+  const div6 = document.createElement('div');
+  div6.id = 'div6-spec';
+  document.body.appendChild(div6);
   const graph = new Graph({
-    container: div,
+    container: div6,
     width: 500,
     height: 500,
     renderer: 'svg',
@@ -1073,16 +1077,17 @@ xdescribe('auto rotate label on edge', () => {
     const label1 = edge1.get('group').get('children')[1];
     const label1Matrix = label1.attr('matrix');
 
-    expect(label1Matrix[0]).toBe(0.28751589136689853);
-    expect(label1Matrix[1]).toBe(0.9577758674196681);
-    expect(label1Matrix[3]).toBe(-0.9577758674196681);
-    expect(label1Matrix[4]).toBe(0.28751589136689853);
-    expect(label1Matrix[6]).toBe(142.08905380311842);
-    expect(label1Matrix[7]).toBe(8.99297948103171);
+    expect(label1Matrix[0]).toBe(0.2873479127883911);
+    expect(label1Matrix[1]).toBe(0.9578263759613037);
+    expect(label1Matrix[3]).toBe(-0.9578263759613037);
+    expect(label1Matrix[4]).toBe(0.2873479127883911);
+    expect(label1Matrix[6]).toBe(65);
+    expect(label1Matrix[7]).toBe(100);
     const edge2 = graph.getEdges()[1];
     const label2 = edge2.get('group').get('children')[1];
     const label2Matrix = label2.attr('matrix');
-    expect(label2Matrix).toBe(null);
+    expect(label2Matrix[1]).toBe(0);
+    expect(label2Matrix[3]).toBe(-0);
   });
 
   it('drag node', () => {
@@ -1093,35 +1098,36 @@ xdescribe('auto rotate label on edge', () => {
     const edge1 = graph.getEdges()[0];
     const label1 = edge1.get('group').get('children')[1];
     const label1Matrix = label1.attr('matrix');
-    expect(label1Matrix[0]).toBe(0.7071067811865476);
-    expect(label1Matrix[1]).toBe(0.7071067811865475);
-    expect(label1Matrix[3]).toBe(-0.7071067811865475);
-    expect(label1Matrix[4]).toBe(0.7071067811865476);
-    expect(label1Matrix[6]).toBe(124.99999999999999);
-    expect(label1Matrix[7]).toBe(-51.77669529663689);
+    expect(label1Matrix[0]).toBe(0.7071068286895752);
+    expect(label1Matrix[1]).toBe(0.7071067094802856);
+    expect(label1Matrix[3]).toBe(-0.7071067094802856);
+    expect(label1Matrix[4]).toBe(0.7071068286895752);
+    expect(label1Matrix[6]).toBe(125);
+    expect(label1Matrix[7]).toBe(125);
     const edge2 = graph.getEdges()[1];
     const label2 = edge2.get('group').get('children')[1];
     const label2Matrix = label2.attr('matrix');
-    expect(label2Matrix).toBe(null);
+    expect(label2Matrix[0]).toBe(1);
+    expect(label2Matrix[4]).toBe(1);
   });
 
   it('zoom and pan', () => {
     graph.zoom(0.5);
     graph.moveTo(100, 120);
-    const group = graph.get('group');
-    const bbox = group.getCanvasBBox();
-    const groupMatrix = group.attr('matrix');
-    expect(groupMatrix[0]).toBe(0.5);
-    expect(groupMatrix[4]).toBe(0.5);
-    expect(bbox.minX).toBe(100);
-    expect(bbox.minY).toBe(120);
+    expect(graph.getZoom()).toBe(0.5);
+    const viewPoint = graph.get('canvas').getCamera().getPosition()
+    expect(numberEqual(viewPoint[0], 425, 1)).toBe(true);
+    expect(numberEqual(viewPoint[1], 385, 1)).toBe(true);
     graph.destroy();
   });
 });
 
-xdescribe('behaviors', () => {
+describe('behaviors', () => {
+  const div6 = document.createElement('div');
+  div6.id = 'div7-spec';
+  document.body.appendChild(div6);
   const graph = new Graph({
-    container: div,
+    container: div6,
     width: 500,
     height: 500,
     renderer: 'svg',
@@ -1136,10 +1142,13 @@ xdescribe('behaviors', () => {
     nodeStateStyles: {
       inactive: {
         opacity: 0.1,
+        // fill: '#0f0'
       },
       active: {
         stroke: '#000',
         lineWidth: 2,
+        // fill: '#0f0'
+        // opacity: 1
       },
       selected: {
         fill: '#f00',
@@ -1315,7 +1324,6 @@ xdescribe('behaviors', () => {
     expect(item.getModel().y).toBe(300);
     const edge = graph.getEdges()[0];
     setTimeout(() => {
-      console.log('xx', (edge.getModel() as EdgeConfig).startPoint);
       expect(Math.abs((edge.getModel() as EdgeConfig).startPoint.x - 95) < 4).toBe(true);
       // expect(Math.abs((edge.getModel() as EdgeConfig).startPoint.y - 289) < 2).toBe(true);
       // multiple selected nodes to drag
@@ -1354,7 +1362,7 @@ xdescribe('behaviors', () => {
   });
 });
 
-xdescribe('layouts', () => {
+describe('layouts', () => {
   const data = {
     nodes: [
       {
@@ -1637,7 +1645,7 @@ xdescribe('layouts', () => {
   });
 });
 
-xdescribe('built-in items', () => {
+describe('built-in items', () => {
   const data = {
     nodes: [
       {
@@ -1729,9 +1737,12 @@ xdescribe('built-in items', () => {
   data.nodes.forEach((node: any, i) => {
     node.label = `node-${i + 1}`;
   });
+  const div8 = document.createElement('div');
+  div8.id = 'div8-spec';
+  document.body.appendChild(div8);
 
   const graph = new Graph({
-    container: div,
+    container: div8,
     width: 500,
     height: 500,
     renderer: 'svg',
@@ -1845,17 +1856,20 @@ xdescribe('built-in items', () => {
       },
     });
     const polylineShape = polyline.get('group').get('children')[0];
-    expect(polylineShape.attr('path')[0][1]).toBe(314.85898208618164);
-    expect(polylineShape.attr('path')[0][2]).toBe(185.14101791381836);
+    expect(polylineShape.attr('path')[0][1]).toBe(315.35898208618164);
+    expect(polylineShape.attr('path')[0][2]).toBe(184.64101791381836);
     expect(polylineShape.attr('path')[1][1]).toBe(315);
     expect(polylineShape.attr('path')[1][2]).toBe(300);
-    expect(polylineShape.attr('path')[2][1]).toBe(243);
+    expect(polylineShape.attr('path')[2][1]).toBe(242.5);
     expect(polylineShape.attr('path')[2][2]).toBe(300);
     graph.destroy();
   });
 });
 
-xdescribe('tree graph', () => {
+describe('tree graph', () => {
+  const div9 = document.createElement('div');
+  div9.id = 'div9-spec';
+  document.body.appendChild(div9);
   const data = {
     isRoot: true,
     id: 'Root',
@@ -1883,7 +1897,7 @@ xdescribe('tree graph', () => {
   };
 
   const graph = new TreeGraph({
-    container: div,
+    container: div9,
     width: 500,
     height: 500,
     renderer: 'svg',
@@ -1921,7 +1935,7 @@ xdescribe('tree graph', () => {
   });
 });
 
-xdescribe('plugins', () => {
+describe('plugins', () => {
   const data2 = {
     nodes: [
       {
@@ -1974,10 +1988,13 @@ xdescribe('plugins', () => {
     ],
   };
 
+  const div10 = document.createElement('div');
+  div10.id = 'div10-spec';
+  document.body.appendChild(div10);
   it('minimap default', (done) => {
     const minimap = new G6.Minimap();
     const graph = new Graph({
-      container: div,
+      container: div10,
       width: 500,
       height: 500,
       renderer: 'svg',
@@ -1995,10 +2012,10 @@ xdescribe('plugins', () => {
 
       expect(minimapGroup.get('children')[2].get('children').length).toBe(5);
       const viewport = minimap.get('viewport');
-      expect(viewport.style.width).toBe('37.2093px');
-      expect(viewport.style.height).toBe('6.1794px');
-      expect(viewport.style.left).toBe('162.791px');
-      expect(viewport.style.top).toBe('113.821px');
+      expect(viewport.style.width).toBe('37px');
+      expect(viewport.style.height).toBe('6px');
+      expect(viewport.style.left).toBe('163px');
+      expect(viewport.style.top).toBe('114px');
       graph.destroy();
 
       done();
@@ -2010,7 +2027,7 @@ xdescribe('plugins', () => {
       type: 'delegate',
     });
     const graph2 = new Graph({
-      container: div,
+      container: div10,
       width: 500,
       height: 500,
       renderer: 'svg',
@@ -2026,10 +2043,10 @@ xdescribe('plugins', () => {
       const minimapGroup = minimap2.get('canvas').get('children')[0];
       expect(minimapGroup.get('children').length).toBe(10);
       const viewport = minimap2.get('viewport');
-      expect(viewport.style.width).toBe('41.3907px');
-      expect(viewport.style.height).toBe('37.351px');
-      expect(viewport.style.left).toBe('58.6093px');
-      expect(viewport.style.top).toBe('42.649px');
+      expect(viewport.style.width).toBe('41.3333px');
+      expect(viewport.style.height).toBe('37.3333px');
+      expect(viewport.style.left).toBe('58.6667px');
+      expect(viewport.style.top).toBe('42.6667px');
       graph2.destroy();
     }, 150);
   });
@@ -2039,7 +2056,7 @@ xdescribe('plugins', () => {
       type: 'keyShape',
     });
     const graph = new Graph({
-      container: div,
+      container: div10,
       width: 500,
       height: 500,
       renderer: 'svg',
@@ -2058,17 +2075,17 @@ xdescribe('plugins', () => {
       const minimapGroup = minimap.get('canvas').get('children')[0];
       expect(minimapGroup.get('children').length).toBe(10);
       const viewport = minimap.get('viewport');
-      expect(viewport.style.width).toBe('42.8115px');
-      expect(viewport.style.height).toBe('30.6977px');
-      expect(viewport.style.left).toBe('57.1885px');
-      expect(viewport.style.top).toBe('49.3023px');
+      expect(viewport.style.width).toBe('40px');
+      expect(viewport.style.height).toBe('30.6667px');
+      expect(viewport.style.left).toBe('60px');
+      expect(viewport.style.top).toBe('49.3333px');
       graph.destroy();
     }, 150);
   });
 
   it('edge bundling', () => {
     const bundling = new G6.Bundling({
-      bundleThreshold: 0.1,
+      // bundleThreshold: 0.1,
     });
     const graph = new Graph({
       container: div,
@@ -2472,7 +2489,7 @@ xdescribe('plugins', () => {
 
   it('context menu', () => {
     const graph = new Graph({
-      container: div,
+      container: div10,
       width: 500,
       height: 500,
       renderer: 'svg',
@@ -2518,7 +2535,7 @@ xdescribe('plugins', () => {
   it('grid', () => {
     const grid = new G6.Grid();
     const graph = new Graph({
-      container: div,
+      container: div10,
       width: 500,
       height: 500,
       renderer: 'svg',

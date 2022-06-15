@@ -56,6 +56,7 @@ const varNames = [
   'getCanvasBBox',
   'getBBox',
   'isCanvas',
+  'isGroup',
   'on',
   'once',
   'resetMatrix',
@@ -86,6 +87,7 @@ const handlerFunctionMap = {
   'getBBox': target => () => getBBox(target, 'bBox'),
   'getCanvasBBox': target => () => getBBox(target, 'canvasBBox'),
   'isCanvas': target => () => false,
+  'isGroup': target => () => false,
   'on': target => (eventname: string, callback, once?: boolean) => target.addEventListener(eventname, callback, { once }),
   'once': target => (eventname: string, callback) => target.addEventListener(eventname, callback, { once: true }),
   'rotateAtStart': target => (rotate: number) => { // rotate 弧度制
@@ -523,7 +525,6 @@ class Polygon extends GPolygon {
 class Image extends GImage {
   public shapeType: string;
   constructor(cfg) {
-    debugger
     super(cfg);
     const proxy = new Proxy(this, handler);
     varNames.forEach(funcName => {

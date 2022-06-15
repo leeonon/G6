@@ -57,7 +57,11 @@ export default class Group extends EventEmitter implements IGroup {
    * add a child to group
    * @param ele a shape or a group instance
    */
-  public appendChild(ele: IElement) {
+  public async appendChild(ele: IElement) {
+    // TODO: canvas 初始化之前 appendChild 可能导致错误，但 await 就需要后续所有与画布内容的操作都要 await
+    // if (this.adaptedEle.id === 'g-root' && this.adaptedEle.parentNode?.nodeName === 'document') {
+    //   await (this.adaptedEle.parentNode as any)?.defaultView?.ready
+    // }
     if (ele instanceof Group) {
       this.adaptedEle.appendChild(ele.adaptedEle);
     } else {

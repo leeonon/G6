@@ -50,7 +50,6 @@ registerEdge(
     labelPosition: 'center',
     drawShape(cfg: EdgeConfig, group: IGroup) {
       const shapeStyle = (this as any).getShapeStyle(cfg);
-      console.log('shapeStyle', shapeStyle);
       if (shapeStyle.radius === 0) delete shapeStyle.radius;
       const keyShape = group.addShape('path', {
         className: 'edge-shape',

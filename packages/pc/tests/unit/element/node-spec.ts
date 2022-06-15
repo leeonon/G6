@@ -373,7 +373,6 @@ describe('shape node test', () => {
       const topPoint = group.find((g) => {
         return g.get('className') === 'link-point-top';
       });
-      console.log('topPoint', topPoint);
       expect(topPoint).toBe(null);
       const bottomPoint = group.find((g) => {
         return g.get('className') === 'link-point-bottom';

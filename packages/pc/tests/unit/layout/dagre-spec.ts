@@ -323,9 +323,6 @@ describe('dagre layout with combo', () => {
     graph.render();
 
     graph.on('afterlayout', () => {
-      console.log(graph.findById('1').getModel());
-      console.log(graph.findById('1-2').getModel());
-      console.log(graph.findById('1-1-1').getModel());
 
       expect(graph.findById('1').getModel().x).toBe(145);
       expect(graph.findById('1').getModel().y).toBe(21.5);
@@ -494,10 +491,6 @@ describe('dagre layout with combo', () => {
     });
 
     graph.on('afterlayout', () => {
-      console.log(graph.findById('5').getModel());
-      console.log(graph.findById('7').getModel());
-      console.log(graph.findById('8').getModel());
-      console.log(graph.findById('9').getModel());
 
       expect(graph.findById('5').getModel().x).toBe(520);
       expect(graph.findById('5').getModel().y).toBe(260);

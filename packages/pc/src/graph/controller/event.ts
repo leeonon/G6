@@ -116,7 +116,6 @@ export default class EventController extends AbstractEvent {
    * @param evt 事件句柄
    */
   protected onCanvasEvents(gEvt: IG6GraphEvent, eventTypeProp?: string) {
-    console.log('event', eventTypeProp)
     const { graph } = this;
     let eventType = eventTypeProp;
     if (eventType === 'click') {

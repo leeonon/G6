@@ -105,9 +105,14 @@ describe('text background label', () => {
     },
   });
   it('text background label', done => {
+<<<<<<< HEAD
+=======
+
+>>>>>>> 480c3f5f35 (chore: svg verified)
     const mat = [1, 0, 0, 0, 1, 0, 0, 0, 1];
     graph.data(data);
     graph.render();
+<<<<<<< HEAD
     console.log(graph.getEdges()[0].getContainer().children[2].getMatrix())
     console.log(graph.getEdges()[0].getContainer().children[2].attr())
     const edge1bg = graph.getEdges()[1].getContainer().find(ele => ele.get('classname') === 'edge-label-bg');
@@ -115,6 +120,13 @@ describe('text background label', () => {
     expect(edge1bgMatrix[0]).toBe(0.7071067811865476);
     expect(edge1bgMatrix[6]).toBe(-223.7023625196221);
     expect(edge1bgMatrix[7]).toBe(187.5118869365008);
+=======
+    // const edge1bg = graph.getEdges()[1].getContainer().find(ele => ele.get('classname') === 'edge-label-bg');
+    // let edge1bgMatrix = edge1bg.getMatrix();
+    // expect(edge1bgMatrix[0]).toBe(0.7071067811865476);
+    // expect(edge1bgMatrix[6]).toBe(-223.7023625196221);
+    // expect(edge1bgMatrix[7]).toBe(187.5118869365008);
+>>>>>>> 480c3f5f35 (chore: svg verified)
 
     graph.updateItem('node3', {
       x: 110,

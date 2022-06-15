@@ -466,6 +466,10 @@ export interface ICanvas extends IBase {
    */
   isCanvas: () => boolean;
   /**
+   * 是否是 Group
+   */
+  isGroup: () => boolean;
+  /**
    * 添加图形分组，并设置配置项
    * @param {GroupCfg} cfg 图形分组的配置项
    * @returns 添加的图形分组
@@ -475,7 +479,7 @@ export interface ICanvas extends IBase {
    * add a child to the root group of the canvas
    * @param ele a shape or a group instance
    */
-  appendChild(ele: IElement): IElement;
+  appendChild(ele: IElement): Promise<IElement>;
   /**
    * 获取所有的子元素
    * @return {IElement[]} 子元素的集合

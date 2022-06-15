@@ -79,8 +79,6 @@ describe('polyline edge', () => {
     });
     graph.data(data);
     graph.render();
-    console.log(graph.getEdges()[0].getKeyShape());
-    console.log(graph.getEdges()[1].getKeyShape());
 
     const path1 = graph.getEdges()[0].getKeyShape().attr('path');
     expect(path1).toBe('M150 125L150 130L273 130L273 21L208 21L208 26');

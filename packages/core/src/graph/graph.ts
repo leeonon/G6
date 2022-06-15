@@ -140,7 +140,7 @@ export default abstract class AbstractGraph extends EventEmitter implements IAbs
   protected abstract initPlugins(): void;
 
   // 初始化所有 Group
-  protected initGroups(): void {
+  protected initGroups(): Promise<void> {
     const canvas: ICanvas = this.get('canvas');
     if (!canvas) return;
     const el: HTMLElement = canvas.get('el');

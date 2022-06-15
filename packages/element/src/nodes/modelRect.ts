@@ -404,7 +404,7 @@ registerNode(
       }
       const show = cfg.logoIcon ? cfg.logoIcon.show : undefined;
 
-      const { offset } = labelCfg;
+      const { offset = 0 } = labelCfg;
       let offsetX = -width / 2 + w + offset;
 
       if (!show && show !== undefined) {

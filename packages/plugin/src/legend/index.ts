@@ -279,7 +279,6 @@ export default class Legend extends Base {
    * @param param
    */
   public filterData(e) {
-    console.log('filter')
     const filter = this.get('filter');
     const filterFunctions = filter?.filterFunctions;
     if (!filter || !filterFunctions) return;

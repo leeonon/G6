@@ -414,8 +414,6 @@ export default class Graph extends AbstractGraph implements IGraph {
     const renderer = canvas.getRenderer();
     if (!type) type = 'image/png';
 
-    console.log('typetype', type, type.split)
-
     const fileName: string = (name || 'graph') + (renderer === 'svg' ? '.svg' : type.split('/')[1]);
     const link: HTMLAnchorElement = document.createElement('a');
     self.asyncToDataUrl(type, backgroundColor, (dataURL) => {

@@ -22,7 +22,6 @@ export default {
     if (!this.shouldEnd(e)) {
       return;
     }
-    console.log('mouseleave')
     this.hideTooltip();
     this.graph.emit('tooltipchange', { item: this.currentTarget, action: 'hide' });
     this.currentTarget = null;

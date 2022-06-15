@@ -199,7 +199,6 @@ describe('scenario', () => {
       });
     });
 
-    console.log('====', graph.findById('test0'), graph.findById('test1'))
 
     // uncombo
     // 增加动画
@@ -212,7 +211,6 @@ describe('scenario', () => {
     }, 300);
 
     // 标记新增的边，用于观察
-    console.log('newEdges.leng', newEdges.length);
     newEdges.forEach(nEdge => {
       if (nEdge.destroyed) return;
       graph.updateItem(nEdge, {
@@ -247,7 +245,6 @@ describe('scenario', () => {
     meanCenter.y /= meanCenter.count;
 
     if (oriComboId && !e.item.getModel().comboId) {
-      console.log('add combo', oriComboId);
       graph.addItem('combo', {
         id: oriComboId,
         label: oriComboId,
@@ -256,7 +253,6 @@ describe('scenario', () => {
       });
       const childIds = oriComboItemMap[oriComboId];
       childIds.forEach(childId => {
-        console.log('update children', childId)
         const childItem = graph.findById(childId);
         if (!childItem) return;
         graph.updateComboTree(childId, oriComboId);

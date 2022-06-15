@@ -53,7 +53,7 @@ export default class Canvas extends EventEmitter implements ICanvas {
     cfg.devicePixelRatio = cfg.devicePixelRatio || cfg.pixelRatio;
     this.canvasEle = new GCanvas(cfg);
     this.adaptedEle = this.canvasEle.getRoot();
-    this.rootGroup = new Group({ adaptedEle: this.adaptedEle });
+    this.rootGroup = new Group({ adaptedEle: this.adaptedEle }) as IGroup;
     this.set('children', []);
 
     // passive 为 false 才可以 e.preventDefault()
@@ -83,8 +83,9 @@ export default class Canvas extends EventEmitter implements ICanvas {
    * add a child to the root group of the canvas
    * @param ele a shape or a group instance
    */
-  public appendChild(ele: IElement) {
-    // this.adaptedEle.appendChild(ele.adaptedEle);
+  public async appendChild(ele: IElement) {
+    // TODO: canvas 初始化之前 appendChild 可能导致错误，但 await 就需要后续所有与画布内容的操作都要 await
+    // await this.canvasEle.ready;
     this.rootGroup.appendChild(ele);
     ele.set('parent', this.rootGroup);
     ele.set('canvas', this);
@@ -137,7 +138,7 @@ export default class Canvas extends EventEmitter implements ICanvas {
       case 'children':
         return this.children;
       case 'container':
-        return (this.canvasEle.getContextService()?.getDomElement?.() as HTMLElement)?.parentNode;
+        return (this.canvasEle.getContextService()?.getDomElement?.() as any)?.parentNode;
       default:
         return this.canvasEle.document?.[key];
     }
@@ -257,6 +258,14 @@ export default class Canvas extends EventEmitter implements ICanvas {
   }
 
   /**
+   * if the object is a group
+   * @returns {boolean} return true to distinguish from shape and group
+   */
+  public isGroup(): boolean {
+    return false
+  }
+
+  /**
    * change the size of the canvas
    * @param {number} width new width for canvas
    * @param {number} height new height for canvas
@@ -310,7 +319,6 @@ export default class Canvas extends EventEmitter implements ICanvas {
   public animate(onFrame: OnFrame, animateCfg?: AnimateCfg) {
     // @ts-ignore
     const callAnimate = (...args) => this.adaptedEle.animate(...args);
-    console.log('animateCfg', animateCfg);
     const animation = callAnimate(
       [],
       {
@@ -346,7 +354,6 @@ export default class Canvas extends EventEmitter implements ICanvas {
    * stop all the animations on the canvas. the animations will be executed to the end
    */
   public stopAnimate() {
-    console.log('stio animate')
     const animations = this.get('animations') || [];
     animations.forEach((animation) => {
       // 将动画执行到最后一帧

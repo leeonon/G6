@@ -55,9 +55,9 @@ describe('destroy circular layout', () => {
 
     graph.on('canvas:click', e => {
 
-      graph.getNodes().forEach((node, i) => {
-        console.log('node', i, node.getModel().x, node.getModel().y);
-      })
+      // graph.getNodes().forEach((node, i) => {
+      //   console.log('node', i, node.getModel().x, node.getModel().y);
+      // })
     })
 
     graph.once('afterlayout', () => {

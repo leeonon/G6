@@ -195,7 +195,6 @@ describe('graph', () => {
   it('moveTo', () => {
     globalGraph.moveTo(10, 10);
     const viewcenter = globalGraph.get('canvas').getCamera().getPosition();
-    console.log('viewcenter', viewcenter);
     expect(numberEqual(viewcenter[0], 390, 1)).toBe(true);
     expect(numberEqual(viewcenter[1], 340, 1)).toBe(true);
 
@@ -586,7 +585,6 @@ describe('graph', () => {
     expect(numberEqual(point.x, 0, 0.001)).toBe(true);
     expect(numberEqual(point.y, 0, 0.001)).toBe(true);
     point = globalGraph.getPointByCanvas(0, 0);
-    console.log('point', point);
     expect(numberEqual(point.x, -66.7, 0.1)).toBe(true);
     expect(numberEqual(point.y, -66.7, 0.1)).toBe(true);
 
@@ -1328,7 +1326,6 @@ describe('auto rotate label on edge', () => {
     // TOOD: label 角度没更新！
 
     const edge1 = graph.getEdges()[0];
-    console.log('edge1', edge1);
     const label1 = edge1.get('group').get('children')[1];
     const label1Matrix = label1.attr('matrix');
     expect(label1Matrix[0]).toBe(0.7071068286895752);

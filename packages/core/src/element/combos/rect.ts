@@ -63,10 +63,10 @@ Shape.registerCombo(
       let { refX, refY } = labelCfg;
       // 考虑 refX 和 refY = 0 的场景，不用用 labelCfg.refX || Global.nodeLabel.refY
       if (isNil(refX)) {
-        refX = this.refX as number; // 不居中时的偏移量
+        refX = this.refX as number || 0; // 不居中时的偏移量
       }
       if (isNil(refY)) {
-        refY = this.refY as number; // 不居中时的偏移量
+        refY = this.refY as number || 0; // 不居中时的偏移量
       }
 
       const leftDis = cfgStyle.width / 2 + padding[3];

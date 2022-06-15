@@ -307,7 +307,6 @@ describe('drag-combo', () => {
     const combo = graph.findById('A');
     const comboC = graph.findById('C');
     let comboCBBox = comboC.getKeyShape().getCanvasBBox();
-    console.log('comboCBBox', comboCBBox)
 
     expect(numberEqual(comboCBBox.width, 295, 1)).toBe(true);
 

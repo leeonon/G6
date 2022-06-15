@@ -21,6 +21,10 @@ const createShape = (shapeType, param, canvas) => {
   shape.set('canvas', canvas);
   param.style.x = param.style.x || 0;
   param.style.y = param.style.y || 0;
+  if (shapeType === 'circle' || shapeType === 'ellipse') {
+    param.style.cx = param.style.x;
+    param.style.cy = param.style.y;
+  }
   if (param.style.rotate) {
     shape.rotateAtStart(param.style.rotate);
   }
@@ -77,6 +81,10 @@ const attr = (param1, param2, target) => {
       if (key === 'text') value = `${value}`;
       target.style[key] = value;
     });
+    if (target.nodeName === 'circle' || target.nodeName === 'ellipse') {
+      target.style.cx = target.style.x;
+      target.style.cy = target.style.y;
+    }
     return param1;
   }
   return;
