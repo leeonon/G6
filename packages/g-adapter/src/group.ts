@@ -459,6 +459,7 @@ export default class Group extends EventEmitter implements IGroup {
       // 将动画执行到最后一帧
       animation.onframe({ target: animation, propRatio: 1 });
       animation.finish();
+      animation.cancel();
     });
     this.set('animations', []);
   }
@@ -562,6 +563,7 @@ export default class Group extends EventEmitter implements IGroup {
 
     // this.createEle({ ...this.cfg, attrs: this.attrs, children: [], parent: null });
     const stack = [[this, tree]];
+    const setMatrixStack = [];
     while (stack.length) {
       const [origin, parent] = stack.pop();
       origin.getChildren().forEach((child) => {
@@ -573,10 +575,16 @@ export default class Group extends EventEmitter implements IGroup {
         }
         // const ele = this.createEle({ ...child.cfg, attrs: child.attrs, children: [] });
         const matrix = child.getMatrix();
-        ele.setMatrix(matrix);
+        setMatrixStack.push({ ele, matrix });
         parent.appendChild(ele);
         stack.push([child, ele]);
       });
+    }
+    // 需要先设置外层 group 矩阵，再设置内层。避免出现矩阵叠加效果
+    setMatrixStack.reverse();
+    while (setMatrixStack.length) {
+      const { ele, matrix } = setMatrixStack.pop();
+      ele.setMatrix(matrix);
     }
     const groupMatrix = this.getMatrix();
     tree.setMatrix(groupMatrix);

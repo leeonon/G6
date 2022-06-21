@@ -60,8 +60,8 @@
     ]
   },
   "dependencies": {
-    "@antv/g": "^5.0.24",
-    "@antv/g-svg": "^1.0.21",
+    "@antv/g": "^5.2.2",
+    "@antv/g-svg": "^1.2.2",
     "@antv/g6-core": "0.6.15",
     "@antv/g6-g-adapter": "*",
     "@antv/util": "~2.0.5"

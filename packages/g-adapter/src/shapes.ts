@@ -106,6 +106,7 @@ const handlerFunctionMap = {
       // 将动画执行到最后一帧
       animation.onframe({ target: animation, propRatio: 1 });
       animation.finish();
+      animation.cancel();
     });
     // target.set('animating', false);
     target.set('animations', []);

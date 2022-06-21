@@ -141,8 +141,10 @@ export default class MiniMap extends Base {
         ratio = this.get('ratio');
 
         dragging = true;
-        x = e.clientX;
-        y = e.clientY;
+        // @ts-ignore
+        x = e.screenX;
+        // @ts-ignore
+        y = e.screenY;
       },
       false,
     );
@@ -150,12 +152,14 @@ export default class MiniMap extends Base {
     viewport.addEventListener(
       isFireFox ? 'dragover' : 'drag',
       (e: GraphEvent) => {
-        if (!dragging || isNil(e.clientX) || isNil(e.clientY)) {
+        if (!dragging || isNil(e.screenX) || isNil(e.screenY)) {
           return;
         }
 
-        let dx = x - e.clientX;
-        let dy = y - e.clientY;
+        // @ts-ignore
+        let dx = (x - e.screenX) / zoom;
+        // @ts-ignore
+        let dy = (y - e.screenY) / zoom;
 
         // 若视口移动到最左边或最右边了,仅移动到边界
         if (left - dx < 0 || left - dx + width >= size[0]) {
@@ -179,8 +183,10 @@ export default class MiniMap extends Base {
         // graph 移动需要偏移量 dx/dy * 缩放比例才会得到正确的移动距离
         graph!.translate((dx * zoom) / ratio, (dy * zoom) / ratio);
 
-        x = e.clientX;
-        y = e.clientY;
+        // @ts-ignore
+        x = e.screenX;
+        // @ts-ignore
+        y = e.screenY;
       },
       false,
     );
@@ -196,6 +202,7 @@ export default class MiniMap extends Base {
 
     this.set('viewport', viewport);
     containerDOM.appendChild(viewport);
+    return viewport;
   }
 
   /**
@@ -212,8 +219,8 @@ export default class MiniMap extends Base {
     const graphHeight = graph.get('height');
     const topLeft: Point = graph.getPointByCanvas(0, 0);
     const bottomRight: Point = graph.getPointByCanvas(graphWidth, graphHeight);
-    const viewport: HTMLElement = this.get('viewport');
-    if (!viewport) this.initViewport();
+    let viewport: HTMLElement = this.get('viewport');
+    if (!viewport) viewport = this.initViewport();
 
     // viewport宽高,左上角点的计算
     let width = (bottomRight.x - topLeft.x) * ratio;

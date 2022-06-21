@@ -187,6 +187,11 @@ export default class Graph extends AbstractGraph implements IGraph {
     const renderer = canvas.getRenderer();
     const canvasDom = canvas.get('el');
 
+    if (renderer === 'webgl') {
+      console.warn("The renderer is WebGL, which is not able to export data url temporary");
+      return '';
+    }
+
     if (!type) type = 'image/png';
 
     let dataURL = '';

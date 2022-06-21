@@ -48,14 +48,15 @@ const cloneEventFromG = (e: any, eventName: string): IG6GraphEvent => {
   return event;
 };
 
+const getPointerName = (evtName: string) => {
+  if (!evtName.includes('mouse')) return evtName;
+  return evtName.replace('mouse', 'pointer');
+}
+
 export default class EventController extends AbstractEvent {
   protected extendEvents: any[] = [];
 
   protected canvasHandler!: Fun;
-
-  protected dragging: { item: Item, target: IElement } | false = false;
-
-  protected dragon: { item: Item, target: IElement } | false = false;
 
   protected mousedown: boolean = false;
 
@@ -74,7 +75,6 @@ export default class EventController extends AbstractEvent {
     const { graph, extendEvents = [] } = this;
 
     const canvas: ICanvas = graph.get('canvas');
-    // canvas.set('draggable', true);
     const el = canvas.get('el');
 
     const canvasHandler: Fun = wrapBehavior(this, 'onCanvasEvents') as Fun;
@@ -87,7 +87,8 @@ export default class EventController extends AbstractEvent {
 
     canvas.off('*');
     EVENTS.forEach(eventName => {
-      canvas.on(eventName, evt => this.onCanvasEvents(evt, eventName));
+      const pointerName = getPointerName(eventName);
+      canvas.on(pointerName, evt => this.onCanvasEvents(evt, eventName));
     });
 
     this.canvasHandler = canvasHandler;
@@ -140,7 +141,6 @@ export default class EventController extends AbstractEvent {
       graph.emit(eventType, evt);
       graph.emit(`canvas:${eventType}`, evt);
 
-      this.processDragEvents(evt, eventType);
       return;
     }
 
@@ -169,8 +169,6 @@ export default class EventController extends AbstractEvent {
     if (type) graph.emit(`${type}:${eventType}`, evt); // node:click
     const targetShapeName = evt.target.get('name');
     if (targetShapeName) graph.emit(`${targetShapeName}:${eventType}`, evt); // text-shape:click
-
-    this.processDragEvents(evt, eventType);
 
     if (eventType === 'mousemove') {
       this.handleMouseMove(evt, type);
@@ -204,69 +202,6 @@ export default class EventController extends AbstractEvent {
   }
 
   /**
-   * 组合 mouswdown mouseup 等事件为 drag 相关事件
-   * @param evt 事件句柄
-   */
-  private processDragEvents(evt: IG6GraphEvent, eventType: string) {
-    const draggingCanvas = this.dragging === false ? false : this.dragging?.target?.nodeName === 'document';
-    switch (eventType) {
-      case 'mousedown':
-        this.mousedown = true;
-        break;
-      case 'mouseup':
-        this.mousedown = false;
-        if (this.dragging) {
-          this.emitItemEvents(evt, this.dragging, 'dragend');
-          // 对象不是 canvas，需要冒泡给 canvas
-          if (!draggingCanvas) this.graph.emit('dragend', evt)
-
-          this.dragging = false;
-          if (this.dragon) {
-            this.emitItemEvents(evt, this.dragon, 'drop');
-            this.dragon = false;
-          }
-        }
-        break;
-      case 'mousemove':
-        if (this.dragging) {
-          this.emitItemEvents(evt, this.dragging, 'drag');
-          // 对象不是 canvas，需要冒泡给 canvas
-          if (!draggingCanvas) this.graph.emit('drag', evt)
-        } else if (this.mousedown) {
-          this.dragging = { item: evt.item, target: evt.target };
-          this.emitItemEvents(evt, this.dragging, 'dragstart');
-          // 对象不是 canvas，需要冒泡给 canvas
-          if (!draggingCanvas) this.graph.emit('dragstart', evt)
-        }
-        break;
-      default:
-        break;
-
-    }
-  }
-
-  private emitItemEvents(evt: IG6GraphEvent, { item: propItem, target: propTarget }, eventType: string) {
-    const canvas: ICanvas = this.graph.get('canvas');
-    if (propTarget) {
-      evt.item = propItem;
-      evt.target = propTarget;
-    }
-    const item = evt.target === canvas ? null : evt.item;
-    const itemType = item ? item.getType() : 'canvas';
-    evt.name = eventType;
-    if (!item) this.emitCustomEvent(undefined, eventType, evt);
-    this.emitCustomEvent(itemType, eventType, evt);
-
-    // 对象不是 canvas 时，触发图形的事件
-    if (item) {
-      const targetShapeName = evt.target.get('name');
-      if (targetShapeName) {
-        this.emitCustomEvent(targetShapeName, eventType, evt); // text-shape:click
-      }
-    }
-  }
-
-  /**
    * 处理鼠标移动的事件
    * @param evt 事件句柄
    * @param type item 类型
@@ -283,23 +218,12 @@ export default class EventController extends AbstractEvent {
       if (preItem && !preItem.destroyed) {
         evt.item = preItem;
         this.emitCustomEvent(preItem.getType(), 'mouseleave', evt);
-        if (this.dragging) {
-          this.emitCustomEvent(preItem.getType(), 'dragleave', evt);
-          this.dragon = false;
-        }
       }
 
       // 从一个item或canvas移动到当前item，触发当前item的enter事件
       if (item && !item.destroyed) {
         evt.item = item;
         this.emitCustomEvent(type, 'mouseenter', evt);
-        if (this.dragging) {
-          this.emitCustomEvent(type, 'dragenter', evt);
-        }
-      }
-
-      if (this.dragging) {
-        this.dragon = { item, target: evt.target };
       }
     }
 
@@ -338,9 +262,7 @@ export default class EventController extends AbstractEvent {
   }
 
   private clearCache() {
-    this.dragging = false;
     this.mousedown = false;
-    this.dragon = false;
     this.preItem = null;
     this.preShape = null;
   }

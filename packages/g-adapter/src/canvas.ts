@@ -3,10 +3,9 @@ import EventEmitter from '@antv/event-emitter';
 import { isString, noop } from '@antv/util';
 import { Plugin as DragDropPlugin } from '@antv/g-plugin-dragndrop';
 
-// TODO: 暂时先从 node_modules 引入避免引用到最外层的 node_modules
-import { Renderer as CanvasRenderer } from '../node_modules/@antv/g-canvas';
-import { Renderer as SVGRenderer } from '../node_modules/@antv/g-svg';
-// import { Renderer as WebGLRenderer } from '../node_modules/@antv/g-webgl';
+import { Renderer as CanvasRenderer } from '@antv/g-canvas';
+import { Renderer as SVGRenderer } from '@antv/g-svg';
+import { Renderer as WebGLRenderer } from '@antv/g-webgl';
 
 import Group from './group';
 import { ICanvas, IElement } from './interface';
@@ -38,9 +37,9 @@ export default class Canvas extends EventEmitter implements ICanvas {
         case 'svg':
           renderer = new SVGRenderer();
           break;
-        // case 'webgl':
-        //   renderer = new WebGLRenderer();
-        //   break;
+        case 'webgl':
+          renderer = new WebGLRenderer();
+          break;
         default:
           renderer = new CanvasRenderer();
       }
@@ -48,7 +47,13 @@ export default class Canvas extends EventEmitter implements ICanvas {
       // TODO: 如果传入的是 renderer 对象，那么如何确定 rendererType
     }
     // dragdrop 插件
-    renderer.registerPlugin(new DragDropPlugin({ overlap: 'pointer' }));
+    renderer.registerPlugin(new DragDropPlugin({
+      overlap: 'pointer',
+      isDocumentDraggable: true,
+      isDocumentDroppable: true,
+      dragstartDistanceThreshold: 10,
+      dragstartTimeThreshold: 100
+    }));
     cfg.renderer = renderer;
     cfg.devicePixelRatio = cfg.devicePixelRatio || cfg.pixelRatio;
     this.canvasEle = new GCanvas(cfg);
@@ -359,6 +364,7 @@ export default class Canvas extends EventEmitter implements ICanvas {
       // 将动画执行到最后一帧
       animation.onframe({ target: animation, propRatio: 1 });
       animation.finish();
+      animation.cancel();
     });
     this.set('animations', []);
   }

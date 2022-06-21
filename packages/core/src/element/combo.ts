@@ -181,6 +181,7 @@ const singleCombo: ShapeOptions = {
     const itemAnimate = item.get('animate');
     const animate = itemAnimate && (cfg.animate === undefined ? this.options.animate : cfg.animate);
     const filteredAttrs = filterByAnimateAttrs(keyShapeStyle);
+    keyShape.stopAnimate();
     if (animate && keyShape.animate) {
       // 更新到展开状态，先将 collapsedIcon 隐藏。否则在动画完成后再出现 collapsedIcon
       if (!cfg.collapsed) {

@@ -32,7 +32,7 @@ export default class Graph extends AbstractGraph {
       container,
       width,
       height,
-      renderer: 'canvas'
+      renderer: this.cfg.renderer || 'canvas'
     };
     const pixelRatio = this.get('pixelRatio');
     if (pixelRatio) {

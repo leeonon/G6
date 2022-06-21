@@ -275,12 +275,7 @@ export default {
       items: this.targets,
       targetItem: null,
     });
-
-    this.point = {};
-    this.origin = null;
-    this.originPoint = {};
-    this.targets.length = 0;
-    this.targetCombo = null;
+    this.terminateBehavior();
   },
   /**
    * 拖动过程中将节点放置到 combo 上
@@ -390,7 +385,7 @@ export default {
     });
   },
   /**
-   * 将节点拖入到 Combo 中
+   * 将节点拖入到 Combo 上方（非释放）
    * @param evt
    */
   onDragEnter(evt: IG6GraphEvent) {
@@ -589,4 +584,12 @@ export default {
       minY: miny,
     };
   },
+
+  terminateBehavior() {
+    this.point = {};
+    this.origin = null;
+    this.originPoint = {};
+    this.targets.length = 0;
+    this.targetCombo = null;
+  }
 };

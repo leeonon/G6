@@ -11,9 +11,22 @@ module.exports = {
     '@g6/types': '<rootDir>/types',
     '@g6/(.*)': '<rootDir>/src/$1',
   },
+  transformIgnorePatterns: ['<rootDir>/node_modules/(?!@mapbox|lodash-es|_@mapbox|_lodash-es)'],
+  transform: {
+    '^.+\\.[tj]s$': 'ts-jest',
+  },
   globals: {
     'ts-jest': {
-      diagnostics: false,
+      isolatedModules: true,
+      tsConfig: {
+        allowJs: true,
+        target: 'ES2019',
+      },
     },
   },
+  // globals: {
+  //   'ts-jest': {
+  //     diagnostics: false,
+  //   },
+  // },
 };
