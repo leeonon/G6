@@ -1,10 +1,7 @@
-import { Event } from '@antv/g-canvas';
 import '../../../src';
 import { Graph } from '../../../src';
-// import { numberEqual } from '../layout/util';
-function numberEqual(a: number, b: number, gap = 0.001) {
-  return Math.abs(a - b) <= gap;
-}
+import { G6GraphEvent } from '@antv/g6-core';
+import { numberEqual } from '../layout/util';
 
 const data = {
   nodes: [
@@ -27,8 +24,10 @@ const div = document.createElement('div');
 div.id = 'zoom-spec';
 document.body.appendChild(div);
 
-class G6Event extends Event {
+class G6Event extends G6GraphEvent {
   wheelDelta: number;
+  preventDefault = () => { }
+  defaultPrevented: boolean = false;
 }
 function createWheelEvent(canvas, delta, x, y) {
   const bbox = canvas.getBoundingClientRect();
@@ -62,18 +61,11 @@ describe('zoom-canvas', () => {
     graph.render();
     const e = createWheelEvent(graph.get('canvas').get('el'), 100, 100, 100);
     graph.emit('wheel', e);
-    let matrix = graph.get('group').getMatrix();
-    expect(approximateEqual(matrix[0], 1.1)).toBe(true);
-    expect(approximateEqual(matrix[4], 1.1)).toBe(true);
-    expect(approximateEqual(matrix[6], -11.1)).toBe(true);
-    expect(approximateEqual(matrix[7], -11.1)).toBe(true);
+    const ratio = 1.1111111111111112;
+    expect(graph.getZoom()).toBe(ratio)
     graph.emit('wheel', e);
-    matrix = graph.get('group').getMatrix();
-    expect(approximateEqual(matrix[0], 1.23)).toBe(true);
-    expect(approximateEqual(matrix[4], 1.23)).toBe(true);
-    expect(approximateEqual(matrix[6], -23.45)).toBe(true);
-    expect(approximateEqual(matrix[7], -23.45)).toBe(true);
-    // graph.destroy();
+    expect(graph.getZoom()).toBe(ratio * ratio)
+    graph.destroy();
   });
   it('event not prevented', () => {
     const graph = new Graph({
@@ -116,7 +108,9 @@ describe('zoom-canvas', () => {
     const e = createWheelEvent(graph.get('canvas').get('el'), 100, 100, 100);
     graph.emit('wheel', e);
     let matrix = graph.get('group').getMatrix();
-    expect(matrix).toBe(null);
+    expect(matrix[0]).toBe(1);
+    expect(matrix[1]).toBe(0);
+    expect(matrix[4]).toBe(1);
     graph.destroy();
   });
   it('max zoom & min zoom', () => {
@@ -137,20 +131,12 @@ describe('zoom-canvas', () => {
     graph.zoom(4.8);
     let e = createWheelEvent(graph.get('canvas').get('el'), 100, 100, 100);
     graph.emit('wheel', e);
-    let matrix = graph.get('group').getMatrix();
-    // maxZoom: 5
-    expect(matrix[0]).toEqual(5);
-    expect(matrix[4]).toEqual(5);
-    e = createWheelEvent(graph.get('canvas').get('el'), -100, 100, 100);
+    expect(graph.getZoom()).toBe(5);
+    graph.zoom(0.1);
+    e = createWheelEvent(graph.get('canvas').get('el'), 100, 100, 100);
     graph.emit('wheel', e);
-    matrix = graph.get('group').getMatrix();
-    expect(matrix[0]).toEqual(4.5);
-    expect(matrix[4]).toEqual(4.5);
-    graph.emit('wheel', e);
-    matrix = graph.get('group').getMatrix();
-    // minZoom: 4.2
-    expect(matrix[0]).toEqual(4.2);
-    expect(matrix[4]).toEqual(4.2);
+    expect(graph.getZoom()).toBe(4.2);
+    graph.destroy();
   });
   it('unbind zoom', () => {
     const graph = new Graph({
@@ -164,18 +150,10 @@ describe('zoom-canvas', () => {
     });
     const e = createWheelEvent(graph.get('canvas').get('el'), -100, 100, 100);
     graph.emit('wheel', e);
-    let matrix = graph.get('group').getMatrix();
-    expect(approximateEqual(matrix[0], 0.9)).toBe(true);
-    expect(approximateEqual(matrix[4], 0.9)).toBe(true);
-    expect(matrix[6]).toEqual(10);
-    expect(matrix[7]).toEqual(10);
+    expect(graph.getZoom()).toBe(0.9);
     graph.setMode('custom');
     graph.emit('wheel', e);
-    matrix = graph.get('group').getMatrix();
-    expect(approximateEqual(matrix[0], 0.9)).toBe(true);
-    expect(approximateEqual(matrix[4], 0.9)).toBe(true);
-    expect(matrix[6]).toEqual(10);
-    expect(matrix[7]).toEqual(10);
+    expect(graph.getZoom()).toBe(0.9);
   });
 
   it('zoom with optimize', (done) => {
@@ -219,14 +197,12 @@ describe('zoom-canvas', () => {
 
     graph.data(data);
     graph.render();
+    debugger
 
     let e = createWheelEvent(graph.get('canvas').get('el'), 100, 100, 100);
     graph.emit('wheel', e);
-    let matrix = graph.get('group').getMatrix();
-    expect(approximateEqual(matrix[0], 1.1)).toBe(true);
-    expect(approximateEqual(matrix[4], 1.1)).toBe(true);
-    expect(approximateEqual(matrix[6], -11.1)).toBe(true);
-    expect(approximateEqual(matrix[7], -11.1)).toBe(true);
+    const ratio = 1.1111111111111112;
+    expect(graph.getZoom()).toBe(ratio);
 
     // 默认 zoom=1，会显示所有元素
     setTimeout(() => {

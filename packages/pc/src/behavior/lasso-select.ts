@@ -112,7 +112,8 @@ export default {
     this.points.push(this.originPoint);
     this.getSelectedItems();
 
-    this.lasso.remove(true);
+    const group = this.graph.get('delegateGroup');
+    group.removeChild(this.lasso, true);
     this.lasso = null;
     this.points = [];
     this.dragging = false;
@@ -160,9 +161,14 @@ export default {
   },
   getSelectedItems() {
     const { graph, shouldUpdate } = this;
+    // TODO: 判断有问题
+    // const lassoContour = this.points.map((point) => [
+    //   graph.getCanvasByPoint(point.x, point.y).x,
+    //   graph.getCanvasByPoint(point.x, point.y).y,
+    // ]);
     const lassoContour = this.points.map((point) => [
-      graph.getCanvasByPoint(point.x, point.y).x,
-      graph.getCanvasByPoint(point.x, point.y).y,
+      point.x,
+      point.y,
     ]);
     const state = this.selectedState;
     const selectedNodes = [];

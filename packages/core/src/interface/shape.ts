@@ -1,4 +1,5 @@
-import { IGroup, IShape } from '@antv/g-base';
+// import { IGroup, IShape } from '@antv/g-base';
+import { IGroup, IShape } from '@antv/g6-g-adapter';
 import { IPoint, Item, LabelStyle, ModelConfig, UpdateType } from '../types';
 
 export type ILabelConfig = Partial<{

@@ -1,4 +1,5 @@
-import { IGroup } from '@antv/g-base';
+// import { IGroup } from '@antv/g-base';
+import { IGroup, IElement } from '@antv/g6-g-adapter';
 import { each, isPlainObject, isString, isBoolean, mix, deepMix, clone } from '@antv/util';
 import { IItemBase, IItemBaseConfig } from '../interface/item';
 import Shape from '../element/shape';
@@ -389,10 +390,10 @@ export default class ItemBase implements IItemBase {
 
   public getShapeStyleByName(name?: string): ShapeStyle {
     const group: IGroup = this.get('group');
-    let currentShape: IShapeBase;
+    let currentShape: IElement;
 
     if (name) {
-      currentShape = group['shapeMap'][name]; // group.find((element) => element.get('name') === name) as IShapeBase;
+      currentShape = group.shapeMap?.[name]; // group.find((element) => element.get('name') === name) as IShapeBase;
     } else {
       currentShape = this.getKeyShape();
     }
@@ -629,7 +630,8 @@ export default class ItemBase implements IItemBase {
       const oriVisible = model.visible;
       const cfgVisible = cfg.visible;
       if (oriVisible !== cfgVisible && cfgVisible !== undefined) this.changeVisibility(cfgVisible);
-      const originPosition: IPoint = { x: model.x!, y: model.y! };
+      const originMatrix = this.getContainer().getMatrix() || [1, 0, 0, 0, 1, 0, 0, 0, 1];
+      const originPosition: IPoint = { x: originMatrix[6] || model.x!, y: originMatrix[7] || model.y! };
       cfg.x = isNaN(+cfg.x) ? model.x : (+cfg.x);
       cfg.y = isNaN(+cfg.y) ? model.y : (+cfg.y);
 
@@ -807,7 +809,12 @@ export default class ItemBase implements IItemBase {
       }
       group['shapeMap'] = {};
       this.clearCache();
-      group.remove();
+      const parentGroup = group.getParent();
+      if (parentGroup) {
+        parentGroup.removeChild(group, true);
+      } else {
+        group.remove(true);
+      }
       (this._cfg as IItemBaseConfig | null) = null;
       this.destroyed = true;
     }

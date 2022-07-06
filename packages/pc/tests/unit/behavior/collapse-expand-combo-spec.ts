@@ -83,13 +83,13 @@ const data = {
 };
 
 describe('collapse-expand-combo', () => {
-  it('default collapse expand combo', (done) => {
+  it.only('default collapse expand combo', (done) => {
     const graph = new G6.Graph({
       container: 'container',
       width: 1000,
       height: 800,
       modes: {
-        default: ['collapse-expand-combo'],
+        default: ['collapse-expand-combo', 'drag-combo', 'drag-node'],
       },
       defaultCombo: {
         type: 'circle',
@@ -169,7 +169,7 @@ describe('collapse-expand-combo', () => {
       comboA.getChildren().combos.forEach((combo) => {
         expect(combo.isVisible()).toBe(false);
       });
-      graph.destroy();
+      // graph.destroy();
       done();
     }, 250);
   });

@@ -517,7 +517,7 @@ describe('shape edge test', () => {
       const path = edge.get('group').get('children')[0];
       let bbox = path.getBBox();
       // console.log(bbox);
-      expect(bbox.minX).toEqual(90.60845891791658);
+      expect(bbox.minX).toEqual(92.48424530029297);
     });
 
     it('clear', () => {

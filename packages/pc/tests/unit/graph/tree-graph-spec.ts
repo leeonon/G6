@@ -121,13 +121,13 @@ describe('tree graph without animate', () => {
       type: 'rect',
       children: [{ x: 150, y: 150, id: 'SubTreeNode3.1.1' }],
     };
-    graph.on('afteraddchild', function(e) {
+    graph.on('afteraddchild', function (e) {
       expect(
         e.item.getModel().id === 'SubTreeNode3.1' || e.item.getModel().id === 'SubTreeNode3.1.1',
       ).toBe(true);
       expect(
         e.item.get('parent').getModel().id === 'SubTreeNode3' ||
-          e.item.get('parent').getModel().id === 'SubTreeNode3.1',
+        e.item.get('parent').getModel().id === 'SubTreeNode3.1',
       ).toBe(true);
       expect(
         e.parent.getModel().id === 'SubTreeNode3' || e.parent.getModel().id === 'SubTreeNode3.1',
@@ -147,7 +147,7 @@ describe('tree graph without animate', () => {
     expect(graph.findById('SubTreeNode3.1:SubTreeNode3.1.1')).not.toBe(undefined);
   });
 
-  it('remove child & remove nonexistent child', () => {
+  it('remove child & remove nonexistent child', (done) => {
     graph.removeChild('SubTreeNode3.1');
 
     const parent = graph.findById('SubTreeNode3');
@@ -161,6 +161,7 @@ describe('tree graph without animate', () => {
 
     const none = graph.removeChild('none-child');
     expect(none).toBe(undefined);
+    done();
   });
 
   it('collapse & expand with layout', () => {
@@ -185,7 +186,7 @@ describe('tree graph without animate', () => {
       collapsed = false;
       graph.emit('node:click', { item: parent });
     }, 600);
-    // graph.destroy();
+    graph.destroy();
   });
 
   it('collapse & expand with layout with parameter trigger=dblclick', () => {
@@ -260,11 +261,15 @@ describe('tree graph without animate', () => {
 });
 
 describe('update child', () => {
+  const div2 = document.createElement('div');
+  div2.id = 'tree2-spec';
+  document.body.appendChild(div2);
   const graph = new TreeGraph({
-    container: div,
+    container: div2,
     width: 500,
     height: 500,
     animate: false,
+    fitView: true,
     modes: {
       default: ['drag-canvas', 'drag-node'],
     },
@@ -359,11 +364,15 @@ describe('update child', () => {
 });
 
 describe('updateLayout, layout', () => {
+  const div3 = document.createElement('div');
+  div3.id = 'tree3-spec';
+  document.body.appendChild(div3);
   const graph = new TreeGraph({
-    container: div,
+    container: div3,
     width: 500,
     height: 500,
     animate: false,
+    // fitView: true,
     modes: {
       default: ['drag-canvas', 'drag-node'],
     },
@@ -447,8 +456,11 @@ describe('updateLayout, layout', () => {
 });
 
 describe('tree graph with animate', () => {
+  const div4 = document.createElement('div');
+  div4.id = 'tree4-spec';
+  document.body.appendChild(div4);
   const graph3 = new TreeGraph({
-    container: div,
+    container: div4,
     width: 500,
     height: 500,
     animate: true,

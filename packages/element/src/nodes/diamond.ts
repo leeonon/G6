@@ -1,4 +1,4 @@
-import { IGroup, IShape } from '@antv/g-base';
+import { IGroup, IShape } from '@antv/g6-g-adapter';
 import { registerNode, Item, NodeConfig, ShapeStyle, BaseGlobal as Global, UpdateType } from '@antv/g6-core';
 import { mix } from '@antv/util';
 
@@ -62,7 +62,7 @@ registerNode(
       });
       group['shapeMap'][`${this.type}-keyShape`] = keyShape;
 
-      const { width: w, height: h, show, text } = icon;
+      const { width: w = 20, height: h = 20, show, text } = icon;
       if (show) {
         if (text) {
           group['shapeMap'][`${this.type}-icon`] = group.addShape('text', {

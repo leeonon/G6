@@ -25,9 +25,10 @@ import {
   pointLineSquareDist,
   isPointsOverlap,
   pointRectSquareDist,
+  isUnitMatrix,
 } from '../../../src/util/math';
 import Graph from '../implement-graph';
-import { Canvas } from '@antv/g-canvas';
+import { Canvas } from '@antv/g6-g-adapter';
 
 const equal = (a: number, b: number): boolean => Math.abs(a - b) < 0.0001;
 
@@ -333,7 +334,7 @@ describe('math util test', () => {
     expect(result[1]).toEqual([1, 0, 1]);
     expect(result[2]).toEqual([1, 2, 0]);
   });
-  it('scale and rotate', () => {
+  it.only('scale and rotate', () => {
     const div = document.createElement('div');
     div.id = 'edge-shape';
     document.body.appendChild(div);
@@ -343,6 +344,15 @@ describe('math util test', () => {
       height: 600,
     });
     const group = canvas.addGroup();
+    group.addShape('rect', {
+      attrs: {
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 30,
+        fill: '#f00'
+      }
+    })
     scale(group, 0.5);
     const matrix = group.getMatrix();
     expect(matrix[0]).toBe(0.5);
@@ -351,20 +361,20 @@ describe('math util test', () => {
     expect(matrix2[0]).toBe(0.25);
     rotate(group, 1.3);
     const matrix3 = group.getMatrix();
-    expect(matrix3[0]).toBe(0.06687470715614684);
-    expect(matrix3[1]).toBe(0.24088954635429824);
-    expect(matrix3[3]).toBe(-0.24088954635429824);
+    expect(matrix3[0]).toBe(0.06687472015619278);
+    expect(matrix3[1]).toBe(0.2408895492553711);
+    expect(matrix3[3]).toBe(-0.2408895492553711);
 
     // rotate a group with null matrix
     const group2 = canvas.addGroup();
     const oriGroup2Matrix = group2.getMatrix();
-    expect(oriGroup2Matrix).toBe(null);
+    expect(isUnitMatrix(oriGroup2Matrix)).toBe(true);
     rotate(group2, 3);
     const group2Matrix = group2.getMatrix();
-    expect(group2Matrix[0]).toBe(-0.9899924966004454);
-    expect(group2Matrix[1]).toBe(0.1411200080598672);
-    expect(group2Matrix[3]).toBe(-0.1411200080598672);
-    expect(group2Matrix[4]).toBe(-0.9899924966004454);
+    expect(group2Matrix[0]).toBe(-0.9899924993515015);
+    expect(group2Matrix[1]).toBe(0.14112000167369843);
+    expect(group2Matrix[3]).toBe(-0.14112000167369843);
+    expect(group2Matrix[4]).toBe(-0.9899924993515015);
   });
 
   it('getLineIntersect', () => {
@@ -380,7 +390,7 @@ describe('math util test', () => {
 
   it('translate', () => {
     const group = graph.getGroup();
-    expect(group.getMatrix()).toEqual(null);
+    expect(isUnitMatrix(group.getMatrix())).toEqual(true);
     translate(group, { x: 10, y: 10 });
     const matrix = group.getMatrix();
     expect(matrix[0]).toEqual(1);
@@ -393,8 +403,8 @@ describe('math util test', () => {
     move(group, { x: 100, y: 100 });
     const matrix = group.getMatrix();
     expect(matrix[0]).toEqual(1);
-    expect(matrix[6]).toEqual(110.5);
-    expect(matrix[7]).toEqual(110.5);
+    expect(matrix[6]).toEqual(110);
+    expect(matrix[7]).toEqual(110);
   });
 
   it('isPointInPolygon', () => {
@@ -476,30 +486,36 @@ describe('math util test', () => {
   });
 
   it('getBBoxBoundLine', () => {
+    graph.updateItem(graph.getNodes()[0], {
+      style: {
+        fill: '#f00'
+      }
+    });
     const topLine = getBBoxBoundLine(graph.getNodes()[0].getBBox(), 'top');
     const leftLine = getBBoxBoundLine(graph.getNodes()[0].getBBox(), 'left');
     const bottomLine = getBBoxBoundLine(graph.getNodes()[0].getBBox(), 'bottom');
     const rightLine = getBBoxBoundLine(graph.getNodes()[0].getBBox(), 'right');
-    expect(topLine[0]).toEqual(-10.5);
-    expect(topLine[2]).toEqual(10.5);
-    expect(leftLine[0]).toEqual(-10.5);
-    expect(leftLine[2]).toEqual(-10.5);
-    expect(bottomLine[0]).toEqual(-10.5);
-    expect(bottomLine[2]).toEqual(10.5);
-    expect(rightLine[0]).toEqual(10.5);
-    expect(rightLine[2]).toEqual(10.5);
+    expect(topLine[0]).toEqual(-10);
+    expect(topLine[2]).toEqual(10);
+    expect(leftLine[0]).toEqual(-10);
+    expect(leftLine[2]).toEqual(-10);
+    expect(bottomLine[0]).toEqual(-10);
+    expect(bottomLine[2]).toEqual(10);
+    expect(rightLine[0]).toEqual(10);
+    expect(rightLine[2]).toEqual(10);
   });
 
   it('itemIntersectByLine', () => {
+    // node 目前位置不考虑根 group 平移时为 0,0 . 考虑则为 110,110
     const node = graph.getNodes()[0];
     const line: any = { x1: 0, y1: 0, x2: 100, y2: 100 };
     const result = itemIntersectByLine(node, line);
     expect(result[0][0]).toEqual(null);
     expect(result[0][1]).toEqual(null);
-    expect(result[0][2].x).toEqual(10.5);
-    expect(result[0][2].y).toEqual(10.5);
-    expect(result[0][3].x).toEqual(10.5);
-    expect(result[0][3].y).toEqual(10.5);
+    expect(result[0][2].x).toEqual(10);
+    expect(result[0][2].y).toEqual(10);
+    expect(result[0][3].x).toEqual(10);
+    expect(result[0][3].y).toEqual(10);
     expect(result[1]).toEqual(2);
   });
 
@@ -510,7 +526,7 @@ describe('math util test', () => {
     expect(res).toBe(-1);
     const line2: any = { x1: 0, y1: 0, x2: 100, y2: 100 };
     const res2 = fractionToLine(node, line2);
-    expect(res2).toBe(0.395);
+    expect(res2).toBe(0.4);
   });
 
   it('getPointsCenter', () => {

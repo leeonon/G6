@@ -75,27 +75,25 @@ describe('vertical horizontal cubic edge', () => {
     const edge = graph.getEdges()[0];
     const keyShape = edge.getKeyShape();
     const path = keyShape.attr('path');
-    console.log(path);
-    expect(path[0][1]).toBe(105.5);
+    expect(path[0][1]).toBe(105);
     expect(path[0][2]).toBe(300);
     expect(path[1][1]).toBe(190);
     expect(path[1][2]).toBe(300);
     expect(path[1][3]).toBe(110);
     expect(path[1][4]).toBe(200);
-    expect(path[1][5]).toBe(194.5);
+    expect(path[1][5]).toBe(195);
     expect(path[1][6]).toBe(200);
 
     const edge2 = graph.getEdges()[1];
     const keyShape2 = edge2.getKeyShape();
     const path2 = keyShape2.attr('path');
-    console.log(path2);
-    expect(path2[0][1]).toBe(105.5);
+    expect(path2[0][1]).toBe(105);
     expect(path2[0][2]).toBe(300);
     expect(path2[1][1]).toBe(130);
     expect(path2[1][2]).toBe(300);
     expect(path2[1][3]).toBe(-30);
     expect(path2[1][4]).toBe(200);
-    expect(path2[1][5]).toBe(-5.5);
+    expect(path2[1][5]).toBe(-5);
     expect(path2[1][6]).toBe(200);
 
     graph.destroy();
@@ -169,26 +167,25 @@ describe('vertical horizontal cubic edge', () => {
     const edge = graph.getEdges()[0];
     const keyShape = edge.getKeyShape();
     const path = keyShape.attr('path');
-    expect(path[0][1]).toBe(105.5);
+    expect(path[0][1]).toBe(105);
     expect(path[0][2]).toBe(300);
     expect(path[1][1]).toBe(140);
     expect(path[1][2]).toBe(300);
     expect(path[1][3]).toBe(60);
     expect(path[1][4]).toBe(200);
-    expect(path[1][5]).toBe(94.5);
+    expect(path[1][5]).toBe(95);
     expect(path[1][6]).toBe(200);
 
     const edge2 = graph.getEdges()[1];
     const keyShape2 = edge2.getKeyShape();
     const path2 = keyShape2.attr('path');
-    console.log(path2);
-    expect(path2[0][1]).toBe(105.5);
+    expect(path2[0][1]).toBe(105);
     expect(path2[0][2]).toBe(300);
     expect(path2[1][1]).toBe(170);
     expect(path2[1][2]).toBe(300);
     expect(path2[1][3]).toBe(10);
     expect(path2[1][4]).toBe(200);
-    expect(path2[1][5]).toBe(74.5);
+    expect(path2[1][5]).toBe(75);
     expect(path2[1][6]).toBe(200);
 
     graph.destroy();

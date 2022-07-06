@@ -146,12 +146,13 @@ describe('image test', () => {
       const nodeShape = node.get('group').get('children')[0];
       expect(nodeShape.get('clipShape').attr('r')).toEqual(10);
 
-      // node.update({
-      //   clipCfg: {
-      //     r: 50,
-      //     x: -100
-      //   }
-      // })
+      // TODO：G6 旧版已有问题，更新 clipCfg 未生效
+      node.update({
+        clipCfg: {
+          r: 50,
+          x: -100
+        }
+      })
       graph.destroy();
       expect(graph.destroyed).toBe(true);
     });
@@ -191,7 +192,7 @@ describe('image test', () => {
       const nodeShape = node.get('group').get('children')[0];
       expect(nodeShape.get('clipShape').attr('width')).toEqual(100);
       expect(nodeShape.get('clipShape').attr('height')).toEqual(50);
-      expect(nodeShape.get('clipShape').attr('x')).toEqual(-100);
+      expect(nodeShape.get('clipShape').attr('x')).toEqual(-25);
 
       // node.update({
       //   clipCfg: {
@@ -236,7 +237,7 @@ describe('image test', () => {
       const nodeShape = node.get('group').get('children')[0];
       expect(nodeShape.get('clipShape').attr('rx')).toEqual(100);
       expect(nodeShape.get('clipShape').attr('ry')).toEqual(50);
-      expect(nodeShape.get('clipShape').attr('x')).toEqual(-50);
+      expect(nodeShape.get('clipShape').attr('x')).toEqual(25);
 
       // node.update({
       //   clipCfg: {
@@ -261,6 +262,7 @@ describe('image test', () => {
           {
             id: 'node',
             label: 'image',
+            img: 'https://gw.alipayobjects.com/mdn/rms_f8c6a0/afts/img/A*wwBqR4StRboAAAAAAAAAAAAAARQnAQ',
             x: 200,
             y: 100,
             clipCfg: {

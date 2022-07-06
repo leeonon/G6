@@ -42,7 +42,7 @@ export default class SnapLine extends Base {
     };
   }
 
-  public init() {}
+  public init() { }
 
   // class-methods-use-this
   public getEvents() {
@@ -340,7 +340,12 @@ export default class SnapLine extends Base {
   clearAlignLine() {
     const { alignLines } = this._cfgs;
     each(alignLines, line => {
-      line.remove();
+      const group = line.get('parent');
+      if (group) {
+        group.removeChild(line, true);
+      } else {
+        line.remove(true);
+      }
     });
     alignLines.length = 0;
   }

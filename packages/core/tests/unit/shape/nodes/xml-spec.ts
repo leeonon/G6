@@ -25,18 +25,16 @@ const testXMLNode = (cfg) => `
   <rect style={{
     width: 100, height: 20, fill: '#1890ff', stroke: '#1890ff', radius: [6, 6, 0, 0]
 }} keyshape="true" name="test">
-  <text style={{ marginTop: 2, marginLeft: 50, textAlign: 'center', fontWeight: 'bold', fill: '#fff' }} name="title">${
-    cfg.id
+  <text style={{ marginTop: 2, marginLeft: 50, textAlign: 'center', fontWeight: 'bold', fill: '#fff' }} name="title">${cfg.id
   }</text>
   <text style={{ marginTop: 2, marginTop: 10, textAlign: 'center', fontWeight: 'bold', fill: '#fff', next: inline }} visible="false">{{id}}</text>
-  ${
-    cfg.name
-      ? `<polygon style={{
+  ${cfg.name
+    ? `<polygon style={{
     points: [[10, 10], [15, 20], [20, 40], [30, 90]],
     fill: '#F6BD16',
     stroke: 'green',
   }}/>`
-      : ''
+    : ''
   }
 </rect>
 <group>
@@ -63,7 +61,7 @@ describe('xml node test', () => {
         nodeStateStyles: {
           test: {
             title: {
-              fill: '#eee',
+              fill: '#f00',
             },
           },
         },
@@ -92,7 +90,7 @@ describe('xml node test', () => {
       graph.setItemState(node, 'test', true);
       const afterNode = graph.getNodes()[0];
       const afterGroup = afterNode.get('group');
-      expect(afterGroup.get('children')[1].attr('fill')).toBe('#eee');
+      expect(afterGroup.get('children')[1].attr('fill')).toBe('#f00');
       graph.updateItem('node', { name: 1 });
       expect(group.getCount()).toEqual(4);
 
@@ -110,8 +108,8 @@ describe('xml node test', () => {
       const obj = parseXML(xml, {});
       expect(obj.type).toBe('group');
       expect(obj.children[0].type).toBe('rect');
-      expect(obj.children[0].attrs.stroke).toBe('#1890ff');
-      expect(obj.children[0].children[0].attrs.text).toBe('node');
+      expect(obj.children[0].style.stroke).toBe('#1890ff');
+      expect(obj.children[0].children[0].style.text).toBe('node');
     });
 
     it('object generate target', () => {
@@ -179,38 +177,37 @@ describe('xml node test', () => {
 
   describe('node create from xml', () => {
     const descs = (cfg) => `
-    <rect style={{
-      width: 100, height: 20, fill: '#1890ff', stroke: '#1890ff', radius: [6, 6, 0, 0]
-    }} keyshape="true" name="test">
-      <text style={{ marginTop: 2, marginLeft: 50, textAlign: 'center', fontWeight: 'bold', fill: '#fff' }} name="title">${
-        cfg.label || cfg.id
+      <rect style={{
+        width: 100, height: 20, fill: '#1890ff', stroke: '#1890ff', radius: [6, 6, 0, 0]
+      }} keyshape="true" name="test">
+        <text style={{ marginTop: 2, marginLeft: 50, textAlign: 'center', fontWeight: 'bold', fill: '#fff' }} name="title">${cfg.label || cfg.id
       }</text>
-      <polygon style={{
-        points:[[ 30, 30 ], [ 40, 20 ], [ 30, 50 ], [ 60, 100 ]],
-            fill: 'red'
-      }} />
-      <path style={{
-            startArrow: {
-              path: 'M 10,0 L -10,-10 L -10,10 Z',
-              d: 10
-            },
-            endArrow: {
-              path: 'M 10,0 L -10,-10 L -10,10 Z',
-              d: 10
-            },
-            path: [
-               [ 'M', 100, 100 ],
-               [ 'L', 200, 200 ]
-            ],
-            stroke: '#000',
-            lineWidth: 8
-          }} />
-          <polyline style={{ points: [[ 30, 30 ], [ 40, 20 ], [ 60, 100 ]] }} />
-          <image style={{ img: 'https://gw.alipayobjects.com/zos/antfincdn/FLrTNDvlna/antv.png', width: 48, height: 48, marginTop: 100 }} />
-          <text style={{ fill: red, next: inline }}>1111</text>
-          <text style={{ fill: yellow, marginLeft: 4, fontWeight: bold }}>2222</text>            
-    </rect>
-  `;
+        <polygon style={{
+          points:[[ 30, 30 ], [ 40, 20 ], [ 30, 50 ], [ 60, 100 ]],
+              fill: 'red'
+        }} />
+        <path style={{
+              startArrow: {
+                path: 'M 10,0 L -10,-10 L -10,10 Z',
+                d: 10
+              },
+              endArrow: {
+                path: 'M 10,0 L -10,-10 L -10,10 Z',
+                d: 10
+              },
+              path: [
+                 [ 'M', 100, 100 ],
+                 [ 'L', 200, 200 ]
+              ],
+              stroke: '#000',
+              lineWidth: 8
+            }} />
+            <polyline style={{ points: [[ 30, 30 ], [ 40, 20 ], [ 60, 100 ]] }} />
+  https://gw.alipayobjects.com/zos/antfincdn/FLrTNDvlna/antv.png          <image style={{ img: '', width: 48, height: 48, marginTop: 100 }} />
+            <text style={{ fill: red, next: inline }}>1111</text>
+            <text style={{ fill: yellow, marginLeft: 4, fontWeight: bold }}>2222</text>            
+      </rect>
+    `;
     it('generate object', () => {
       const result = createNodeFromXML(descs);
       expect(result.draw).not.toBeUndefined();
@@ -222,33 +219,32 @@ describe('xml node test', () => {
   describe('xml node state', () => {
     G6.registerNode('xml-node', (cfg) => {
       return `
-        <group>
-          <circle keyshape='true' style={{
-            x: 0,
-            y: 0,
-            r: ${cfg.size || 6},
-            stroke: ${cfg.style.stroke},
-            fill: ${cfg.style.fill}
-          }}>
-            <polygon style={{
-              points: [[10, 10], [15, 20], [20, 40], [30, 90]],
-              fill: '#F6BD16',
-              stroke: 'green'
-            }}></polygon>
-            <circle style={{
-              x: 10, 
-              y: 20,
-              r: 15,
-              stroke: 'yellow',
-              fill: '#000'
-            }} name='icon-circle' draggable='true'>
+          <group>
+            <circle keyshape='true' style={{
+              x: 0,
+              y: 0,
+              r: ${cfg.size || 6},
+              stroke: ${cfg.style.stroke},
+              fill: ${cfg.style.fill}
+            }}>
+              <polygon style={{
+                points: [[10, 10], [15, 20], [20, 40], [30, 90]],
+                fill: '#F6BD16',
+                stroke: 'green'
+              }}></polygon>
+              <circle style={{
+                x: 10, 
+                y: 20,
+                r: 15,
+                stroke: 'yellow',
+                fill: '#000'
+              }} name='icon-circle' draggable='true'>
+              </circle>
             </circle>
-          </circle>
-          <text style={{ marginTop: -140, textAlign: 'center', fontWeight: 'bold', fill: 'green' }}>${
-            cfg.label || cfg.id
-          }</text>
-        </group>
-      `;
+            <text style={{ marginTop: -140, textAlign: 'center', fontWeight: 'bold', fill: 'green' }}>${cfg.label || cfg.id
+        }</text>
+          </group>
+        `;
     });
     const data = {
       nodes: [
@@ -298,6 +294,8 @@ describe('xml node test', () => {
       graph.on('icon-circle:mouseleave', (evt) => {
         graph.setItemState(evt.item, 'hover', false);
       });
+
+      graph.emit('icon-circle:mouseenter', { item: graph.getNodes()[0] })
     });
   });
 });

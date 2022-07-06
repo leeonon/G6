@@ -1,4 +1,4 @@
-import { isString, isNumber, isNil, isArray } from '@antv/util';
+import { isString, isNumber, isArray } from '@antv/util';
 import { G6GraphEvent } from '../interface/behavior';
 import { IG6GraphEvent, Padding, Matrix, Item } from '../types';
 

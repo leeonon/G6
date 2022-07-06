@@ -1,5 +1,6 @@
 import '../../../src';
 import { Graph } from '../../../src';
+import { numberEqual } from '../layout/util';
 
 const div = document.createElement('div');
 div.id = 'pan-spec';
@@ -28,7 +29,7 @@ const data = {
 };
 
 describe('drag-canvas', () => {
-  it('drag canvas', () => {
+  it.only('drag canvas', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -38,6 +39,7 @@ describe('drag-canvas', () => {
           {
             type: 'drag-canvas',
           },
+          'zoom-canvas'
         ],
       },
     });
@@ -50,20 +52,20 @@ describe('drag-canvas', () => {
     graph.on('canvas:dragend', () => {
       start = false;
     });
-    graph.paint();
+    const oriCenter = graph.getPointByCanvas(250, 250);
     graph.emit('dragstart', { clientX: 150, clientY: 150, target: graph.get('canvas') });
     graph.emit('drag', { clientX: 200, clientY: 200, target: graph.get('canvas') });
     expect(start).toBe(true);
     graph.emit('drag', { clientX: 250, clientY: 250, target: graph.get('canvas') });
     expect(start).toBe(true);
-    const matrix = graph.get('group').getMatrix();
-    expect(matrix[6]).toEqual(100);
-    expect(matrix[7]).toEqual(100);
+    const afterCenter = graph.getPointByCanvas(250, 250);
+    expect(numberEqual(afterCenter.x - oriCenter.x, -100)).toBe(true);
+    expect(numberEqual(afterCenter.y - oriCenter.y, -100)).toBe(true);
     graph.emit('dragend', {});
     expect(start).toBe(false);
-    graph.destroy();
+    // graph.destroy();
   });
-  it('drag canvas with allowDragOnItem', () => {
+  it.only('drag canvas with allowDragOnItem', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -87,19 +89,20 @@ describe('drag-canvas', () => {
       start = false;
     });
     graph.paint();
+    const oriCenter = graph.getPointByCanvas(250, 250);
     graph.emit('dragstart', { clientX: 150, clientY: 150, target: graph.getNodes()[0] });
     graph.emit('drag', { clientX: 200, clientY: 200, target: graph.getNodes()[0] });
     expect(start).toBe(true);
     graph.emit('drag', { clientX: 250, clientY: 250, target: graph.getNodes()[0] });
     expect(start).toBe(true);
-    const matrix = graph.get('group').getMatrix();
-    expect(matrix[6]).toEqual(100);
-    expect(matrix[7]).toEqual(100);
+    const afterCenter = graph.getPointByCanvas(250, 250);
+    expect(numberEqual(afterCenter.x - oriCenter.x, -100)).toBe(true);
+    expect(numberEqual(afterCenter.y - oriCenter.y, -100)).toBe(true);
     graph.emit('dragend', {});
     expect(start).toBe(false);
     graph.destroy();
   });
-  it('prevent default drag behavior', () => {
+  it.only('prevent default drag behavior', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -108,9 +111,7 @@ describe('drag-canvas', () => {
         default: [
           {
             type: 'drag-canvas',
-            shouldUpdate: () => {
-              return false;
-            },
+            shouldUpdate: () => false
           },
         ],
       },
@@ -131,12 +132,14 @@ describe('drag-canvas', () => {
     graph.emit('drag', { clientX: 250, clientY: 250, target: graph.get('canvas') });
     expect(start).toBe(true);
     const matrix = graph.get('group').getMatrix();
-    expect(matrix).toEqual(null);
+    expect(matrix[0]).toEqual(1);
+    expect(matrix[1]).toEqual(0);
+    expect(matrix[4]).toEqual(1);
     graph.emit('canvas:dragend', {});
     expect(start).toBe(false);
     graph.destroy();
   });
-  it('unbind event', () => {
+  it.only('unbind event', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -169,7 +172,7 @@ describe('drag-canvas', () => {
     expect(triggered).toBe(false);
     graph.destroy();
   });
-  it('drag with x direction restrict', () => {
+  it.only('drag with x direction restrict', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -193,20 +196,20 @@ describe('drag-canvas', () => {
     graph.on('canvas:dragend', () => {
       start = false;
     });
-    graph.paint();
+    const oriCenter = graph.getPointByCanvas(250, 250);
     graph.emit('dragstart', { clientX: 150, clientY: 150, target: graph.get('canvas') });
     graph.emit('drag', { clientX: 200, clientY: 200, target: graph.get('canvas') });
     expect(start).toBe(true);
     graph.emit('drag', { clientX: 250, clientY: 250, target: graph.get('canvas') });
     expect(start).toBe(true);
-    const matrix = graph.get('group').getMatrix();
-    expect(matrix[6]).toEqual(100);
-    expect(matrix[7]).toEqual(0);
+    const afterCenter = graph.getPointByCanvas(250, 250);
+    expect(afterCenter.x - oriCenter.x).toBe(-100);
+    expect(afterCenter.y - oriCenter.y).toBe(0);
     graph.emit('dragend', { clientX: 200, clientY: 200 });
     expect(start).toBe(false);
     graph.destroy();
   });
-  it('drag with y direction restrict', () => {
+  it.only('drag with y direction restrict', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -220,18 +223,17 @@ describe('drag-canvas', () => {
         ],
       },
     });
-    let start = false;
+    const oriCenter = graph.getPointByCanvas(250, 250);
     graph.addItem('node', { x: 100, y: 100, color: '#666', type: 'rect', id: 'test' });
-    graph.paint();
     graph.emit('dragstart', { clientX: 150, clientY: 150, target: graph.get('canvas') });
     graph.emit('drag', { clientX: 250, clientY: 250, target: graph.get('canvas') });
-    const matrix = graph.get('group').getMatrix();
-    expect(matrix[6]).toEqual(0);
-    expect(matrix[7]).toEqual(100);
+    const afterCenter = graph.getPointByCanvas(250, 250);
+    expect(afterCenter.x - oriCenter.x).toBe(0);
+    expect(numberEqual(afterCenter.y - oriCenter.y, -100)).toBe(true);
     graph.emit('dragend', { clientX: 250, clientY: 250 });
     graph.destroy();
   });
-  it('drag offset', () => {
+  it.only('drag offset', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -244,6 +246,7 @@ describe('drag-canvas', () => {
         ],
       },
     });
+    graph.addItem('node', { x: 100, y: 100, color: '#666', type: 'rect', id: 'test' });
     let triggered = false;
     let dragging = false;
     graph.on('canvas:dragstart', () => {
@@ -266,7 +269,7 @@ describe('drag-canvas', () => {
     expect(dragging).toBe(false);
     graph.destroy();
   });
-  it('drag with keydown', () => {
+  it.only('drag with keydown', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -279,6 +282,7 @@ describe('drag-canvas', () => {
         ],
       },
     });
+    graph.addItem('node', { x: 100, y: 100, color: '#666', type: 'rect', id: 'test' });
     let triggered = false;
     let dragging = false;
     graph.on('canvas:dragstart', () => {
@@ -312,7 +316,7 @@ describe('drag-canvas', () => {
     expect(triggered).toBe(true);
     graph.destroy();
   });
-  it('drag with keydown code invalid', () => {
+  it.only('drag with keydown code invalid', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -325,6 +329,7 @@ describe('drag-canvas', () => {
         ],
       },
     });
+    graph.addItem('node', { x: 100, y: 100, color: '#666', type: 'rect', id: 'test' });
     let triggered = false;
     graph.on('canvas:dragstart', () => {
       triggered = true;
@@ -343,7 +348,7 @@ describe('drag-canvas', () => {
     graph.destroy();
   });
 
-  it('drag out of canvas', () => {
+  it.only('drag out of canvas', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -356,6 +361,13 @@ describe('drag-canvas', () => {
         ],
       },
     });
+    graph.addItem('node', {
+      id: 'node',
+      label: 'node',
+      x: 0,
+      y: 0
+    });
+    const oriCenter = graph.getPointByCanvas(250, 250);
     graph.emit('dragstart', { clientX: 150, clientY: 150, target: graph.get('canvas') });
     graph.emit('drag', { clientX: 550, clientY: 550, target: graph.get('canvas') });
     graph.emit('canvas:mouseleave', { target: graph.get('canvas').get('el') });
@@ -380,12 +392,13 @@ describe('drag-canvas', () => {
       null,
     );
     document.body.dispatchEvent(event);
-    const movedMatrix = graph.get('group').getMatrix();
-    expect(movedMatrix[6]).toEqual(400);
-    expect(movedMatrix[7]).toEqual(400);
+    const afterCenter = graph.getPointByCanvas(250, 250);
+    expect(numberEqual(afterCenter.x - oriCenter.x, -400)).toBe(true);
+    expect(numberEqual(afterCenter.y - oriCenter.y, -400)).toBe(true);
+    graph.destroy();
   });
 
-  it('drag out of canvas, but it is not dragging', () => {
+  it.only('drag out of canvas, but it is not dragging', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -398,6 +411,8 @@ describe('drag-canvas', () => {
         ],
       },
     });
+    graph.addItem('node', { x: 100, y: 100, color: '#666', type: 'rect', id: 'test' });
+    const oriCenter = graph.getPointByCanvas(250, 250);
     graph.emit('dragstart', { clientX: 150, clientY: 150, target: graph.get('canvas') });
     graph.emit('drag', { clientX: 350, clientY: 350, target: graph.get('canvas') });
     graph.emit('dragend', { clientX: 350, clientY: 350 });
@@ -423,12 +438,13 @@ describe('drag-canvas', () => {
       null,
     );
     document.body.dispatchEvent(event);
-    const movedMatrix = graph.get('group').getMatrix();
-    expect(movedMatrix[6]).toEqual(200);
-    expect(movedMatrix[7]).toEqual(200);
+    const afterCenter = graph.getPointByCanvas(250, 250);
+    expect(numberEqual(afterCenter.x - oriCenter.x, -200)).toBe(true);
+    expect(numberEqual(afterCenter.y - oriCenter.y, -200)).toBe(true);
+    graph.destroy();
   });
 
-  it('enable optimize to hide the shapes while dragging', () => {
+  it.only('enable optimize to hide the shapes while dragging', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -480,9 +496,10 @@ describe('drag-canvas', () => {
         expect(child.get('visible')).toEqual(true);
       });
     });
+    graph.destroy();
   });
 
-  it('drag canvas with scalableRange', () => {
+  it.only('drag canvas with scalableRange', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -505,28 +522,29 @@ describe('drag-canvas', () => {
     graph.on('canvas:dragend', () => {
       start = false;
     });
-    graph.paint();
+    const oriCenter = graph.getPointByCanvas(250, 250);
     graph.emit('dragstart', { clientX: 150, clientY: 150, target: graph.get('canvas') });
     graph.emit('drag', { clientX: 200, clientY: 200, target: graph.get('canvas') });
     expect(start).toBe(true);
     graph.emit('drag', { clientX: 250, clientY: 250, target: graph.get('canvas') });
     expect(start).toBe(true);
     let matrix = graph.get('group').getMatrix();
-    expect(matrix[6]).toEqual(100);
-    expect(matrix[7]).toEqual(100);
+    let afterCenter = graph.getPointByCanvas(250, 250);
+    expect(numberEqual(afterCenter.x - oriCenter.x, -100)).toBe(true);
+    expect(numberEqual(afterCenter.y - oriCenter.y, -100)).toBe(true);
 
     graph.emit('drag', { clientX: 400, clientY: 350, target: graph.get('canvas') });
-    matrix = graph.get('group').getMatrix();
-    expect(matrix[6]).toEqual(250);
-    expect(matrix[7]).toEqual(200);
     expect(start).toBe(true);
+    afterCenter = graph.getPointByCanvas(250, 250);
+    expect(numberEqual(afterCenter.x - oriCenter.x, -250)).toBe(true);
+    expect(numberEqual(afterCenter.y - oriCenter.y, -200)).toBe(true);
 
-    // 超过了设置的范围，则不再移动
+    // // 超过了设置的范围，则不再移动
     graph.emit('drag', { clientX: 550, clientY: 550, target: graph.get('canvas') });
-    matrix = graph.get('group').getMatrix();
-    expect(matrix[6]).toEqual(250);
-    expect(matrix[7]).toEqual(200);
     expect(start).toBe(true);
+    afterCenter = graph.getPointByCanvas(250, 250);
+    expect(numberEqual(afterCenter.x - oriCenter.x, -250)).toBe(true);
+    expect(numberEqual(afterCenter.y - oriCenter.y, -200)).toBe(true);
 
     graph.emit('dragend', {});
     expect(start).toBe(false);

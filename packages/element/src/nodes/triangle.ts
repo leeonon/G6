@@ -1,4 +1,4 @@
-import { IGroup, IShape } from '@antv/g-base';
+import { IGroup, IShape } from '@antv/g6-g-adapter';
 import {
   registerNode,
   Item,
@@ -74,7 +74,7 @@ registerNode(
       });
       group['shapeMap'][`${this.type}-keyShape`] = keyShape;
 
-      const { width: w, height: h, show, offset, text } = icon;
+      const { width: w = 20, height: h = 20, show, offset, text } = icon;
       if (show) {
         if (text) {
           group['shapeMap'][`${this.type}-icon`] = group.addShape('text', {
@@ -373,7 +373,7 @@ registerNode(
       if (leftPos) {
         if (markLeft) {
           if (!left && left !== undefined) {
-            markLeft.remove();
+            group.removeChild(markLeft, true);
             delete group['shapeMap']['link-point-left'];
           } else {
             markLeft.attr({
@@ -407,7 +407,7 @@ registerNode(
       if (rightPos) {
         if (markRight) {
           if (!right && right !== undefined) {
-            markRight.remove();
+            group.removeChild(markRight, true);
             delete group['shapeMap']['link-point-right'];
           } else {
             markRight.attr({
@@ -441,7 +441,7 @@ registerNode(
       if (topPos) {
         if (markTop) {
           if (!top && top !== undefined) {
-            markTop.remove();
+            group.removeChild(markTop, true);
             delete group['shapeMap']['link-point-top'];
           } else {
             // top circle
@@ -476,7 +476,7 @@ registerNode(
       if (bottomPos) {
         if (markBottom) {
           if (!bottom && bottom !== undefined) {
-            markBottom.remove();
+            group.removeChild(markBottom, true);
             delete group['shapeMap']['link-point-bottom'];
           } else {
             markBottom.attr({

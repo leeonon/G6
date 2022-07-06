@@ -1,4 +1,4 @@
-import { Canvas, Shape } from '@antv/g-canvas';
+import { Canvas } from '@antv/g-canvas';
 import { Graph } from '../../../src';
 import '../../../src';
 import { numberEqual } from '../layout/util';
@@ -103,9 +103,12 @@ describe('text background label', () => {
       },
     },
   });
-  graph.data(data);
-  graph.render();
   it('text background label', done => {
+    const mat = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+    graph.data(data);
+    graph.render();
+    console.log(graph.getEdges()[0].getContainer().children[2].getMatrix())
+    console.log(graph.getEdges()[0].getContainer().children[2].attr())
     const edge1bg = graph.getEdges()[1].getContainer().find(ele => ele.get('classname') === 'edge-label-bg');
     let edge1bgMatrix = edge1bg.getMatrix();
     expect(edge1bgMatrix[0]).toBe(0.7071067811865476);

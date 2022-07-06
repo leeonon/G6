@@ -1,6 +1,6 @@
 import { modifyCSS, createDom } from '@antv/dom-util';
 import { IAbstractGraph as IGraph, ViewPortEventParam } from '@antv/g6-core';
-import { ICanvas } from '@antv/g-base';
+import { ICanvas } from '@antv/g6-g-adapter';
 import Base from '../base';
 
 interface GridConfig {
@@ -90,12 +90,15 @@ export default class Grid extends Base {
    */
   protected updateGrid(param: ViewPortEventParam) {
     const gridContainer: HTMLDivElement = this.get('gridContainer');
-    let { matrix } = param;
-    if (!matrix) matrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-
+    const { matrix = [1, 0, 0, 0, 1, 0, 0, 0, 1] } = param;
     const isFollow = this.get('follow');
-    const transform = `matrix(${matrix[0]}, ${matrix[1]}, ${matrix[3]}, ${matrix[4]}, ${isFollow ? matrix[6] : '0'
-      }, ${isFollow ? matrix[7] : '0'})`;
+    const domMatrix = [...matrix];
+    if (!isFollow) {
+      domMatrix[6] = 0;
+      domMatrix[7] = 0;
+    }
+
+    const transform = `matrix(${domMatrix[0]}, ${domMatrix[1]}, ${domMatrix[3]}, ${domMatrix[4]}, ${domMatrix[6]}, ${domMatrix[7]})`;
 
     modifyCSS(gridContainer, {
       transform,

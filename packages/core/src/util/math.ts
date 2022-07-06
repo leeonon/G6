@@ -1,6 +1,7 @@
-import { Point, IGroup } from '@antv/g-base';
+// import { Point, IGroup } from '@antv/g-base';
+import { Point, IGroup } from '@antv/g6-g-adapter';
 import { mat3, vec3, ext, vec2 } from '@antv/matrix-util';
-import { isArray, each } from '@antv/util';
+import { isArray, each, clone } from '@antv/util';
 import {
   GraphData,
   ICircle,
@@ -355,10 +356,7 @@ export const translate = (group: IGroup, vec: Point) => {
  * @param point 移动到的坐标点
  */
 export const move = (group: IGroup, point: Point, animate?: boolean, animateCfg: GraphAnimateConfig = { duration: 500 }) => {
-  let matrix: Matrix = group.getMatrix();
-  if (!matrix) {
-    matrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-  }
+  let matrix: Matrix = group.getMatrix() || [1, 0, 0, 0, 1, 0, 0, 0, 1];
   const bbox = group.getCanvasBBox();
   const vx = point.x - bbox.minX;
   const vy = point.y - bbox.minY;
@@ -383,6 +381,97 @@ export const move = (group: IGroup, point: Point, animate?: boolean, animateCfg:
     group.setMatrix(movedMatrix);
   }
 };
+
+/** 暂时无用，待删 */
+// export const moveCameraTo = (canvas, point, animate, animateCfg) => {
+//   const camera = canvas.getCamera();
+//   if (animate) {
+//     const markName = `moveToMark${Math.random()}`
+//     camera.createLandmark(markName, {
+//       position: [point.x, point.y],
+//       focalPoint: [point.x, point.y],
+//     });
+//     camera.gotoLandmark(markName, animateCfg?.duration || 500);
+//     // TODO: 其他 animateCfg 和 callback？
+//   } else {
+//     const currentPosition = camera.getPosition();
+//     camera.setPosition(point.x, point.y);
+//     camera.setFocalPoint(point.x, point.y);
+//   }
+// }
+const getAnimateCfgWithCallback = ({
+  animateCfg,
+  callback
+}: {
+  animateCfg: GraphAnimateConfig;
+  callback: () => void;
+}): GraphAnimateConfig => {
+  let animateConfig: GraphAnimateConfig = animateCfg ? clone(animateCfg) : {
+    duration: 500,
+    easing: 'easeCubic',
+    callback
+  };
+  if (animateConfig.callback) {
+    const animateCfgCallback = animateConfig.callback;
+    animateConfig.callback = () => {
+      callback?.();
+      animateCfgCallback();
+    }
+  } else if (callback) {
+    animateConfig.callback = callback;
+  }
+  return animateConfig;
+}
+
+
+export const moveCamera = (canvas, point, callback, animate, animateCfg) => {
+  const camera = canvas.getCamera();
+  const currentPosition = camera.getPosition();
+  const targetPosition = [currentPosition[0] + point.x, currentPosition[1] + point.y];
+  if (animate) {
+    const animateConfig = getAnimateCfgWithCallback({
+      animateCfg,
+      callback
+    });
+    const markName = `moveToMark${Math.random()}`
+    camera.createLandmark(markName, {
+      position: targetPosition,
+      focalPoint: targetPosition,
+    });
+    camera.gotoLandmark(markName, {
+      duration: 500,
+      onfinish: animateConfig.callback,
+      ...animateConfig,
+    });
+  } else {
+    camera.setPosition(...targetPosition);
+    camera.setFocalPoint(...targetPosition);
+    callback?.();
+  }
+}
+
+const unitMatrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+
+/**
+ * 获取 camera 的矩阵，可直接作用于需要与画布同步变换的内容
+ * @param camera graph 的相机对象
+ * @return {number[]} 矩阵
+ */
+export const getCameraMatrix = (camera) => {
+  const cameraMatrix = camera.orthoMatrix;
+  return cameraMatrix ? [
+    cameraMatrix[0],
+    cameraMatrix[1],
+    cameraMatrix[2],
+    cameraMatrix[4],
+    cameraMatrix[5],
+    cameraMatrix[6],
+    cameraMatrix[12],
+    cameraMatrix[13],
+    cameraMatrix[14]
+  ] : unitMatrix;
+}
+
 
 /**
  * 缩放 group
@@ -415,10 +504,7 @@ export const scale = (group: IGroup, ratio: number | number[]) => {
  * @param ratio 选择角度
  */
 export const rotate = (group: IGroup, angle: number) => {
-  let matrix: Matrix = group.getMatrix();
-  if (!matrix) {
-    matrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-  }
+  let matrix: Matrix = group.getMatrix() || [1, 0, 0, 0, 1, 0, 0, 0, 1];
   matrix = transform(matrix, [['r', angle]]);
 
   group.setMatrix(matrix);
@@ -830,4 +916,17 @@ export const pointLineDistance = (line, point) => {
  */
 export const lerp = (start: number, end: number, alpha: number): number => {
   return start + (end - start) * alpha;
+}
+
+export const isUnitMatrix = (matrix): boolean => {
+  for (let i = 0; i < 9; i++) {
+    if (i === 0 || i === 4 || i === 8) {
+      if (matrix[i] !== 1) return false;
+      else continue;
+    }
+    if (matrix[i] !== 0) {
+      return false;
+    }
+  }
+  return true;
 }

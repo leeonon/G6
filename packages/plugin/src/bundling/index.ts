@@ -7,7 +7,7 @@ import {
   NodeConfigMap,
   EdgeConfig,
 } from '@antv/g6-core';
-import { Point } from '@antv/g-base';
+import { Point } from '@antv/g6-g-adapter';
 
 interface BundlingConfig extends IPluginBaseConfig {
   edgeBundles?: IEdge[];
@@ -76,8 +76,8 @@ export default class Bundling extends Base {
       iterRate: 0.6666667, // 迭代下降率
       bundleThreshold: 0.6,
       eps: 1e-6,
-      onLayoutEnd() {}, // 布局完成回调
-      onTick() {}, // 每一迭代布局回调
+      onLayoutEnd() { }, // 布局完成回调
+      onTick() { }, // 每一迭代布局回调
     };
   }
 
@@ -102,7 +102,10 @@ export default class Bundling extends Base {
       return;
     }
 
-    const edges = data.edges || [];
+    const graph = self.get('graph');
+
+    const edgeItems = graph.getEdges();
+    const edges = edgeItems.map(edge => edge.getModel());
     const nodes = data.nodes || [];
     const nodeIdMap: NodeConfigMap = {};
     let error = false;
@@ -120,11 +123,11 @@ export default class Bundling extends Base {
     // subdivide each edges
     let divisions: number = self.get('divisions');
     const divRate: number = self.get('divRate');
-    let edgePoints: Point[][] = self.divideEdges(divisions);
+    let edgePoints: Point[][] = self.divideEdges(divisions, edges);
     self.set('edgePoints', edgePoints);
 
     // compute the bundles
-    const edgeBundles = self.getEdgeBundles();
+    const edgeBundles = self.getEdgeBundles(edges);
     self.set('edgeBundles', edgeBundles);
 
     // iterations
@@ -137,11 +140,12 @@ export default class Bundling extends Base {
       for (let j = 0; j < iterations; j++) {
         const forces: Point[][] = [];
         edges.forEach((e, k) => {
-          if (e.source === e.target) return;
-          const source = nodeIdMap[e.source as string];
-          const target = nodeIdMap[e.target as string];
+          const { source, target } = e;
+          if (source === target) return;
+          const sourceNode = nodeIdMap[source as string];
+          const targetNode = nodeIdMap[target as string];
 
-          forces[k] = self.getEdgeForces({ source, target }, k, divisions, lambda);
+          forces[k] = self.getEdgeForces({ source: sourceNode, target: targetNode }, k, divisions, lambda);
 
           for (let p = 0; p < divisions + 1; p++) {
             edgePoints[k][p].x += forces[k][p].x;
@@ -154,19 +158,19 @@ export default class Bundling extends Base {
       lambda = lambda / 2;
       divisions *= divRate;
       iterations *= iterRate;
-      edgePoints = self.divideEdges(divisions);
+      edgePoints = self.divideEdges(divisions, edges);
       self.set('edgePoints', edgePoints);
     }
-
     // change the edges according to edgePoints
-    edges.forEach((e, i) => {
-      if (e.source === e.target) return;
-      e.type = 'polyline';
-      e.controlPoints = edgePoints[i].slice(1, edgePoints[i].length - 1);
+    edgeItems.forEach((e, i) => {
+      const model = e.getModel();
+      const { source, target } = model;
+      if (source === target) return;
+      graph.updateItem(e, {
+        type: 'polyline',
+        controlPoints: edgePoints[i].slice(1, edgePoints[i].length - 1)
+      })
     });
-
-    const graph = self.get('graph');
-    graph.refresh();
   }
 
   public updateBundling(cfg: BundlingConfig) {
@@ -196,9 +200,8 @@ export default class Bundling extends Base {
     self.bundling(data);
   }
 
-  public divideEdges(divisions: number): Point[][] {
+  public divideEdges(divisions: number, edges: EdgeConfig[]): Point[][] {
     const self = this;
-    const edges: EdgeConfig[] = self.get('data').edges;
     const nodeIdMap: NodeConfigMap = self.get('nodeIdMap');
     let edgePoints = self.get('edgePoints');
 
@@ -273,10 +276,8 @@ export default class Bundling extends Base {
     return length;
   }
 
-  public getEdgeBundles(): number[] {
+  public getEdgeBundles(edges: EdgeConfig[]): number[] {
     const self = this;
-    const data: GraphData = self.get('data');
-    const edges = data.edges || [];
 
     const bundleThreshold: number = self.get('bundleThreshold');
     const nodeIdMap: NodeConfigMap = self.get('nodeIdMap');

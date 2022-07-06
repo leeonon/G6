@@ -140,7 +140,9 @@ describe('select-node', () => {
         default: ['select-node'],
       },
       nodeStateStyles: {
-        selected: {},
+        selected: {
+          fill: '#f00'
+        },
       },
     });
     const node = graph.addItem('node', {
@@ -156,6 +158,7 @@ describe('select-node', () => {
       expect(e.selectedItems.nodes.length).toEqual(1);
     });
 
+    expect(node.getStates().length).toEqual(0);
     graph.emit('node:click', { item: node });
     expect(node.getStates().length).toEqual(1);
     expect(node.hasState('selected')).toBe(true);

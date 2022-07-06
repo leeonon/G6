@@ -1,4 +1,4 @@
-import { Point, IGroup } from '@antv/g-base';
+import { Point, IGroup } from '@antv/g6-g-adapter';
 import { mix, each, isArray, isString } from '@antv/util';
 import {
   registerEdge,
@@ -50,6 +50,7 @@ registerEdge(
     labelPosition: 'center',
     drawShape(cfg: EdgeConfig, group: IGroup) {
       const shapeStyle = (this as any).getShapeStyle(cfg);
+      console.log('shapeStyle', shapeStyle);
       if (shapeStyle.radius === 0) delete shapeStyle.radius;
       const keyShape = group.addShape('path', {
         className: 'edge-shape',
@@ -97,7 +98,7 @@ registerEdge(
       }
 
       const attrs: ShapeStyle = mix({}, Global.defaultEdge.style as ShapeStyle, style, {
-        lineWidth: cfg.size,
+        lineWidth: cfg.size || 1,
         path,
       } as ShapeStyle);
       return attrs;
@@ -154,7 +155,7 @@ registerEdge(
         strokeStyle,
         shape.attr(),
         {
-          lineWidth: size,
+          lineWidth: size || 1,
           path,
         },
         cfg.style,
@@ -194,7 +195,7 @@ registerEdge(
       const polylinePoints = simple
         ? getPolylinePoints(points[points.length - 1], points[0], target, source, offset)
         : pathFinder(points[0], points[points.length - 1], source, target, routeCfg);
-      
+
       if (!polylinePoints || !polylinePoints.length) return 'M0 0, L0 0';
 
       if (radius) {

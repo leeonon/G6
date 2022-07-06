@@ -98,7 +98,7 @@ describe('update', () => {
     const item = graph.findById('node1');
     graph.setItemState(item, 'hover', true);
     expect(item.hasState('hover')).toBe(true);
-
+    expect(item.getKeyShape().attr('opacity')).toBe(0.3);
     const keyShape = item.getKeyShape();
     expect(keyShape.attr('fill')).toEqual('steelblue');
 
@@ -112,6 +112,8 @@ describe('update', () => {
     expect(item.hasState('hover')).toBe(false);
     expect(item.hasState('body:health')).toBe(false);
     expect(item.getStates().length).toBe(0);
+    expect(item.getKeyShape().attr('opacity')).toBe(1);
+    expect(keyShape.attr('fill')).toEqual('steelblue');
 
     graph.destroy();
   });

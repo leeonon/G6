@@ -2,7 +2,7 @@
  * 基于 G 的刻度时间轴组件
  */
 import { ext } from '@antv/matrix-util';
-import { ICanvas, IGroup } from '@antv/g-base';
+import { ICanvas, IGroup } from '@antv/g6-g-adapter';
 import { isNumber, isString } from '@antv/util';
 import { ShapeStyle, IAbstractGraph as IGraph } from '@antv/g6-core';
 import TimeBarTooltip from './timeBarTooltip';
@@ -116,6 +116,8 @@ export default class TimeBarSlice {
 
   private dragging: boolean;
 
+  private mousedown: boolean;
+
   // play controller
   private controllerBtnGroup: ControllerBtn;
 
@@ -180,7 +182,7 @@ export default class TimeBarSlice {
     this.fontFamily =
       typeof window !== 'undefined'
         ? window.getComputedStyle(document.body, null).getPropertyValue('font-family') ||
-          'Arial, sans-serif'
+        'Arial, sans-serif'
         : 'Arial, sans-serif';
 
     this.renderSlices();
@@ -386,51 +388,56 @@ export default class TimeBarSlice {
         this.graph.emit(VALUE_CHANGE, { value: [start, start] });
       }
     });
-    sliceGroup.on('dragstart', (e) => {
-      const tickRects = this.tickRects;
-      // cancel the selected ticks
-      const unselectedTickStyle = this.unselectedTickStyle;
-      tickRects.forEach((tickRect) => {
-        tickRect.rect.attr(unselectedTickStyle);
-      });
-      const targetRect = e.target;
-      const id = parseInt(targetRect.get('name').split('-')[2], 10);
-      const selectedTickStyle = this.selectedTickStyle;
-      tickRects[id].rect.attr(selectedTickStyle);
-      this.startTickRectId = id;
-
-      const ticksLength = tickRects.length;
-      const start = id / ticksLength;
-      this.graph.emit(VALUE_CHANGE, { value: [start, start] });
-
-      this.dragging = true;
+    sliceGroup.on('mousedown', e => {
+      this.mousedown = true;
     });
-    sliceGroup.on('dragover', (e) => {
-      if (!this.dragging) return;
-      if (e.target.get('type') !== 'rect') return;
+    sliceGroup.on('mousemove', e => {
+      if (!this.mousedown) return;
+      if (!this.dragging) {
+        // dragstart
+        this.dragging = true;
+        const tickRects = this.tickRects;
+        // cancel the selected ticks
+        const unselectedTickStyle = this.unselectedTickStyle;
+        tickRects.forEach((tickRect) => {
+          tickRect.rect.attr(unselectedTickStyle);
+        });
+        const targetRect = e.target;
+        const id = parseInt(targetRect.get('name').split('-')[2], 10);
+        const selectedTickStyle = this.selectedTickStyle;
+        tickRects[id].rect.attr(selectedTickStyle);
+        this.startTickRectId = id;
 
-      const id = parseInt(e.target.get('name').split('-')[2], 10);
-      const startTickRectId = this.startTickRectId;
-      const tickRects = this.tickRects;
-      const selectedTickStyle = this.selectedTickStyle;
-      const unselectedTickStyle = this.unselectedTickStyle;
-      for (let i = 0; i < tickRects.length; i++) {
-        const style = i >= startTickRectId && i <= id ? selectedTickStyle : unselectedTickStyle;
-        tickRects[i].rect.attr(style);
+        const ticksLength = tickRects.length;
+        const start = id / ticksLength;
+        this.graph.emit(VALUE_CHANGE, { value: [start, start] });
+
+        this.dragging = true;
+      } else {
+        // drag
+        if (e.target.get('type') !== 'rect') return;
+        const id = parseInt(e.target.get('name').split('-')[2], 10);
+        const startTickRectId = this.startTickRectId;
+        const tickRects = this.tickRects;
+        const selectedTickStyle = this.selectedTickStyle;
+        const unselectedTickStyle = this.unselectedTickStyle;
+        for (let i = 0; i < tickRects.length; i++) {
+          const style = i >= startTickRectId && i <= id ? selectedTickStyle : unselectedTickStyle;
+          tickRects[i].rect.attr(style);
+        }
+        const ticksLength = tickRects.length;
+        this.endTickRectId = id;
+
+        const start = startTickRectId / ticksLength;
+        const end = id / ticksLength;
+        this.graph.emit(VALUE_CHANGE, { value: [start, end] });
       }
-      const ticksLength = tickRects.length;
-      this.endTickRectId = id;
-
-      const start = startTickRectId / ticksLength;
-      const end = id / ticksLength;
-      this.graph.emit(VALUE_CHANGE, { value: [start, end] });
     });
-
-    sliceGroup.on('drop', (e) => {
+    sliceGroup.on('mouseup', e => {
+      this.mousedown = false;
       if (!this.dragging) return;
-
+      // dragend
       this.dragging = false;
-
       if (e.target.get('type') !== 'rect') return;
       const startTickRectId = this.startTickRectId;
       const id = parseInt(e.target.get('name').split('-')[2], 10);
@@ -484,16 +491,19 @@ export default class TimeBarSlice {
     });
 
     // 处理前进一步的事件
-    group.on(`${NEXT_STEP_BTN}:click`, () => {
+    const nextButton = group.find(ele => ele.get('name') === NEXT_STEP_BTN);
+    nextButton.on('click', () => {
       this.updateStartEnd(1);
     });
 
     // 处理后退一步的事件
-    group.on(`${PRE_STEP_BTN}:click`, () => {
+    const preButton = group.find(ele => ele.get('name') === PRE_STEP_BTN);
+    preButton.on('click', () => {
       this.updateStartEnd(-1);
     });
 
-    group.on(TIMEBAR_CONFIG_CHANGE, ({ type, speed }) => {
+    group.on(TIMEBAR_CONFIG_CHANGE, (e) => {
+      const { type, speed = 1 } = e.detail || {};
       this.currentSpeed = speed;
     });
   }
@@ -520,19 +530,19 @@ export default class TimeBarSlice {
   private startPlay() {
     return typeof window !== 'undefined'
       ? window.requestAnimationFrame(() => {
-          const speed = this.currentSpeed;
+        const speed = this.currentSpeed;
 
-          // 一分钟刷新一次
-          if (this.frameCount % (60 / speed) === 0) {
-            this.frameCount = 0;
-            this.updateStartEnd(1);
-          }
-          this.frameCount++;
+        // 一分钟刷新一次
+        if (this.frameCount % (60 / speed) === 0) {
+          this.frameCount = 0;
+          this.updateStartEnd(1);
+        }
+        this.frameCount++;
 
-          if (this.isPlay) {
-            this.playHandler = this.startPlay();
-          }
-        })
+        if (this.isPlay) {
+          this.playHandler = this.startPlay();
+        }
+      })
       : undefined;
   }
 
@@ -573,13 +583,14 @@ export default class TimeBarSlice {
   }
 
   public destory() {
-    this.graph.off(VALUE_CHANGE, () => { /* do nothing */});
+    this.graph.off(VALUE_CHANGE, () => { /* do nothing */ });
 
     const group = this.sliceGroup;
 
     group.off('click');
-    group.off('dragstart');
-    group.off('dragover');
+    group.off('mousedown');
+    group.off('mouseup');
+    group.off('mousemove');
     group.off('drop');
 
     this.tickRects.forEach((tickRect) => {
@@ -591,8 +602,10 @@ export default class TimeBarSlice {
     this.tickRects.length = 0;
 
     group.off(`${PLAY_PAUSE_BTN}:click`);
-    group.off(`${NEXT_STEP_BTN}:click`);
-    group.off(`${PRE_STEP_BTN}:click`);
+    const nextButton = group.find(ele => ele.get('name') === NEXT_STEP_BTN);
+    const preButton = group.find(ele => ele.get('name') === PRE_STEP_BTN);
+    nextButton?.off('click');
+    preButton?.off('click');
     group.off(TIMEBAR_CONFIG_CHANGE);
 
     this.sliceGroup.destroy();

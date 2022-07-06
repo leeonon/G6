@@ -35,7 +35,7 @@ describe('item controller', () => {
     const node2 = graph.addItem('node', {
       type: 'rect',
       id: 'node0',
-      color: '#666',
+      color: '#f00',
       style: { x: 100, y: 100, width: 100, height: 70 },
     });
     expect(node2).not.toBe(undefined);
@@ -56,19 +56,22 @@ describe('item controller', () => {
     const node1 = graph.addItem('node', {
       id: 'node1',
       color: '#ccc',
-      style: { x: 50, y: 50, r: 20, lineWidth: 2 },
+      x: 50, y: 50,
+      style: { r: 20, lineWidth: 2 },
     });
     const node2 = graph.addItem('node', {
       id: 'node2',
       type: 'circle',
       color: '#ccc',
-      style: { x: 50, y: 150, r: 20, lineWidth: 2 },
+      x: 50, y: 150,
+      style: { r: 20, lineWidth: 2 },
     });
     graph.addItem('node', {
       id: 'node3',
       type: 'circle',
       color: '#ccc',
-      style: { x: 50, y: 200, r: 20, lineWidth: 2 },
+      x: 50, y: 200,
+      style: { r: 20, lineWidth: 2 },
     });
 
     graph.addItem('edge', { id: 'edge1', source: 'node1', target: 'node2', type: 'line' });
@@ -159,23 +162,24 @@ describe('item controller', () => {
     let path = edge.get('keyShape').attr('path');
 
     expect(path[0][1]).toBe(100);
-    expect(path[0][2]).toBe(125.5);
+    expect(path[0][2]).toBe(125);
     expect(path[1][1]).toBe(100);
-    expect(path[1][2]).toBe(174.5);
+    expect(path[1][2]).toBe(175);
     edge.setTarget(node3);
     graph.refresh();
     setTimeout(() => {
       path = edge.get('keyShape').attr('path');
-      expect(path[0][1]).toBe(125.5);
+      expect(path[0][1]).toBe(125);
       expect(path[0][2]).toBe(100);
-      expect(path[1][1]).toBe(274.5);
+      expect(path[1][1]).toBe(275);
       expect(path[1][2]).toBe(100);
       done();
-    }, 800);
+    }, 100);
   });
   it('show & hide item', () => {
+    graph.clear();
     const node = graph.addItem('node', { id: 'node9', x: 100, y: 100, size: 50 });
-    const node2 = graph.addItem('node', { id: 'node10', x: 100, y: 100, size: 50 });
+    const node2 = graph.addItem('node', { id: 'node10', x: 100, y: 200, size: 50 });
     const edge = graph.addItem('edge', { id: 'edge5', source: 'node9', target: 'node10' });
     graph.hideItem('node9');
 
@@ -189,6 +193,7 @@ describe('item controller', () => {
   });
 
   it('setItemState & clearItemStates', () => {
+    graph.clear();
     const node = graph.addItem('node', { id: 'node11', x: 100, y: 100, size: 50 });
     const node2 = graph.addItem('node', { id: 'node12', x: 100, y: 100, size: 50 });
 

@@ -367,9 +367,9 @@ describe('drag-node', () => {
       .get('group')
       .get('children')[0]
       .attr('path');
-    expect(path[0][1]).toEqual(57.77817459305202);
-    expect(path[0][2]).toEqual(57.77817459305202);
-    expect(mathEqual(289, path[1][1])).toEqual(true);
+    expect(path[0][1]).toEqual(57.071067811865476);
+    expect(path[0][2]).toEqual(57.071067811865476);
+    expect(mathEqual(290, path[1][1])).toEqual(true);
     expect(mathEqual(300, path[1][2])).toEqual(true);
     graph.emit('node:dragstart', { x: 100, y: 100, item: source });
     graph.emit('node:drag', { x: 120, y: 120, item: source });
@@ -379,9 +379,9 @@ describe('drag-node', () => {
       .attr('path');
     setTimeout(() => {
       // 因为有 delegate，没有 dragend 之前，边不更新
-      expect(path[0][1]).toEqual(57.77817459305202);
-      expect(path[0][2]).toEqual(57.77817459305202);
-      expect(mathEqual(289, path[1][1])).toEqual(true);
+      expect(path[0][1]).toEqual(57.071067811865476);
+      expect(path[0][2]).toEqual(57.071067811865476);
+      expect(mathEqual(290, path[1][1])).toEqual(true);
       expect(mathEqual(300, path[1][2])).toEqual(true);
       graph.emit('canvas:drop', { x: 140, y: 140, item: source });
       graph.emit('node:dragend', { x: 140, y: 140, item: source });
@@ -390,9 +390,9 @@ describe('drag-node', () => {
           .get('group')
           .get('children')[0]
           .attr('path');
-        expect(path[0][1]).toEqual(97.77817459305203);
-        expect(path[0][2]).toEqual(97.77817459305203);
-        expect(mathEqual(289, path[1][1])).toEqual(true);
+        expect(path[0][1]).toEqual(97.07106781186548);
+        expect(path[0][2]).toEqual(97.07106781186548);
+        expect(mathEqual(290, path[1][1])).toEqual(true);
         expect(mathEqual(300, path[1][2])).toEqual(true);
         graph.destroy();
         done()
@@ -473,18 +473,18 @@ describe('drag-node', () => {
     });
     expect(label).not.toBe(undefined);
     let matrix = label.getMatrix();
-    expect(matrix[0]).toEqual(0.6196324480014811);
-    expect(matrix[1]).toEqual(0.7848921132128235);
-    expect(matrix[3]).toEqual(-0.7848921132128235);
-    expect(matrix[4]).toEqual(0.6196324480014811);
+    expect(matrix[0]).toEqual(0.621911346912384);
+    expect(matrix[1]).toEqual(0.7830876111984253);
+    expect(matrix[3]).toEqual(-0.7830876111984253);
+    expect(matrix[4]).toEqual(0.621911346912384);
     graph.emit('node:dragstart', { x: 100, y: 100, item: target });
     graph.emit('node:drag', { x: 120, y: 120, item: target });
     graph.emit('node:dragend', { x: 80, y: 120, item: target });
     matrix = label.getMatrix();
-    expect(matrix[0]).toEqual(0.627307162629268);
-    expect(matrix[1]).toEqual(0.7787719330548688);
-    expect(matrix[3]).toEqual(-0.7787719330548688);
-    expect(matrix[4]).toEqual(0.627307162629268);
+    expect(matrix[0]).toEqual(0.62934410572052);
+    expect(matrix[1]).toEqual(0.7771267890930176);
+    expect(matrix[3]).toEqual(-0.7771267890930176);
+    expect(matrix[4]).toEqual(0.62934410572052);
     graph.destroy();
   });
 

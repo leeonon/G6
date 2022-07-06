@@ -1,6 +1,6 @@
 import '../../../src';
 import { Graph } from '../../../src';
-import { Event } from '@antv/g-canvas';
+import { G6GraphEvent } from '@antv/g6-core';
 
 const data = {
   nodes: [
@@ -23,8 +23,10 @@ const div = document.createElement('div');
 div.id = 'scroll-spec';
 document.body.appendChild(div);
 
-class G6Event extends Event {
+class G6Event extends G6GraphEvent {
   wheelDelta: number;
+  preventDefault = () => { }
+  defaultPrevented: boolean = false;
 }
 function createWheelEvent(delta, deltaX, deltaY) {
 
@@ -55,19 +57,16 @@ describe('scroll-canvas', () => {
     });
     graph.data(data);
     graph.render();
+    const oriCenter = graph.getPointByCanvas(250, 250);
     const e = createWheelEvent(100, 100, 100);
     graph.emit('wheel', e);
-    let matrix = graph.get('group').getMatrix();
-    expect(approximateEqual(matrix[0], 1)).toBe(true);
-    expect(approximateEqual(matrix[4], 1)).toBe(true);
-    expect(approximateEqual(matrix[6], -100)).toBe(true);
-    expect(approximateEqual(matrix[7], -100)).toBe(true);
+    let afterCenter = graph.getPointByCanvas(250, 250);
+    expect(afterCenter.x - oriCenter.x).toBe(100);
+    expect(afterCenter.y - oriCenter.y).toBe(100);
     graph.emit('wheel', e);
-    matrix = graph.get('group').getMatrix();
-    expect(approximateEqual(matrix[0], 1)).toBe(true);
-    expect(approximateEqual(matrix[4], 1)).toBe(true);
-    expect(approximateEqual(matrix[6], -200)).toBe(true);
-    expect(approximateEqual(matrix[7], -200)).toBe(true);
+    afterCenter = graph.getPointByCanvas(250, 250);
+    expect(afterCenter.x - oriCenter.x).toBe(200);
+    expect(afterCenter.y - oriCenter.y).toBe(200);
     graph.destroy();
   });
   it('direction x', () => {
@@ -86,22 +85,19 @@ describe('scroll-canvas', () => {
     });
     graph.data(data);
     graph.render();
+    const oriCenter = graph.getPointByCanvas(250, 250);
     const e = createWheelEvent(100, 100, 100);
     graph.emit('wheel', e);
-    let matrix = graph.get('group').getMatrix();
-    expect(approximateEqual(matrix[0], 1)).toBe(true);
-    expect(approximateEqual(matrix[4], 1)).toBe(true);
-    expect(approximateEqual(matrix[6], -100)).toBe(true);
-    expect(approximateEqual(matrix[7], 0)).toBe(true);
+    let afterCenter = graph.getPointByCanvas(250, 250);
+    expect(afterCenter.x - oriCenter.x).toBe(100);
+    expect(afterCenter.y - oriCenter.y).toBe(0);
     graph.emit('wheel', e);
-    matrix = graph.get('group').getMatrix();
-    expect(approximateEqual(matrix[0], 1)).toBe(true);
-    expect(approximateEqual(matrix[4], 1)).toBe(true);
-    expect(approximateEqual(matrix[6], -200)).toBe(true);
-    expect(approximateEqual(matrix[7], 0)).toBe(true);
+    afterCenter = graph.getPointByCanvas(250, 250);
+    expect(afterCenter.x - oriCenter.x).toBe(200);
+    expect(afterCenter.y - oriCenter.y).toBe(0);
     graph.destroy();
   });
-  it('direction x', () => {
+  it('direction y', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -117,19 +113,16 @@ describe('scroll-canvas', () => {
     });
     graph.data(data);
     graph.render();
+    const oriCenter = graph.getPointByCanvas(250, 250);
     const e = createWheelEvent(100, 100, 100);
     graph.emit('wheel', e);
-    let matrix = graph.get('group').getMatrix();
-    expect(approximateEqual(matrix[0], 1)).toBe(true);
-    expect(approximateEqual(matrix[4], 1)).toBe(true);
-    expect(approximateEqual(matrix[6], 0)).toBe(true);
-    expect(approximateEqual(matrix[7], -100)).toBe(true);
+    let afterCenter = graph.getPointByCanvas(250, 250);
+    expect(afterCenter.x - oriCenter.x).toBe(0);
+    expect(afterCenter.y - oriCenter.y).toBe(100);
     graph.emit('wheel', e);
-    matrix = graph.get('group').getMatrix();
-    expect(approximateEqual(matrix[0], 1)).toBe(true);
-    expect(approximateEqual(matrix[4], 1)).toBe(true);
-    expect(approximateEqual(matrix[6], 0)).toBe(true);
-    expect(approximateEqual(matrix[7], -200)).toBe(true);
+    afterCenter = graph.getPointByCanvas(250, 250);
+    expect(afterCenter.x - oriCenter.x).toBe(0);
+    expect(afterCenter.y - oriCenter.y).toBe(200);
     graph.destroy();
   });
 });

@@ -2,16 +2,21 @@ import { Graph } from '../../../src';
 import '../../../src/behavior';
 import { GraphData, Item } from '@antv/g6-core';
 import Core from '@antv/g6-core';
+import { numberEqual } from '../layout/util';
 
 const { scale, translate } = Core.Util;
 
+const globalDOM = document.createElement('div');
+globalDOM.id = 'global-spec';
+document.body.appendChild(globalDOM);
+
 const div = document.createElement('div');
-div.id = 'global-spec';
+div.id = 'other-spec';
 document.body.appendChild(div);
 
 describe('graph', () => {
   const globalGraph = new Graph({
-    container: div,
+    container: globalDOM,
     width: 500,
     height: 500,
     modes: {
@@ -77,7 +82,7 @@ describe('graph', () => {
 
     expect(inst).not.toBe(undefined);
     expect(inst instanceof Graph).toBe(true);
-    expect(length > 1).toBe(true);
+    expect(length === 1).toBe(true);
 
     expect(inst.get('canvas')).not.toBe(undefined);
     expect(inst.get('group')).not.toBe(undefined);
@@ -179,45 +184,40 @@ describe('graph', () => {
   });
 
   it('translate', () => {
-    const canvasMatrix = globalGraph.get('canvas').getMatrix();
+    const viewcenter = globalGraph.get('canvas').getCamera().getPosition();
     globalGraph.translate(100, 100);
-
-    const matrix = globalGraph.get('group').getMatrix();
-
-    expect(canvasMatrix).toBe(null);
-    expect(matrix[6]).toBe(100);
-    expect(matrix[7]).toBe(100);
-
-    globalGraph.get('group').resetMatrix();
+    const viewCenterAfterTranslate = globalGraph.get('canvas').getCamera().getPosition();
+    const expectCenter = [viewcenter[0] - 100, viewcenter[1] - 100];
+    expect(viewCenterAfterTranslate[0]).toBe(expectCenter[0]);
+    expect(viewCenterAfterTranslate[1]).toBe(expectCenter[1]);
   });
 
   it('moveTo', () => {
-    let group = globalGraph.get('group');
-    let bbox = group.getCanvasBBox();
+    globalGraph.moveTo(10, 10);
+    const viewcenter = globalGraph.get('canvas').getCamera().getPosition();
+    console.log('viewcenter', viewcenter);
+    expect(viewcenter[0]).toBe(290);
+    expect(viewcenter[1]).toBe(240);
 
-    globalGraph.moveTo(100, 100);
-
-    group = globalGraph.get('group');
-    bbox = group.getCanvasBBox();
-
-    expect(bbox.x).toBe(100);
-    expect(bbox.y).toBe(100);
-
-    globalGraph.get('group').resetMatrix();
+    // reset
+    globalGraph.get('canvas').getCamera().setPosition(250, 250);
+    globalGraph.get('canvas').getCamera().setFocalPoint(250, 250);
   });
 
   it('zoom', () => {
-    globalGraph.zoom(3, { x: 100, y: 100 });
-
-    const matrix = globalGraph.get('group').getMatrix();
-
-    expect(matrix[0]).toBe(3);
-    expect(matrix[4]).toBe(3);
-    expect(matrix[6]).toBe(-200);
-    expect(matrix[7]).toBe(-200);
+    // 以 node1 为中心放缩
+    globalGraph.zoom(3, { x: 150, y: 50 });
     expect(globalGraph.getZoom()).toBe(3);
 
-    globalGraph.get('group').resetMatrix();
+    const camera = globalGraph.get('canvas').getCamera();
+    const viewCenter = globalGraph.get('canvas').getPointByCanvas(250, 250);
+    expect(numberEqual(viewCenter.x, 183, 1)).toBe(true);
+    expect(numberEqual(viewCenter.y, 116, 1)).toBe(true);
+
+    // reset
+    globalGraph.get('canvas').getCamera().setZoom(1);
+    globalGraph.get('canvas').getCamera().setPosition(250, 250);
+    globalGraph.get('canvas').getCamera().setFocalPoint(250, 250);
   });
 
   it('minZoom & maxZoom', () => {
@@ -233,6 +233,8 @@ describe('graph', () => {
       nodes: [
         {
           id: 'node',
+          x: 100,
+          y: 100
         },
       ],
     };
@@ -240,37 +242,26 @@ describe('graph', () => {
     graph.data(data);
     graph.render();
 
-    let matrix = graph.get('group').getMatrix();
-    expect(matrix).toBe(null);
-
     graph.zoom(0.5, { x: 100, y: 100 });
-    matrix = graph.get('group').getMatrix();
-    expect(matrix).toBe(null);
+    expect(graph.getZoom()).toBe(1);
 
     graph.zoom(5.5);
-    matrix = graph.get('group').getMatrix();
-    expect(matrix).toBe(null);
+    expect(graph.getZoom()).toBe(1);
   });
 
   it('zoomTo', () => {
-    let matrix = globalGraph.get('group').getMatrix();
-    expect(matrix).toBe(null);
-
+    // 以左上角为防所中心放大两倍
     globalGraph.zoomTo(2);
-
-    matrix = globalGraph.get('group').getMatrix();
-    expect(matrix[0]).toBe(2);
-    expect(matrix[4]).toBe(2);
-    expect(matrix[6]).toBe(0);
-    expect(matrix[7]).toBe(0);
+    expect(globalGraph.getZoom()).toBe(2);
+    let viewcenter = globalGraph.get('canvas').getCanvasByPoint(250, 250);
+    // 中心坐标扩大两倍
+    expect(numberEqual(viewcenter.x, 500)).toBe(true);
+    expect(numberEqual(viewcenter.y, 500)).toBe(true);
 
     globalGraph.zoomTo(1.5, { x: 250, y: 250 });
-    matrix = globalGraph.get('group').getMatrix();
-
-    expect(matrix[0]).toBe(1.5);
-    expect(matrix[4]).toBe(1.5);
-    expect(matrix[6]).toBe(62.5);
-    expect(matrix[7]).toBe(62.5);
+    viewcenter = globalGraph.get('canvas').getCanvasByPoint(250, 250);
+    expect(numberEqual(viewcenter.x, 500)).toBe(true);
+    expect(numberEqual(viewcenter.y, 500)).toBe(true);
   });
 
   it('change size', () => {
@@ -288,14 +279,6 @@ describe('graph', () => {
 
     expect(graph.get('width')).toBe(300);
     expect(graph.get('height')).toBe(300);
-
-    // 专门用于测试使用非 number 类型 会报错的情况 // TODO 可以移走这个测试, TS 本身就限制了类型参数
-    // expect(() => {
-    //   graph.changeSize('x', 10);
-    // }).toThrowError(
-    //   'invalid canvas width & height, please make sure width & height type is number',
-    // );
-
     graph.destroy();
   });
 
@@ -442,6 +425,7 @@ describe('graph', () => {
     globalGraph.render();
     const newData = null;
     const nodeNumBeforeChange = globalGraph.getNodes().length;
+    // 新数据是 null，不会切换
     globalGraph.changeData(newData);
     const nodeNumAfterChange = globalGraph.getNodes().length;
     expect(nodeNumBeforeChange).toBe(nodeNumAfterChange);
@@ -496,6 +480,7 @@ describe('graph', () => {
     globalGraph.set('animate', true);
     data.nodes[0].x = 100;
     data.nodes[0].y = 100;
+    globalGraph.changeData(data);
     globalGraph.changeData(data);
     const nodeModel = globalGraph.getNodes()[0].getModel();
     expect(nodeModel.x).toBe(100);
@@ -589,37 +574,40 @@ describe('graph', () => {
     expect(point.x).toBe(100);
     expect(point.y).toBe(100);
 
-    translate(group, {
-      x: 100,
-      y: 100,
-    });
+    globalGraph.translate(100, 100);
 
     point = globalGraph.getPointByCanvas(100, 100);
-    expect(point.x).toBe(0);
-    expect(point.y).toBe(0);
+    expect(numberEqual(point.x, 0, 0.001)).toBe(true);
+    expect(numberEqual(point.y, 0, 0.001)).toBe(true);
 
-    scale(group, [1.5, 1.5]);
+    globalGraph.zoom(1.5);
 
     point = globalGraph.getPointByCanvas(100, 100);
-    expect(point.x).toBe(-33.33333333333334);
-    expect(point.y).toBe(-33.33333333333334);
+    expect(numberEqual(point.x, 0, 0.001)).toBe(true);
+    expect(numberEqual(point.y, 0, 0.001)).toBe(true);
+    point = globalGraph.getPointByCanvas(0, 0);
+    console.log('point', point);
+    expect(numberEqual(point.x, -66.7, 0.1)).toBe(true);
+    expect(numberEqual(point.y, -66.7, 0.1)).toBe(true);
 
-    group.resetMatrix();
+    // reset
+    const camera = globalGraph.get('canvas').getCamera();
+    camera.setZoom(1);
+    camera.setPosition(250, 250);
+    camera.setFocalPoint(250, 250);
+
+    point = globalGraph.getPointByCanvas(100, 100);
+    expect(point.x).toBe(100);
+    expect(point.y).toBe(100);
 
     point = globalGraph.getCanvasByPoint(100, 100);
-    expect(point.x).toBe(100);
-    expect(point.y).toBe(100);
+    expect(numberEqual(point.x, 100, 0.001)).toBe(true);
+    expect(numberEqual(point.y, 100, 0.001)).toBe(true);
 
-    translate(group, {
-      x: 100,
-      y: 100,
-    });
-
-    point = globalGraph.getCanvasByPoint(0, 0);
-    expect(point.x).toBe(100);
-    expect(point.y).toBe(100);
-
-    group.resetMatrix();
+    // reset
+    camera.setZoom(1);
+    camera.setPosition(250, 250);
+    camera.setFocalPoint(250, 250);
   });
 
   it('client point & model point convert', () => {
@@ -631,37 +619,27 @@ describe('graph', () => {
     expect(point.x).toBe(100);
     expect(point.y).toBe(100);
 
-    translate(group, {
-      x: 100,
-      y: 100,
-    });
+    globalGraph.translate(100, 100);
 
     point = globalGraph.getPointByClient(bbox.left + 100, bbox.top + 100);
-    expect(point.x).toBe(0);
-    expect(point.y).toBe(0);
+    expect(numberEqual(point.x, 0, 0.001)).toBe(true);
+    expect(numberEqual(point.y, 0, 0.001)).toBe(true);
 
-    scale(group, [1.5, 1.5]);
+    globalGraph.zoom(1.5)
     point = globalGraph.getPointByClient(bbox.left + 100, bbox.top + 100);
+    expect(numberEqual(point.x, 0, 0.001)).toBe(true);
+    expect(numberEqual(point.y, 0, 0.001)).toBe(true);
 
-    expect(point.x).toBe(-33.33333333333334);
-    expect(point.y).toBe(-33.33333333333334);
-
-    group.resetMatrix();
+    // reset
+    const camera = globalGraph.get('canvas').getCamera();
+    camera.setZoom(1);
+    camera.setPosition(250, 250);
+    camera.setFocalPoint(250, 250);
 
     point = globalGraph.getClientByPoint(100, 100);
 
-    expect(point.x).toBe(bbox.left + 100);
-    expect(point.y).toBe(bbox.top + 100);
-
-    translate(group, {
-      x: 100,
-      y: 100,
-    });
-
-    point = globalGraph.getClientByPoint(100, 100);
-
-    expect(point.x).toBe(bbox.left + 200);
-    expect(point.y).toBe(bbox.top + 200);
+    expect(numberEqual(point.x, bbox.left + 100, 0.1)).toBe(true);
+    expect(numberEqual(point.y, bbox.top + 100, 0.1)).toBe(true);
   });
 
   it('clear', () => {
@@ -671,8 +649,11 @@ describe('graph', () => {
 });
 
 describe('all node link center', () => {
+  const div2 = document.createElement('div');
+  div2.id = 'div2-spec';
+  document.body.appendChild(div2);
   const graph = new Graph({
-    container: div,
+    container: div2,
     width: 500,
     height: 500,
     linkCenter: true,
@@ -843,11 +824,11 @@ describe('all node link center', () => {
     expect(edge4.getKeyShape().attr('path')[0][2]).toEqual(edge3.getKeyShape().attr('path')[1][6]);
 
     const pathWithAnchor = edgeWithAnchor.getKeyShape().attr('path');
-    expect(pathWithAnchor[0][1]).toEqual(139.5);
-    expect(pathWithAnchor[0][2]).toEqual(139.5);
+    expect(pathWithAnchor[0][1]).toEqual(140);
+    expect(pathWithAnchor[0][2]).toEqual(140);
     expect(pathWithAnchor[1][0]).toEqual('C');
-    expect(pathWithAnchor[1][5]).toEqual(139.5);
-    expect(pathWithAnchor[1][6]).toEqual(160.5);
+    expect(pathWithAnchor[1][5]).toEqual(140);
+    expect(pathWithAnchor[1][6]).toEqual(160);
   });
 
   it('clear states', () => {
@@ -872,11 +853,12 @@ describe('all node link center', () => {
 
     graph.clearItemStates(node, 'b');
     expect(graph.findAllByState('node', 'b').length).toBe(0);
+    graph.destroy();
   });
 
   it('default node & edge style', () => {
     const defaultGraph = new Graph({
-      container: div,
+      container: div2,
       width: 500,
       height: 500,
       defaultNode: {
@@ -945,17 +927,17 @@ describe('all node link center', () => {
     defaultGraph.setItemState(node, 'selected', true);
 
     expect(keyShape.attr('fill')).toEqual('green');
-    expect(keyShape.attr('fillStyle')).toBe(undefined);
+    expect(keyShape.attr('fillStyle')).toBe(null);
     expect(keyShape.attr('stroke')).toEqual('red');
-    expect(keyShape.attr('strokeStyle')).toBe(undefined);
+    expect(keyShape.attr('strokeStyle')).toBe(null);
 
     defaultGraph.setItemState(node, 'selected', false);
 
     // addItem 时候 model 中的 style 会和 defaultNode 中定义的做 merge
     expect(keyShape.attr('fill')).toEqual('red');
-    expect(keyShape.attr('fillStyle')).toBe(undefined);
+    expect(keyShape.attr('fillStyle')).toBe(null);
     expect(keyShape.attr('stroke')).toEqual('#666');
-    expect(keyShape.attr('strokeStyle')).toBe(undefined);
+    expect(keyShape.attr('strokeStyle')).toBe(null);
 
     defaultGraph.updateItem(node, { style: { fill: '#ccc', stroke: '#444' } });
 
@@ -964,16 +946,16 @@ describe('all node link center', () => {
     defaultGraph.setItemState(node, 'selected', true);
 
     expect(keyShape.attr('fill')).toEqual('green');
-    expect(keyShape.attr('fillStyle')).toBe(undefined);
+    expect(keyShape.attr('fillStyle')).toBe(null);
     expect(keyShape.attr('stroke')).toEqual('red');
-    expect(keyShape.attr('strokeStyle')).toBe(undefined);
+    expect(keyShape.attr('strokeStyle')).toBe(null);
 
     defaultGraph.setItemState(node, 'selected', false);
 
     expect(keyShape.attr('fill')).toEqual('#ccc');
-    expect(keyShape.attr('fillStyle')).toBe(undefined);
+    expect(keyShape.attr('fillStyle')).toBe(null);
     expect(keyShape.attr('stroke')).toEqual('#444');
-    expect(keyShape.attr('strokeStyle')).toBe(undefined);
+    expect(keyShape.attr('strokeStyle')).toBe(null);
 
     defaultGraph.addItem('node', { id: 'node2' });
     const edge = defaultGraph.addItem('edge', { id: 'edge', source: 'node1', target: 'node2' });
@@ -992,7 +974,8 @@ describe('all node link center', () => {
     expect(edgeKeyShape.attr('strokeOpacity')).toEqual(0.5);
 
     // 测试default状态不存在的属性
-    expect(edgeKeyShape.attr('shadowColor')).toBe(undefined);
+    expect(edgeKeyShape.attr('shadowColor')).not.toBe(null);
+    expect(edgeKeyShape.attr('shadowBlur')).toBe(0);
     defaultGraph.setItemState(edge, 'active', true);
 
     expect(edgeKeyShape.attr('stroke')).toEqual('green');
@@ -1001,7 +984,7 @@ describe('all node link center', () => {
     defaultGraph.setItemState(edge, 'active', false);
 
     expect(edgeKeyShape.attr('stroke')).toEqual('blue');
-    expect(edgeKeyShape.attr('shadowColor')).toBe(undefined);
+    expect(edgeKeyShape.attr('shadowColor')).not.toBe(null);
     defaultGraph.destroy();
   });
 
@@ -1089,8 +1072,11 @@ describe('all node link center', () => {
 });
 
 describe('mapper fn', () => {
+  const div3 = document.createElement('div');
+  div3.id = 'div3-spec';
+  document.body.appendChild(div3);
   const graph = new Graph({
-    container: div,
+    container: div3,
     width: 500,
     height: 500,
     defaultNode: {
@@ -1153,7 +1139,7 @@ describe('mapper fn', () => {
     label = edge.getContainer().find((element) => element.get('className') === 'edge-label');
     expect(label).not.toBe(undefined);
     expect(label.attr('text')).toEqual('edge');
-    expect(label.attr('x')).toEqual(115.5);
+    expect(label.attr('x')).toEqual(115);
     expect(label.attr('y')).toEqual(100);
 
     graph.updateItem(node, { value: 50 });
@@ -1204,17 +1190,18 @@ describe('mapper fn', () => {
     keyShape = edge.getKeyShape();
     expect(keyShape.attr('stroke')).toEqual('rgb(224, 224, 224)');
     expect(keyShape.attr('lineWidth')).toEqual(1);
-    expect(keyShape.attr('fillOpacity')).toEqual(1);
+    expect(keyShape.attr('fillOpacity')).toEqual("");
 
     graph.setItemState(edge, 'selected', true);
     expect(keyShape.attr('stroke')).toEqual('rgb(95, 149, 255)');
     expect(keyShape.attr('lineWidth')).toEqual(2);
-    expect(keyShape.attr('fillOpacity')).toEqual(1);
+    expect(keyShape.attr('fillOpacity')).toEqual("");
 
     graph.setItemState(edge, 'custom', true);
     expect(keyShape.attr('stroke')).toEqual('rgb(95, 149, 255)');
     expect(keyShape.attr('lineWidth')).toEqual(2);
     expect(keyShape.attr('opacity')).toEqual(0.5);
+    graph.destroy();
   });
 });
 
@@ -1259,8 +1246,11 @@ xdescribe('plugins & layout', () => {
 });
 
 describe('auto rotate label on edge', () => {
+  const div4 = document.createElement('div');
+  div4.id = 'div4-spec';
+  document.body.appendChild(div4);
   const graph = new Graph({
-    container: div,
+    container: div4,
     width: 500,
     height: 500,
     modes: {
@@ -1287,6 +1277,7 @@ describe('auto rotate label on edge', () => {
     ],
     edges: [
       {
+        id: 'rotate-edge-label',
         source: 'node1',
         target: 'node2',
         label: 'node1-node2',
@@ -1316,16 +1307,17 @@ describe('auto rotate label on edge', () => {
     const edge1 = graph.getEdges()[0];
     const label1 = edge1.get('group').get('children')[1];
     const label1Matrix = label1.attr('matrix');
-    expect(label1Matrix[0]).toBe(0.2873478855664496);
-    expect(label1Matrix[1]).toBe(0.9578262852211201);
-    expect(label1Matrix[3]).toBe(-0.9578262852211201);
-    expect(label1Matrix[4]).toBe(0.2873478855664496);
-    expect(label1Matrix[6]).toBe(142.10501596029277);
-    expect(label1Matrix[7]).toBe(9.006502903982238);
+    expect(label1Matrix[0]).toBe(0.2873479127883911);
+    expect(label1Matrix[1]).toBe(0.9578263759613037);
+    expect(label1Matrix[3]).toBe(-0.9578263759613037);
+    expect(label1Matrix[4]).toBe(0.2873479127883911);
+    expect(label1Matrix[6]).toBe(65);
+    expect(label1Matrix[7]).toBe(100);
     const edge2 = graph.getEdges()[1];
     const label2 = edge2.get('group').get('children')[1];
     const label2Matrix = label2.attr('matrix');
-    expect(label2Matrix).toBe(null);
+    expect(label2Matrix[1]).toBe(0);
+    expect(label2Matrix[3]).toBe(-0);
   });
 
   it('drag node', () => {
@@ -1333,38 +1325,42 @@ describe('auto rotate label on edge', () => {
     graph.emit('node:dragstart', { x: 80, y: 150, item: node });
     graph.emit('node:drag', { x: 200, y: 200, item: node });
     graph.emit('node:dragend', { x: 200, y: 200, item: node });
+    // TOOD: label 角度没更新！
+
     const edge1 = graph.getEdges()[0];
     console.log('edge1', edge1);
     const label1 = edge1.get('group').get('children')[1];
     const label1Matrix = label1.attr('matrix');
-    expect(label1Matrix[0]).toBe(0.7071067811865476);
-    expect(label1Matrix[1]).toBe(0.7071067811865475);
-    expect(label1Matrix[3]).toBe(-0.7071067811865475);
-    expect(label1Matrix[4]).toBe(0.7071067811865476);
-    expect(label1Matrix[6]).toBe(124.99999999999999);
-    expect(label1Matrix[7]).toBe(-51.77669529663689);
+    expect(label1Matrix[0]).toBe(0.7071068286895752);
+    expect(label1Matrix[1]).toBe(0.7071067094802856);
+    expect(label1Matrix[3]).toBe(-0.7071067094802856);
+    expect(label1Matrix[4]).toBe(0.7071068286895752);
+    expect(label1Matrix[6]).toBe(125);
+    expect(label1Matrix[7]).toBe(125);
     const edge2 = graph.getEdges()[1];
     const label2 = edge2.get('group').get('children')[1];
     const label2Matrix = label2.attr('matrix');
-    expect(label2Matrix).toBe(null);
+    expect(label2Matrix[0]).toBe(1);
+    expect(label2Matrix[4]).toBe(1);
   });
 
   it('zoom and pan', () => {
     graph.zoom(0.5);
     graph.moveTo(100, 120);
-    const group = graph.get('group');
-    const groupMatrix = group.attr('matrix');
-    expect(groupMatrix[0]).toBe(0.5);
-    expect(groupMatrix[4]).toBe(0.5);
-    const bbox = graph.get('group').getCanvasBBox();
-    expect(bbox.x).toBe(100);
-    expect(bbox.y).toBe(120);
+    expect(graph.getZoom()).toBe(0.5);
+    const viewPoint = graph.get('canvas').getCamera().getPosition()
+    expect(numberEqual(viewPoint[0], 525, 1)).toBe(true);
+    expect(numberEqual(viewPoint[1], 505, 0.1)).toBe(true);
+    graph.destroy();
   });
 });
 
 describe('auto rotate label on edge', () => {
+  const div5 = document.createElement('div');
+  div5.id = 'div5-spec';
+  document.body.appendChild(div5);
   const graph = new Graph({
-    container: div,
+    container: div5,
     width: 500,
     height: 500,
     modes: {
@@ -1396,18 +1392,24 @@ describe('auto rotate label on edge', () => {
   it('downloadFullImage', () => {
     graph.data(data);
     graph.render();
+    // TODO: 事件无法正常触发
     graph.on('canvas:click', (evt) => {
-      graph.downloadFullImage('graph', {
+      graph.downloadFullImage('graph', 'image/jpeg', {
         backgroundColor: '#fff',
         padding: [40, 10, 10, 10],
       });
     });
+    // graph.emit('canvas:click', {})
+    graph.destroy();
   });
 });
 
 describe('node Neighbors', () => {
+  const div6 = document.createElement('div');
+  div6.id = 'div6-spec';
+  document.body.appendChild(div6);
   const graph = new Graph({
-    container: 'global-spec',
+    container: div6,
     width: 500,
     height: 500,
   });
@@ -1502,9 +1504,12 @@ describe('node Neighbors', () => {
 });
 
 describe('redo stack & undo stack', () => {
+  const div7 = document.createElement('div');
+  div7.id = 'div7-spec';
+  document.body.appendChild(div7);
   it('default stack is undefined', () => {
     const graph = new Graph({
-      container: 'global-spec',
+      container: div7,
       width: 500,
       height: 500,
     });
@@ -1514,7 +1519,7 @@ describe('redo stack & undo stack', () => {
   });
 
   const graph = new Graph({
-    container: 'global-spec',
+    container: div7,
     width: 500,
     height: 500,
     enabledStack: true,

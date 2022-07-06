@@ -1,9 +1,7 @@
 /**
  * 基于 G 的时间轴组件
  */
-import { Canvas as GCanvas } from '@antv/g-canvas';
-import { Canvas as GSVGCanvas } from '@antv/g-svg';
-import { ICanvas } from '@antv/g-base';
+import { Canvas, ICanvas } from '@antv/g6-g-adapter';
 import { createDom, modifyCSS } from '@antv/dom-util';
 import Base, { IPluginBaseConfig } from '../base';
 import TrendTimeBar, { TickCfg, SliderOption } from './trendTimeBar';
@@ -109,6 +107,8 @@ export default class TimeBar extends Base {
       container: null,
       className: 'g6-component-timebar',
       padding: 10,
+      width: 500,
+      height: 150,
       type: 'trend',
       trend: {
         data: [],
@@ -164,21 +164,13 @@ export default class TimeBar extends Base {
 
     this.set('timeBarContainer', timeBarContainer);
 
-    let canvas;
     const renderer = graph.get('renderer');
-    if (renderer === 'SVG') {
-      canvas = new GSVGCanvas({
-        container: timeBarContainer,
-        width,
-        height,
-      });
-    } else {
-      canvas = new GCanvas({
-        container: timeBarContainer,
-        width,
-        height,
-      });
-    }
+    const canvas = new Canvas({
+      container: timeBarContainer,
+      width,
+      height,
+      renderer
+    });
     // 根据传入的参数修改容器 CSS 样式
     if (this.get('containerCSS')) modifyCSS(timeBarContainer, this.get('containerCSS'));
     this.set('canvas', canvas);
@@ -287,6 +279,7 @@ export default class TimeBar extends Base {
       document.removeEventListener('mouseup', handleMouseUp)
     }
     canvas.on('mousedown', e => {
+      if (e.target.nodeName === 'document') return;
       if (e.target.get('name') === 'maxHandlerShape-handler' ||
         e.target.get('name') === 'minHandlerShape-handler' ||
         e.target === timebar.foregroundShape) {
@@ -298,9 +291,11 @@ export default class TimeBar extends Base {
   }
 
   private filterData(evt) {
+    if (this.destroyed) return;
     const { value } = evt;
 
     let trendData = null;
+    debugger
     const type = this._cfgs.type;
     if (type === 'trend' || type === 'simple') {
       trendData = this._cfgs.trend.data;

@@ -26,6 +26,9 @@ describe('image minimap', () => {
         width: 800,
         height: 600,
         plugins: [minimap],
+        modes: {
+          default: ['zoom-canvas', 'drag-canvas', 'collapse-expand']
+        },
         defaultNode: {
           size: 26,
           anchorPoints: [
@@ -100,10 +103,10 @@ describe('image minimap', () => {
         top = parseFloat(viewport.style.top.split('px')[0]);
         width = parseFloat(viewport.style.width.split('px')[0]);
         height = parseFloat(viewport.style.height.split('px')[0]);
-        expect(numberEqual(left, 33, 2)).toEqual(true);
-        expect(numberEqual(top, 90, 2)).toEqual(true);
-        expect(numberEqual(width, 158, 2)).toEqual(true);
-        expect(numberEqual(height, 59, 2)).toEqual(true);
+        expect(numberEqual(left, 28, 5)).toEqual(true);
+        expect(numberEqual(top, 90, 5)).toEqual(true);
+        expect(numberEqual(width, 167, 5)).toEqual(true);
+        expect(numberEqual(height, 59, 5)).toEqual(true);
 
         minimap.updateGraphImg(
           'https://gw.alipayobjects.com/mdn/rms_f8c6a0/afts/img/A*7QSRRJwAWxQAAAAAAAAAAABkARQnAQ',

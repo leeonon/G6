@@ -213,11 +213,11 @@ describe('shape node test', () => {
       });
       const shape = rectGroup.get('children')[0];
 
-      expect(shape.attr('fillOpacity')).toBe(1);
+      expect(shape.attr('fillOpacity')).toBe("");
       factory.setState('rectnode', 'active', true, item);
-      expect(shape.attr('fillOpacity')).not.toBe(1);
+      expect(shape.attr('fillOpacity')).not.toBe("");
       factory.setState('rectnode', 'active', false, item);
-      expect(shape.attr('fillOpacity')).toBe(1);
+      expect(shape.attr('fillOpacity')).toBe("");
     });
 
     it('selected', () => {
@@ -374,6 +374,7 @@ describe('shape node test', () => {
       const topPoint = group.find((g) => {
         return g.get('className') === 'link-point-top';
       });
+      console.log('topPoint', topPoint);
       expect(topPoint).toBe(null);
       const bottomPoint = group.find((g) => {
         return g.get('className') === 'link-point-bottom';
@@ -565,16 +566,26 @@ describe('shape node test', () => {
             type: 'diamond',
             x: 100,
             y: 200,
-          },
+          }
         ],
       };
       graph.data(data);
       graph.render();
+      debugger
 
       const node = graph.getNodes()[0];
       const group = node.get('group');
       // rect + label + linkPoints * 2
       expect(group.getCount()).toEqual(4);
+
+      group.addShape('circle', {
+        attrs: {
+          x: 100,
+          y: 200,
+          fill: '#f00',
+          r: 4
+        }
+      })
 
       node.update({
         linkPoints: {
@@ -706,7 +717,6 @@ describe('shape node test', () => {
         },
       });
       const leftPoint = group.find((g) => g.get('className') === 'link-point-left');
-      console.log('leftPoint', leftPoint, group);
       expect(leftPoint).not.toBe(null);
       expect(leftPoint.attr('r')).toBe(5);
       expect(leftPoint.attr('fill')).toBe('#f00');

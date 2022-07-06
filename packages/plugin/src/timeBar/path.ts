@@ -1,6 +1,6 @@
-import * as pathUtil from '@antv/path-util';
 import { Category, Linear } from '@antv/scale';
 import { map, each, isEqual, head, isArray } from '@antv/util';
+import { catmullRom2Bezier } from '@antv/path-util';
 
 type Point = [number, number];
 
@@ -43,7 +43,7 @@ export function getSmoothLinePath(points: Point[]): any[][] {
     }
   });
 
-  const path = pathUtil.catmullRom2Bezier(data, false);
+  const path = catmullRom2Bezier(data, false);
   const [x, y] = head(points);
   path.unshift(['M', x, y]);
 

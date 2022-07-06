@@ -21,6 +21,8 @@ const BaseGlobal = Global;
 
 export * from './types';
 
+export { EVENTS } from './constants';
+
 export {
   Arrow,
   Shape,

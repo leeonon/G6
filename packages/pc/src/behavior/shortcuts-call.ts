@@ -83,12 +83,6 @@ export default {
     }
   },
   onKeyUp() {
-    if (this.brush) {
-      // 清除所有选中状态后，设置拖得动状态为false，并清除框选的brush
-      this.brush.remove(true);
-      this.brush = null;
-      this.dragging = false;
-    }
     this.triggerKeydown = false;
   },
 };

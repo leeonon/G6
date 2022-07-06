@@ -7,7 +7,7 @@ import {
   Marker,
   Shape,
 } from '@antv/g6-core';
-import { ICanvas, IGroup, IShape } from '@antv/g-base';
+import { ICanvas, IGroup, IShape } from '@antv/g6-g-adapter';
 import * as AlgorithmSync from '@antv/algorithm';
 import * as AlgorithmAsync from '@antv/algorithm/lib/asyncIndex';
 import Graph from './graph/graph';
@@ -20,7 +20,7 @@ import './element';
 import './behavior';
 
 type IAlgorithm = typeof AlgorithmSync | typeof AlgorithmAsync;
-const Algorithm: IAlgorithm = { ...AlgorithmSync, ... AlgorithmAsync };
+const Algorithm: IAlgorithm = { ...AlgorithmSync, ...AlgorithmAsync };
 
 const Grid = Plugin.Grid;
 const Minimap = Plugin.Minimap;

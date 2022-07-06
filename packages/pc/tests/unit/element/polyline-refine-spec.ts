@@ -83,20 +83,11 @@ describe('polyline edge', () => {
     console.log(graph.getEdges()[1].getKeyShape());
 
     const path1 = graph.getEdges()[0].getKeyShape().attr('path');
-    expect(path1[1][1]).toBe(150);
-    expect(path1[1][2]).toBe(130.5);
-    expect(path1[2][1]).toBe(273.5);
-    expect(path1[2][2]).toBe(130.5);
-    expect(path1[3][1]).toBe(273.5);
-    expect(path1[3][2]).toBe(20.5);
-    expect(path1[4][1]).toBe(208);
-    expect(path1[4][2]).toBe(20.5);
-    expect(path1[5][1]).toBe(208);
-    expect(path1[5][2]).toBe(25.5);
+    expect(path1).toBe('M150 125L150 130L273 130L273 21L208 21L208 26');
   });
 
 
-  it.only('polyline with radius and circle ellipse node', () => {
+  it('polyline with radius and circle ellipse node', () => {
 
     const data2 = {
       nodes: [
@@ -195,19 +186,12 @@ describe('polyline edge', () => {
     graph.data(data2);
     graph.render();
 
-    // const path1 = graph.getEdges()[0].getKeyShape().attr('path');
-    // expect(path1[1][1]).toBe(150);
-    // expect(path1[1][2]).toBe(130.5);
-    // expect(path1[2][1]).toBe(273.5);
-    // expect(path1[2][2]).toBe(130.5);
-    // expect(path1[3][1]).toBe(273.5);
-    // expect(path1[3][2]).toBe(20.5);
-    // expect(path1[4][1]).toBe(208);
-    // expect(path1[4][2]).toBe(20.5);
-    // expect(path1[5][1]).toBe(208);
-    // expect(path1[5][2]).toBe(25.5);
+    const path1 = graph.getEdges()[0].getKeyShape().attr('path');
+    const path2 = graph.getEdges()[2].getKeyShape().attr('path');
+    expect(path1).toBe('M47.5 37.5L240 37.5');
+    expect(path2).toBe('M242.92893218813452 44.571067811865476L242.92893218813452 222.92893218813452Q242.92893218813452 242.92893218813452 222.92893218813452 242.92893218813452L222.92893218813452 242.92893218813452L44.571067811865476 242.92893218813452');
   });
-  
+
   xit('polyline edge performance exam', () => {
     const graph = new Graph({
       container: div,

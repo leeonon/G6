@@ -1,4 +1,4 @@
-import { clone } from '@antv/util';
+import { clone, debounce } from '@antv/util';
 import { IG6GraphEvent, ShapeStyle, IAbstractGraph as IGraph, Util } from '@antv/g6-core';
 import Base from '../base';
 
@@ -26,6 +26,9 @@ const lensDelegateStyle = {
   fill: '#fff',
 };
 export default class EdgeFilterLens extends Base {
+  private dragging: boolean;
+  private mousedown: boolean;
+
   constructor(config?: EdgeFilterLensConfig) {
     super(config);
   }
@@ -83,17 +86,29 @@ export default class EdgeFilterLens extends Base {
       lensDelegate = self.get('delegate');
 
       // drag to move the lens
-      lensDelegate.on('dragstart', (evt) => {});
-      lensDelegate.on('drag', (evt) => {
-        self.filter(evt);
+      lensDelegate.on('mousedown', evt => {
+        self.mousedown = true;
+      })
+      lensDelegate.on('mousemove', evt => {
+        if (self.dragging) {
+          // drag
+          self.filter(evt);
+        }
+        if (self.mousedown && !self.dragging) {
+          self.dragging = true;
+          // dragstart
+        }
       });
-
+      lensDelegate.on('mouseup', evt => {
+        self.mousedown = false;
+        self.dragging = false;
+      })
       // 绑定调整范围（r）
       // 由于 drag 用于改变 lens 位置，因此在此模式下，drag 不能用于调整 r
 
       // scaling r
       if (this.get('scaleRBy') === 'wheel') {
-        lensDelegate.on('mousewheel', (evt) => {
+        lensDelegate.on('wheel', (evt) => {
           self.scaleRByWheel(evt);
         });
       }
@@ -106,23 +121,11 @@ export default class EdgeFilterLens extends Base {
    */
   protected scaleRByWheel(e: IG6GraphEvent) {
     const self = this;
-    if (!e || !e.originalEvent) return;
-    if (e.preventDefault) e.preventDefault();
+    const wheelData = (e?.originalEvent as any)?.wheelDelta;
+    if (!e?.deltaY && !wheelData) return;
+    e.preventDefault?.();
     const graph: IGraph = self.get('graph');
-    let ratio;
-    const lensDelegate = self.get('delegate');
-    const lensCenter = lensDelegate
-      ? {
-          x: lensDelegate.attr('x'),
-          y: lensDelegate.attr('y'),
-        }
-      : undefined;
-    const mousePos = lensCenter || graph.getPointByClient(e.clientX, e.clientY);
-    if ((e.originalEvent as any).wheelDelta < 0) {
-      ratio = 1 - DELTA;
-    } else {
-      ratio = 1 / (1 - DELTA);
-    }
+    let ratio = (e.deltaY || wheelData) < 0 ? 1 - DELTA : 1 / (1 - DELTA);
     const maxR = self.get('maxR');
     const minR = self.get('minR');
     let r = self.get('r');
@@ -148,14 +151,15 @@ export default class EdgeFilterLens extends Base {
     const hitNodesMap = {};
     const r = self.get('r');
     const type = self.get('type');
-    const fCenter = { x: e.x, y: e.y };
+    const fCenter = { x: e.x || e.pointX, y: e.y || e.pointY };
     self.updateDelegate(fCenter, r);
     const shouldShow = self.get('shouldShow');
 
     let vShapes = self.get('vShapes');
     if (vShapes) {
+      const group = graph.get('group');
       vShapes.forEach((shape) => {
-        shape.remove();
+        group.removeChild(shape, true);
         shape.destroy();
       });
     }
@@ -175,12 +179,19 @@ export default class EdgeFilterLens extends Base {
       const sourceId = model.source;
       const targetId = model.target;
       if (shouldShow(model)) {
-        if (type === 'only-source' || type === 'one') {
-          if (hitNodesMap[sourceId] && !hitNodesMap[targetId]) hitEdges.push(edge);
-        } else if (type === 'only-target' || type === 'one') {
-          if (hitNodesMap[targetId] && !hitNodesMap[sourceId]) hitEdges.push(edge);
-        } else if (type === 'both' && hitNodesMap[sourceId] && hitNodesMap[targetId]) {
-          hitEdges.push(edge);
+        switch (type) {
+          case 'one':
+            if (hitNodesMap[sourceId] || hitNodesMap[targetId]) hitEdges.push(edge);
+            break;
+          case 'only-source':
+            if (hitNodesMap[sourceId] && !hitNodesMap[targetId]) hitEdges.push(edge);
+            break;
+          case 'only-target':
+            if (hitNodesMap[targetId] && !hitNodesMap[sourceId]) hitEdges.push(edge);
+            break;
+          default:
+            if (hitNodesMap[sourceId] && hitNodesMap[targetId]) hitEdges.push(edge);
+            break;
         }
       }
     });
@@ -197,6 +208,7 @@ export default class EdgeFilterLens extends Base {
         const vShape = group.addShape(shapeType, {
           attrs: shape.attr(),
         });
+        vShape.set('capture', false);
         vShapes.push(vShape);
         if (showNodeLabel && shapeType === 'text') {
           vShape.set('visible', true);
@@ -207,7 +219,8 @@ export default class EdgeFilterLens extends Base {
     Object.keys(hitNodesMap).forEach((key) => {
       const node = hitNodesMap[key];
       const clonedGroup = node.get('group').clone();
-      group.add(clonedGroup);
+      clonedGroup.set('capture', false);
+      group.appendChild(clonedGroup);
       vShapes.push(clonedGroup);
       if (showEdgeLabel) {
         const shapes = clonedGroup.get('children');
@@ -244,12 +257,12 @@ export default class EdgeFilterLens extends Base {
     }
     if (scaleRBy === 'wheel' || scaleRBy === 'unset') {
       self.set('scaleRBy', scaleRBy);
-      self.get('delegate').remove();
-      self.get('delegate').destroy();
+      const graph = this.get('graph');
+      const parent = graph.get('group');
+      parent.removeChild(self.get('delegate'), true);
       const dPercentText = self.get('dPercentText');
       if (dPercentText) {
-        dPercentText.remove();
-        dPercentText.destroy();
+        parent.removeChild(dPercentText, true);
       }
     }
     if (showLabel === 'node' || showLabel === 'both') {
@@ -293,7 +306,7 @@ export default class EdgeFilterLens extends Base {
         // 调整范围 r 的监听
         if (this.get('scaleRBy') === 'wheel') {
           // 使用滚轮调整 r
-          lensDelegate.on('mousewheel', (evt) => {
+          lensDelegate.on('wheel', (evt) => {
             self.scaleRByWheel(evt);
           });
         }
@@ -315,19 +328,15 @@ export default class EdgeFilterLens extends Base {
   public clear() {
     const self = this;
     let vShapes = self.get('vShapes');
+    const graph = self.get('graph');
+    const group = graph.get('group');
     if (vShapes) {
-      vShapes.forEach((shape) => {
-        shape.remove();
-        shape.destroy();
-      });
+      vShapes.forEach((shape) => group.removeChild(shape, true));
     }
     vShapes = [];
     self.set('vShapes', vShapes);
     const lensDelegate = self.get('delegate');
-    if (lensDelegate && !lensDelegate.destroyed) {
-      lensDelegate.remove();
-      lensDelegate.destroy();
-    }
+    if (lensDelegate && !lensDelegate.destroyed) group.removeChild(lensDelegate, true)
   }
 
   /**

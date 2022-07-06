@@ -1,4 +1,5 @@
-import { IGroup, BBox } from '@antv/g-base';
+// import { IGroup, BBox } from '@antv/g-base';
+import { IGroup, BBox } from '@antv/g6-g-adapter';
 import { vec2 } from '@antv/matrix-util';
 import Global from '../global';
 import {
@@ -35,10 +36,7 @@ export const getBBox = (element: IShapeBase, group: IGroup): IBBox => {
   };
   // 根据父元素变换矩阵
   if (group) {
-    let matrix = group.getMatrix();
-    if (!matrix) {
-      matrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-    }
+    const matrix = group.getMatrix() || [1, 0, 0, 0, 1, 0, 0, 0, 1];
     leftTop = applyMatrix(leftTop, matrix);
     rightBottom = applyMatrix(rightBottom, matrix);
   }
@@ -633,18 +631,22 @@ export const getComboBBox = (children: ComboTree[], graph: IAbstractGraph, combo
     if (!childItem || !childItem.isVisible()) return; // ignore hidden children
     childItem.set('bboxCanvasCache', undefined);
     const childBBox = childItem.getCanvasBBox();
-    if (childBBox.x && comboBBox.minX > childBBox.minX) comboBBox.minX = childBBox.minX;
-    if (childBBox.y && comboBBox.minY > childBBox.minY) comboBBox.minY = childBBox.minY;
-    if (childBBox.x && comboBBox.maxX < childBBox.maxX) comboBBox.maxX = childBBox.maxX;
-    if (childBBox.y && comboBBox.maxY < childBBox.maxY) comboBBox.maxY = childBBox.maxY;
+    if (!isNaN(childBBox.x)) {
+      if (comboBBox.minX > childBBox.minX) comboBBox.minX = childBBox.minX;
+      if (comboBBox.maxX < childBBox.maxX) comboBBox.maxX = childBBox.maxX;
+    }
+    if (!isNaN(childBBox.y)) {
+      if (comboBBox.minY > childBBox.minY) comboBBox.minY = childBBox.minY;
+      if (comboBBox.maxY < childBBox.maxY) comboBBox.maxY = childBBox.maxY;
+    }
   });
   comboBBox.x = (comboBBox.minX + comboBBox.maxX) / 2;
   comboBBox.y = (comboBBox.minY + comboBBox.maxY) / 2;
   comboBBox.width = comboBBox.maxX - comboBBox.minX;
   comboBBox.height = comboBBox.maxY - comboBBox.minY;
 
-  comboBBox.centerX = (comboBBox.minX + comboBBox.maxX) / 2;
-  comboBBox.centerY = (comboBBox.minY + comboBBox.maxY) / 2;
+  comboBBox.centerX = comboBBox.x;
+  comboBBox.centerY = comboBBox.y;
 
   Object.keys(comboBBox).forEach((key) => {
     if (comboBBox[key] === Infinity || comboBBox[key] === -Infinity) {
@@ -685,4 +687,17 @@ export const cloneBesidesImg = (obj) => {
     }
   });
   return clonedObj;
+}
+
+export const animateAttrs = ['x', 'y', 'r', 'stroke', 'strokeOpacity', 'fill', 'fillOpacity', 'opacity', 'lineWidth', 'lineCap', 'lineJoin', 'lineDash', 'path', 'points', 'height', 'width', 'shadowColor', 'shadowBlur', 'shadowOffsetX', 'shadowOffsetY', 'textAlign', 'textBaseline', 'fontSize', 'fontFamily', 'fontWeight', 'fontVariant', 'lineHeight'];
+export const animateAttrsMap = Object.fromEntries(animateAttrs.map(key => [key, true]));
+
+export const filterByAnimateAttrs = (attrs) => {
+  const filteredAttrs = {};
+  Object.keys(attrs).forEach(key => {
+    if (animateAttrsMap[key]) {
+      filteredAttrs[key] = attrs[key];
+    }
+  });
+  return filteredAttrs;
 }

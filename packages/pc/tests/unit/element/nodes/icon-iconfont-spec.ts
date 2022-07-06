@@ -34,6 +34,9 @@ describe('icon with iconfont', () => {
         text: 'xxx'
       }
     })
+
+    graph.emit('canvas:click')
+
     expect(graph.getNodes()[0].get('group').find(e => e.get('name') === 'circle-icon').attr('text')).toBe('xxx');
   });
   it('update iconfont node', () => {

@@ -1,7 +1,6 @@
 import { each, isNil, isNumber } from '@antv/util';
 import { IEdge, INode } from '../interface/item';
 import { IPoint, IShapeBase, ModelConfig, NodeConfig, UpdateType } from '../types';
-import { getBBox } from '../util/graphic';
 import {
   distance,
   getCircleIntersectByPoint,

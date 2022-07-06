@@ -1,5 +1,6 @@
 import '../../../src';
 import G6 from '../../../src';
+import { numberEqual } from '../layout/util';
 
 const div = document.createElement('div');
 div.id = 'drag-combo-spec';
@@ -42,7 +43,7 @@ G6.registerCombo(
 );
 
 describe('drag-combo', () => {
-  it('drag combo', (done) => {
+  it.only('drag combo', (done) => {
     const data = {
       nodes: [
         {
@@ -168,21 +169,21 @@ describe('drag-combo', () => {
     const comboC = graph.findById('C');
     let comboCBBox = comboC.getKeyShape().getCanvasBBox();
 
-    expect(Math.abs(comboCBBox.width - 279) < 2).toBe(true);
+    expect(numberEqual(comboCBBox.width, 276, 1)).toBe(true);
 
     graph.emit('combo:dragstart', { item: combo, x: 100, y: 100 });
     graph.emit('combo:drag', { item: combo, x: 500, y: 100 });
 
 
     comboCBBox = comboC.getKeyShape().getCanvasBBox();
-    expect(Math.abs(comboCBBox.width - 279) < 2).toBe(true);
+    expect(numberEqual(comboCBBox.width, 276, 1)).toBe(true);
 
     graph.emit('combo:dragend', { item: combo, x: 500, y: 100 });
     setTimeout(() => {
       comboCBBox = comboC.getKeyShape().getCanvasBBox();
       // setTimeout 有时候未变化完成
       // expect(Math.abs(comboCBBox.width - 47) < 2).toBe(true);
-      graph.destroy();
+      // graph.destroy();
       done();
     }, 800);
   });
@@ -306,14 +307,15 @@ describe('drag-combo', () => {
     const combo = graph.findById('A');
     const comboC = graph.findById('C');
     let comboCBBox = comboC.getKeyShape().getCanvasBBox();
+    console.log('comboCBBox', comboCBBox)
 
-    expect(Math.abs(comboCBBox.width - 298) < 2).toBe(true);
+    expect(numberEqual(comboCBBox.width, 295, 1)).toBe(true);
 
     graph.emit('combo:dragstart', { item: combo, x: 100, y: 100 });
     graph.emit('combo:drag', { item: combo, x: 500, y: 100 });
 
     comboCBBox = comboC.getKeyShape().getCanvasBBox();
-    expect(Math.abs(comboCBBox.width - 298) < 2).toBe(true);
+    expect(numberEqual(comboCBBox.width, 295, 1)).toBe(true);
 
     graph.emit('combo:dragend', { item: combo, x: 500, y: 100 });
     setTimeout(() => {

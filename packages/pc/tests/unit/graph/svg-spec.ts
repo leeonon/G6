@@ -720,11 +720,11 @@ describe('all node link center', () => {
     expect(edge4.getKeyShape().attr('path')[0][2]).toEqual(edge3.getKeyShape().attr('path')[1][6]);
 
     const pathWithAnchor = edgeWithAnchor.getKeyShape().attr('path');
-    expect(pathWithAnchor[0][1]).toEqual(139.5);
-    expect(pathWithAnchor[0][2]).toEqual(139.5);
+    expect(pathWithAnchor[0][1]).toEqual(140);
+    expect(pathWithAnchor[0][2]).toEqual(140);
     expect(pathWithAnchor[1][0]).toEqual('C');
-    expect(pathWithAnchor[1][5]).toEqual(139.5);
-    expect(pathWithAnchor[1][6]).toEqual(160.5);
+    expect(pathWithAnchor[1][5]).toEqual(140);
+    expect(pathWithAnchor[1][6]).toEqual(160);
   });
 
   it('clear states', () => {

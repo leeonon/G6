@@ -26,12 +26,12 @@ const edges = [
       startArrow: {
         path: Arrow.circle(5, 0),
         fill: '#0f0',
-        d: 0,
+        // d: 0,
       },
       endArrow: {
         path: Arrow.circle(5, 0),
         fill: '#f00',
-        d: 0,
+        // d: 0,
       },
     },
   },
@@ -77,6 +77,7 @@ describe('issues', () => {
     expect(combo.length).toBe(1);
     const comboIds = graph.getNodes().map(node => node.getModel().comboId);
     expect(comboIds).toEqual(['combo1', 'combo1']);
+    graph.destroy();
   });
 
   it('create combo with node and combo', () => {

@@ -76,8 +76,9 @@ describe('edge bundling', () => {
         data: data2,
       });
 
-      expect(data2.edges[0].type).toEqual('polyline');
-      expect(data2.edges[0].controlPoints.length > 2).toEqual(true);
+      const edge = graph.getEdges()[0].getModel();
+      expect(edge.type).toEqual('polyline');
+      expect(edge.controlPoints.length > 2).toEqual(true);
       bundle.destroy();
     });
   });

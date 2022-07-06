@@ -51,13 +51,13 @@ describe('graph node states', () => {
     });
     graph.data(data);
     graph.render();
-    graph.addItem('node', { id: 'node3', x: 100, y: 200 });
+    const node3 = graph.addItem('node', { id: 'node3', x: 100, y: 200 });
     graph.on('node:mouseenter', (e) => {
       const item = e.item;
       graph.setItemState(item, 'hover', true);
       // graph.setItemState(item, 'comCircle', 'selected')
       const keyShape = item.getKeyShape();
-      expect(keyShape.attr('opacity')).toEqual(0.8);
+      expect(keyShape.attr('opacity')).toEqual(0.3);
       expect(keyShape.attr('fill')).toEqual('steelblue');
     });
     graph.on('node:click', (e) => {
@@ -68,7 +68,9 @@ describe('graph node states', () => {
       expect(keyShape.attr('opacity')).toEqual(1);
       expect(keyShape.attr('fill')).toEqual('steelblue');
     });
-    // graph.destroy();
+    graph.emit('node:mouseenter', { item: node3 });
+    graph.emit('node:click', { item: node3 });
+    graph.destroy();
   });
 
   // setState to change the height, when the state is restored, the height can not be restored though the attrs are correct.
@@ -80,12 +82,12 @@ describe('graph node states', () => {
       height: 500,
       nodeStateStyles: {
         hover: {
-          // fill: '#f00',
-          // stroke: '#0f0',
-          // lineWidth: 3,
-          // r: 50,
-          // width: 50,
-          // height: 20
+          fill: '#f00',
+          stroke: '#0f0',
+          lineWidth: 3,
+          r: 50,
+          width: 50,
+          height: 20
         },
       },
       defaultNode: {
@@ -102,16 +104,23 @@ describe('graph node states', () => {
     // canvas.set('localRefresh', false);
     graph.data(data);
     graph.render();
-    const node3 = graph.addItem('node', { id: 'node3', x: 100, y: 150, type: 'rect' });
+    const node3 = graph.addItem('node', { id: 'node3', x: 100, y: 150, type: 'simple-rect' });
+    expect(node3.getKeyShape().attr('width')).toBe(30);
     graph.paint();
     graph.on('node:mouseenter', (e) => {
       const item = e.item;
       graph.setItemState(item, 'hover', true);
+      expect(item.getKeyShape().attr('fill')).toBe('#f00');
+      expect(item.getKeyShape().attr('width')).toBe(50);
     });
     graph.on('node:mouseleave', (e) => {
       const item = e.item;
       graph.setItemState(item, 'hover', false);
+      expect(item.getKeyShape().attr('fill')).not.toBe('#f00');
+      expect(item.getKeyShape().attr('width')).toBe(30);
     });
+    graph.emit('node:mouseenter', { item: node3 });
+    graph.emit('node:mouseleave', { item: node3 });
     graph.destroy();
   });
 
@@ -426,8 +435,8 @@ describe('graph node states', () => {
         case 'node2':
           expect(keyShape.attr('lineWidth')).toEqual(1);
           expect(keyShape.attr('fill')).toEqual('#0f0');
-          expect(keyShape.attr('shadowColor')).toEqual(undefined);
-          expect(keyShape.attr('shadowBlur')).toEqual(undefined);
+          expect(keyShape.attr('shadowColor')).toEqual(null);
+          expect(keyShape.attr('shadowBlur')).toEqual(null);
           break;
       }
     });

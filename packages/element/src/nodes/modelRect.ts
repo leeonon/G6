@@ -1,5 +1,5 @@
 import { mix, isString } from '@antv/util';
-import { IGroup, IShape } from '@antv/g-base';
+import { IGroup, IShape } from '@antv/g6-g-adapter';
 import {
   registerNode,
   Item,
@@ -484,7 +484,7 @@ registerNode(
 
       if (logoIconShape && !logoIconShape.destroyed) {
         if (!show && show !== undefined) {
-          logoIconShape.remove();
+          group.removeChild(logoIconShape, true);
           delete group['shapeMap']['pre-rect'];
         } else {
           const { width: logoW, height: h, x, y, offset: logoOffset, ...logoIconStyle } = logoIcon;
@@ -507,7 +507,7 @@ registerNode(
       const stateIcon = mix({}, currentStateIconAttr, cfg.stateIcon);
       if (stateIconShape) {
         if (!stateIcon.show && stateIcon.show !== undefined) {
-          stateIconShape.remove();
+          group.removeChild(stateIconShape, true);
           delete group['shapeMap']['rect-state-icon'];
         }
         const {

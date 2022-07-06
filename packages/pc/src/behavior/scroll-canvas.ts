@@ -42,8 +42,8 @@ export default {
         y: point.y,
       });
     } else {
-      let dx = (ev.deltaX || ev.movementX) as number;
-      let dy = (ev.deltaY || ev.movementY) as number;
+      let dx = (ev.deltaX || ev.movementX || 0) as number;
+      let dy = (ev.deltaY || ev.movementY || 0) as number;
       if (!dy && navigator.userAgent.indexOf('Firefox') > -1) dy = (-ev.wheelDelta * 125) / 3
 
       const width = this.graph.get('width');
@@ -58,33 +58,35 @@ export default {
         expandHeight = height * expandHeight;
       }
       const { minX, maxX, minY, maxY } = graphCanvasBBox;
+      const leftTopCanvas = graph.getCanvasByPoint(minX, minY);
+      const rightBottomCanvas = graph.getCanvasByPoint(maxX, maxY);
 
 
       if (dx > 0) {
-        if (maxX < -expandWidth) {
+        if (rightBottomCanvas.x < -expandWidth) {
           dx = 0
-        } else if (maxX - dx < -expandWidth) {
-          dx = maxX + expandWidth
+        } else if (rightBottomCanvas.x - dx < -expandWidth) {
+          dx = rightBottomCanvas.x + expandWidth
         }
       } else if (dx < 0) {
-        if (minX > width + expandWidth) {
+        if (leftTopCanvas.x > width + expandWidth) {
           dx = 0
-        } else if (minX - dx > width + expandWidth) {
-          dx = minX - (width + expandWidth)
+        } else if (leftTopCanvas.x - dx > width + expandWidth) {
+          dx = leftTopCanvas.x - (width + expandWidth)
         }
       }
 
       if (dy > 0) {
-        if (maxY < -expandHeight) {
+        if (rightBottomCanvas.y < -expandHeight) {
           dy = 0
         } else if (maxY - dy < -expandHeight) {
-          dy = maxY + expandHeight
+          dy = rightBottomCanvas.y + expandHeight
         }
       } else if (dy < 0) {
-        if (minY > height + expandHeight) {
+        if (leftTopCanvas.y > height + expandHeight) {
           dy = 0
-        } else if (minY - dy > height + expandHeight) {
-          dy = minY - (height + expandHeight)
+        } else if (leftTopCanvas.y - dy > height + expandHeight) {
+          dy = leftTopCanvas.y - (height + expandHeight)
         }
       }
 

@@ -1,4 +1,4 @@
-import { Event, IGroup, ICanvas, IShape } from '@antv/g-base';
+import { GEvent, IGroup, ICanvas, IShape } from '@antv/g6-g-adapter';
 import { get, size, assign, each, isNumber } from '@antv/util';
 import { ext } from '@antv/matrix-util';
 import Trend, { TrendCfg } from './trend';
@@ -176,6 +176,8 @@ export default class TrendTimeBar {
 
   private currentHandler: Handler | IShape;
 
+  private mousedown: boolean;
+
   private prevX: number = 0;
 
   /** 刻度位置预处理 */
@@ -235,7 +237,7 @@ export default class TrendTimeBar {
       tick = {
         tickLabelStyle: {},
         tickLineStyle: {},
-        tickLabelFormatter: (d: string) => { return d; },
+        tickLabelFormatter: (d: string) => d,
         ticks: []
       } as TickCfg,
       type,
@@ -629,20 +631,23 @@ export default class TrendTimeBar {
     });
 
     // 处理前进一步的事件
-    this.group.on(`${NEXT_STEP_BTN}:click`, () => {
+    const nextButton = this.group.find(ele => ele.get('name') === NEXT_STEP_BTN);
+    nextButton.on('click', () => {
       this.currentHandler = this.maxHandlerShape;
       this.updateStartEnd(0.01);
       this.updateUI();
     });
 
     // 处理后退一步的事件
-    this.group.on(`${PRE_STEP_BTN}:click`, () => {
+    const preButton = this.group.find(ele => ele.get('name') === PRE_STEP_BTN);
+    preButton.on('click', () => {
       this.currentHandler = this.maxHandlerShape;
       this.updateStartEnd(-0.01);
       this.updateUI();
     });
 
-    this.group.on(TIMEBAR_CONFIG_CHANGE, ({ type, speed }) => {
+    this.group.on(TIMEBAR_CONFIG_CHANGE, (e) => {
+      const { type, speed } = e.detail;
       this.currentSpeed = speed;
       this.currentMode = type;
       if (type === 'single') {
@@ -655,22 +660,9 @@ export default class TrendTimeBar {
         this.minTextShape.show();
       }
     });
-  }
 
-  private onMouseDown = (handler: Handler | IShape) => (e: Event) => {
-    // 1. 记录点击的滑块
-    this.currentHandler = handler;
 
-    const event = e.originalEvent as MouseEvent;
-
-    // 2. 存储当前点击位置
-    event.stopPropagation();
-    event.preventDefault();
-
-    // 兼容移动端获取数据
-    this.prevX = get(event, 'touches.0.pageX', event.pageX);
-
-    // 3. 开始滑动的时候，绑定 move 和 up 事件
+    // 在容器上绑定 move 和 up 事件，内部根据 this.currentHandler 标记是否在拖拽过程中
     const containerDOM = this.canvas.get('container');
 
     containerDOM.addEventListener('mousemove', this.onMouseMove);
@@ -681,12 +673,30 @@ export default class TrendTimeBar {
     containerDOM.addEventListener('touchmove', this.onMouseMove);
     containerDOM.addEventListener('touchend', this.onMouseUp);
     containerDOM.addEventListener('touchcancel', this.onMouseUp);
+  }
+
+  private onMouseDown = (handler: Handler | IShape) => (e: GEvent) => {
+    // 1. 记录点击的滑块
+    this.currentHandler = handler;
+    // 标记鼠标按下状态，便于模拟 drag
+    this.mousedown = true;
+
+    const event = e.originalEvent;
+
+    // 2. 存储当前点击位置
+    event.stopPropagation();
+
+    // 兼容移动端获取数据
+    this.prevX = get(event, 'touches.0.pageX', event.pageX);
+
   };
 
-  private onMouseMove = (e: MouseEvent) => {
+  private onMouseMove = (e: GEvent) => {
+    // mousedown false，说明不在拖拽过程中
+    if (!this.mousedown) return;
     // 滑动过程中，计算偏移，更新滑块，然后 emit 数据出去
-    e.stopPropagation();
-    e.preventDefault();
+    e.stopPropagation?.();
+    e.preventDefault?.();
 
     const x = get(e, 'touches.0.pageX', e.pageX);
 
@@ -704,23 +714,9 @@ export default class TrendTimeBar {
   };
 
   private onMouseUp = () => {
-    // 结束之后，取消绑定的事件
-    if (this.currentHandler) {
-      this.currentHandler = undefined;
-    }
-
-    const containerDOM = this.canvas.get('container');
-    if (containerDOM) {
-      containerDOM.removeEventListener('mousemove', this.onMouseMove);
-      containerDOM.removeEventListener('mouseup', this.onMouseUp);
-      // 防止滑动到 canvas 外部之后，状态丢失
-      containerDOM.removeEventListener('mouseleave', this.onMouseUp);
-
-      // 移动端事件
-      containerDOM.removeEventListener('touchmove', this.onMouseMove);
-      containerDOM.removeEventListener('touchend', this.onMouseUp);
-      containerDOM.removeEventListener('touchcancel', this.onMouseUp);
-    }
+    // 结束之后，取消绑定的事件，代表拖拽结束
+    if (this.mousedown) this.currentHandler = undefined;
+    this.mousedown = false;
   };
 
   /** 输入当前圆点位置，输出离哪个 tick 的位置最近 */
@@ -773,9 +769,12 @@ export default class TrendTimeBar {
   private updateStartEnd(offsetRange: number) {
     const minData = this.ticks[this.adjustTickIndex(this.start * this.width)];
     const maxData = this.ticks[this.adjustTickIndex(this.end * this.width)];
+    const fomatter = this.tickLabelFormatter ? this.tickLabelFormatter : (d) => d?.date;
+    const minDataText = fomatter(minData);
+    const maxDataText = fomatter(maxData);
     if (!this.currentHandler) {
-      this.minText = this.tickLabelFormatter ? this.tickLabelFormatter(minData) : minData?.date;
-      this.maxText = this.tickLabelFormatter ? this.tickLabelFormatter(maxData) : maxData?.date;
+      this.minText = minDataText;
+      this.maxText = fomatter(maxData);
       return;
     }
     // 操作不同的组件，反馈不一样
@@ -784,19 +783,19 @@ export default class TrendTimeBar {
         // 拖动最小滑块时使用当前最大值设置最大值的文本，以便恢复到默认值
         this.maxText = this.maxTextShape.attr('text');
         this.start += offsetRange;
-        this.minText = this.tickLabelFormatter ? this.tickLabelFormatter(minData) : minData.date;
+        this.minText = minDataText;
         break;
       case this.maxHandlerShape:
         // 拖动最大滑块时使用当前最小值设置最小值的文本，以便恢复到默认值
         this.minText = this.minTextShape.attr('text');
         this.end += offsetRange;
-        this.maxText = this.tickLabelFormatter ? this.tickLabelFormatter(maxData) : maxData.date;
+        this.maxText = maxDataText;
         break;
       case this.foregroundShape:
         this.start += offsetRange;
         this.end += offsetRange;
-        this.minText = this.tickLabelFormatter ? this.tickLabelFormatter(minData) : minData.date;
-        this.maxText = this.tickLabelFormatter ? this.tickLabelFormatter(maxData) : maxData.date;
+        this.minText = minDataText;
+        this.maxText = maxDataText;
         break;
       default:
         break;
@@ -937,7 +936,7 @@ export default class TrendTimeBar {
   }
 
   public destory() {
-    this.graph.off(VALUE_CHANGE, () => { /* do nothing */});
+    this.graph.off(VALUE_CHANGE, () => { /* do nothing */ });
 
     const group = this.group;
 
@@ -961,9 +960,22 @@ export default class TrendTimeBar {
     this.foregroundShape.off('touchstart');
     this.foregroundShape.destroy();
 
+    const containerDOM = this.canvas.get('container');
+    containerDOM.removeEventListener('mousemove', this.onMouseMove);
+    containerDOM.removeEventListener('mouseup', this.onMouseUp);
+    // 防止滑动到 canvas 外部之后，状态丢失
+    containerDOM.removeEventListener('mouseleave', this.onMouseUp);
+
+    // 移动端事件
+    containerDOM.removeEventListener('touchmove', this.onMouseMove);
+    containerDOM.removeEventListener('touchend', this.onMouseUp);
+    containerDOM.removeEventListener('touchcancel', this.onMouseUp);
+
     group.off(`${PLAY_PAUSE_BTN}:click`);
-    group.off(`${NEXT_STEP_BTN}:click`);
-    group.off(`${PRE_STEP_BTN}:click`);
+    const nextButton = group.find(ele => ele.get('name') === NEXT_STEP_BTN);
+    const preButton = group.find(ele => ele.get('name') === PRE_STEP_BTN);
+    nextButton?.off('click');
+    preButton?.off('click');
     group.off(TIMEBAR_CONFIG_CHANGE);
     group.destroy();
 

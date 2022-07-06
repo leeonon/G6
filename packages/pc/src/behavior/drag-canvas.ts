@@ -36,15 +36,16 @@ export default {
     };
   },
   updateViewport(e: IG6GraphEvent) {
-    const { origin } = this;
-    const clientX = +e.clientX;
-    const clientY = +e.clientY;
+    const { origin, graph } = this;
+    const { pointX, pointY, clientX, clientY } = e;
 
-    if (isNaN(clientX) || isNaN(clientY)) {
+    if (isNaN(+clientX) || isNaN(+clientY)) {
       return;
     }
-    let dx = clientX - origin.x;
-    let dy = clientY - origin.y;
+    const originPoint = graph.getPointByClient(origin.x, origin.y);
+    const currentPoint = graph.getPointByClient(clientX, clientY);
+    let dx = currentPoint.x - originPoint.x;
+    let dy = currentPoint.y - originPoint.y;
 
     if (this.get('direction') === 'x') {
       dy = 0;
@@ -55,9 +56,11 @@ export default {
       x: clientX,
       y: clientY,
     };
-    const width = this.graph.get('width');
-    const height = this.graph.get('height');
-    const graphCanvasBBox = this.graph.get('canvas').getCanvasBBox();
+    const width = graph.get('width');
+    const height = graph.get('height');
+    const graphCanvasBBox = graph.get('canvas').getCanvasBBox();
+    const leftTopCanvas = graph.getCanvasByPoint(graphCanvasBBox.minX, graphCanvasBBox.minY);
+    const rightBottomCanvas = graph.getCanvasByPoint(graphCanvasBBox.maxX, graphCanvasBBox.maxY);
 
     let expandWidth = this.scalableRange;
     let expandHeight = this.scalableRange;
@@ -67,22 +70,22 @@ export default {
       expandHeight = height * expandHeight;
     }
     if (
-      (graphCanvasBBox.minX <= width + expandWidth &&
-        graphCanvasBBox.minX + dx > width + expandWidth) ||
-      (graphCanvasBBox.maxX + expandWidth >= 0 &&
-        graphCanvasBBox.maxX + expandWidth + dx < 0)
+      (leftTopCanvas.x <= width + expandWidth &&
+        leftTopCanvas.x + dx > width + expandWidth) ||
+      (rightBottomCanvas.x + expandWidth >= 0 &&
+        rightBottomCanvas.x + expandWidth + dx < 0)
     ) {
       dx = 0;
     }
     if (
-      (graphCanvasBBox.minY <= height + expandHeight &&
-        graphCanvasBBox.minY + dy > height + expandHeight) ||
-      (graphCanvasBBox.maxY + expandHeight >= 0 &&
-        graphCanvasBBox.maxY + expandHeight + dy < 0)
+      (leftTopCanvas.y <= height + expandHeight &&
+        leftTopCanvas.y + dy > height + expandHeight) ||
+      (rightBottomCanvas.y + expandHeight >= 0 &&
+        rightBottomCanvas.y + expandHeight + dy < 0)
     ) {
       dy = 0;
     }
-    this.graph.translate(dx, dy);
+    graph.translate(dx, dy);
   },
   onTouchStart(e: IG6GraphEvent) {
     const self = this as any;
@@ -101,13 +104,14 @@ export default {
     const self = this as any;
     const event = e.originalEvent as MouseEvent;
 
+    const isDragStart = e.name === 'touchstart' || e.name === 'dragstart';
+
     // TODO: 'name' doesn't exist on `IG6GraphEvent`, we should consider typing it so users get autocomplete and other benefits
-    if (event && e.name !== 'touchstart' && event.button !== 0) {
+    if (event && !isDragStart && event.button !== 0) {
       return;
     }
 
     if (
-      e.name !== 'touchstart' &&
       typeof window !== 'undefined' &&
       window.event &&
       !(window.event as any).buttons &&
@@ -200,9 +204,9 @@ export default {
     }
   },
   onMouseUp(e: IG6GraphEvent) {
-    const { graph } = this;
+    const { graph, originPosition, keydown } = this;
 
-    if (this.keydown) return;
+    if (keydown) return;
 
     const currentZoom = graph.getZoom();
     const modeController = graph.get('modeController');
@@ -247,8 +251,9 @@ export default {
       this.updateViewport(e);
     }
     e.type = 'dragend';
-    e.dx = e.clientX - this.originPosition.x;
-    e.dy = e.clientY - this.originPosition.y;
+    const originPoint = graph.getPointByClient(originPosition.x, originPosition.y);
+    e.dx = e.pointX - originPoint.x;
+    e.dy = e.pointY - originPoint.y;
 
     graph.emit('canvas:dragend', e);
     this.endDrag();

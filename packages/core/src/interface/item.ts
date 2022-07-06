@@ -1,5 +1,6 @@
 /* eslint @typescript-eslint/no-use-before-define: 0 */
-import { IGroup, Point } from '@antv/g-base';
+// import { IGroup, Point } from '@antv/g-base';
+import { IGroup, Point } from '@antv/g6-g-adapter';
 import {
   IBBox,
   IPoint,

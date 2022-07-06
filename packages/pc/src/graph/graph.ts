@@ -1,5 +1,4 @@
-import { Canvas as GCanvas } from '@antv/g-canvas';
-import { Canvas as GSVGCanvas } from '@antv/g-svg';
+import { Canvas, ICanvas } from '@antv/g6-g-adapter';
 import { ext } from '@antv/matrix-util';
 import { clone, deepMix, each, isString, isNumber } from '@antv/util';
 import { IGraph, DataUrlType } from '../interface/graph';
@@ -13,6 +12,7 @@ import { createDom } from '@antv/dom-util';
 
 const { transform } = ext;
 const SVG = 'svg';
+const CANVAS = 'canvas';
 
 export default class Graph extends AbstractGraph implements IGraph {
   // private cfg: GraphOptions & { [key: string]: any };
@@ -68,27 +68,21 @@ export default class Graph extends AbstractGraph implements IGraph {
 
     const renderer: string = this.get('renderer');
 
-    let canvas;
+    const canvasCfg: any = {
+      container,
+      width,
+      height,
+      renderer
+    };
 
-    if (renderer === SVG) {
-      canvas = new GSVGCanvas({
-        container,
-        width,
-        height,
-      });
-    } else {
-      const canvasCfg: any = {
-        container,
-        width,
-        height,
-      };
+    if (renderer === CANVAS) {
       const pixelRatio = this.get('pixelRatio');
       if (pixelRatio) {
         canvasCfg.pixelRatio = pixelRatio;
       }
-
-      canvas = new GCanvas(canvasCfg);
     }
+
+    const canvas = new Canvas(canvasCfg);
 
     this.set('canvas', canvas);
   }
@@ -129,7 +123,7 @@ export default class Graph extends AbstractGraph implements IGraph {
    */
   protected asyncToDataUrl(type?: DataUrlType, backgroundColor?: string, callback?: Function, widths?: number, heights?: number, vCanvasEl?: any): void {
     const watermarker = document.querySelector('.g6-graph-watermarker') as HTMLElement;
-    const canvas: GCanvas = this.get('canvas');
+    const canvas: ICanvas = this.get('canvas');
     const renderer = canvas.getRenderer();
     const canvasDom = vCanvasEl || canvas.get('el');
 
@@ -189,7 +183,7 @@ export default class Graph extends AbstractGraph implements IGraph {
    * @return {string} 图片 dataURL
    */
   public toDataURL(type?: DataUrlType, backgroundColor?: string): string {
-    const canvas: GCanvas = this.get('canvas');
+    const canvas: ICanvas = this.get('canvas');
     const renderer = canvas.getRenderer();
     const canvasDom = canvas.get('el');
 
@@ -263,14 +257,13 @@ export default class Graph extends AbstractGraph implements IGraph {
 
     const vHeight = height + padding[0] + padding[2];
     const vWidth = width + padding[1] + padding[3];
-    const canvasOptions = {
+    const vCanvas = new Canvas({
       container: vContainerDOM,
       height: vHeight,
       width: vWidth,
       quickHit: true,
-    };
-
-    const vCanvas = renderer === 'svg' ? new GSVGCanvas(canvasOptions) : new GCanvas(canvasOptions);
+      renderer
+    });
 
     const group = this.get('group');
     const vGroup = group.clone();
@@ -287,7 +280,7 @@ export default class Graph extends AbstractGraph implements IGraph {
 
     vGroup.resetMatrix();
     vGroup.setMatrix(matrix);
-    vCanvas.add(vGroup);
+    vCanvas.appendChild(vGroup);
 
     const vCanvasEl = vCanvas.get('el');
 
@@ -348,9 +341,6 @@ export default class Graph extends AbstractGraph implements IGraph {
     type?: DataUrlType,
     imageConfig?: { backgroundColor?: string; padding?: number | number[] },
   ): void {
-    const bbox = this.get('group').getCanvasBBox();
-    const height = bbox.height;
-    const width = bbox.width;
     const renderer = this.get('renderer');
     const vContainerDOM: HTMLDivElement = createDom('<div id="virtual-image"></div>');
     const watermarker = document.querySelector('.g6-graph-watermarker') as HTMLElement;
@@ -360,6 +350,9 @@ export default class Graph extends AbstractGraph implements IGraph {
     if (!padding) padding = [0, 0, 0, 0];
     else if (isNumber(padding)) padding = [padding, padding, padding, padding];
 
+    const bbox = this.get('group').getCanvasBBox();
+    const height = bbox.height;
+    const width = bbox.width;
     let vHeight = height + padding[0] + padding[2];
     let vWidth = width + padding[1] + padding[3];
     if (watermarker) {
@@ -367,28 +360,25 @@ export default class Graph extends AbstractGraph implements IGraph {
       vHeight = Math.ceil(vHeight / wmHeight) * wmHeight;
       vWidth = Math.ceil(vWidth / wmWidth) * wmWidth;
     }
-    const canvasOptions = {
+    const vCanvas = new Canvas({
       container: vContainerDOM,
       height: vHeight,
       width: vWidth,
-    };
-    const vCanvas = renderer === 'svg' ? new GSVGCanvas(canvasOptions) : new GCanvas(canvasOptions);
+      renderer
+    });
 
     const group = this.get('group');
     const vGroup = group.clone();
 
-    let matrix = clone(vGroup.getMatrix());
-    if (!matrix) matrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+    vCanvas.appendChild(vGroup);
+
+    const camera = this.get('canvas').getCamera();
+    const vCamera = vCanvas.getCamera();
+    vCamera.setZoom(1);
     const centerX = (bbox.maxX + bbox.minX) / 2;
     const centerY = (bbox.maxY + bbox.minY) / 2;
-    matrix = transform(matrix, [
-      ['t', -centerX, -centerY],
-      ['t', width / 2 + padding[3], height / 2 + padding[0]],
-    ]);
-
-    vGroup.resetMatrix();
-    vGroup.setMatrix(matrix);
-    vCanvas.add(vGroup);
+    vCamera.setPosition(centerX, centerY);
+    vCamera.setFocalPoint(centerX, centerY);
 
     const vCanvasEl = vCanvas.get('el');
 
@@ -423,6 +413,9 @@ export default class Graph extends AbstractGraph implements IGraph {
     const canvas = self.get('canvas');
     const renderer = canvas.getRenderer();
     if (!type) type = 'image/png';
+
+    console.log('typetype', type, type.split)
+
     const fileName: string = (name || 'graph') + (renderer === 'svg' ? '.svg' : type.split('/')[1]);
     const link: HTMLAnchorElement = document.createElement('a');
     self.asyncToDataUrl(type, backgroundColor, (dataURL) => {
@@ -508,13 +501,15 @@ export default class Graph extends AbstractGraph implements IGraph {
    * @param {WaterMarkerConfig} config 文本水印的配置项
    */
   public setImageWaterMarker(imgURL: string = Global.waterMarkerImage, config?: WaterMarkerConfig) {
-    let container: string | HTMLElement | null = this.get('container');
-    if (isString(container)) {
-      container = document.getElementById(container);
+    let graphContainer: string | HTMLElement | null = this.get('container');
+    if (isString(graphContainer)) {
+      graphContainer = document.getElementById(graphContainer);
     }
-
-    if (!container.style.position) {
-      container.style.position = 'relative';
+    let waterMarkerContainer = document.getElementById("watermarker-wrapper");
+    if (!waterMarkerContainer) {
+      waterMarkerContainer = createDom('<div id="watermarker-wrapper"></div>');
+      waterMarkerContainer.style.position = 'relative';
+      graphContainer.appendChild(waterMarkerContainer);
     }
 
     let canvas = this.get('graphWaterMarker');
@@ -524,7 +519,7 @@ export default class Graph extends AbstractGraph implements IGraph {
 
     if (!canvas) {
       const canvasCfg: any = {
-        container,
+        container: waterMarkerContainer,
         width,
         height,
         capture: false,
@@ -533,11 +528,13 @@ export default class Graph extends AbstractGraph implements IGraph {
       if (pixelRatio) {
         canvasCfg.pixelRatio = pixelRatio;
       }
-      canvas = new GCanvas(canvasCfg);
+      canvas = new Canvas(canvasCfg);
       this.set('graphWaterMarker', canvas);
     }
-    canvas.get('el').style.display = 'none';
-    const ctx = canvas.get('context');
+
+    const el = canvas.get('el');
+    waterMarkerContainer.style.display = 'none';
+    const ctx = el.getContext('2d');
 
     const { rotate, x, y } = image;
     // 旋转20度
@@ -565,11 +562,11 @@ export default class Graph extends AbstractGraph implements IGraph {
             .toDataURL(
               'image/png',
             )});background-repeat:repeat;position:absolute;top:0;bottom:0;left:0;right:0;pointer-events:none;z-index:-1;`;
-          (container as HTMLElement).appendChild(box);
+          (graphContainer as HTMLElement).appendChild(box);
         }
       } else {
         // 当需要兼容不支持 pointer-events属性的浏览器时，将 compatible 设置为 true
-        (container as HTMLElement).style.cssText = `background-image: url(${canvas
+        (graphContainer as HTMLElement).style.cssText = `background-image: url(${canvas
           .get('el')
           .toDataURL('image/png')});background-repeat:repeat;`;
       }
@@ -582,13 +579,15 @@ export default class Graph extends AbstractGraph implements IGraph {
    * @param {WaterMarkerConfig} config 文本水印的配置项
    */
   public setTextWaterMarker(texts: string[], config?: WaterMarkerConfig) {
-    let container: string | HTMLElement | null = this.get('container');
-    if (isString(container)) {
-      container = document.getElementById(container);
+    let graphContainer: string | HTMLElement | null = this.get('container');
+    if (isString(graphContainer)) {
+      graphContainer = document.getElementById(graphContainer);
     }
-
-    if (!container.style.position) {
-      container.style.position = 'relative';
+    let waterMarkerContainer = document.getElementById("watermarker-wrapper");
+    if (!waterMarkerContainer) {
+      waterMarkerContainer = createDom('<div id="watermarker-wrapper"></div>');
+      waterMarkerContainer.style.position = 'relative';
+      graphContainer.appendChild(waterMarkerContainer);
     }
 
     let canvas = this.get('graphWaterMarker');
@@ -598,7 +597,7 @@ export default class Graph extends AbstractGraph implements IGraph {
 
     if (!canvas) {
       const canvasCfg: any = {
-        container,
+        container: waterMarkerContainer,
         width,
         height,
         capture: false,
@@ -607,11 +606,12 @@ export default class Graph extends AbstractGraph implements IGraph {
       if (pixelRatio) {
         canvasCfg.pixelRatio = pixelRatio;
       }
-      canvas = new GCanvas(canvasCfg);
+      canvas = new Canvas(canvasCfg);
       this.set('graphWaterMarker', canvas);
     }
-    canvas.get('el').style.display = 'none';
-    const ctx = canvas.get('context');
+    const el = canvas.get('el');
+    waterMarkerContainer.style.display = 'none';
+    const ctx = el.getContext('2d');
 
     const { rotate, fill, fontFamily, fontSize, baseline, x, y, lineHeight } = text;
     // 旋转20度
@@ -645,10 +645,10 @@ export default class Graph extends AbstractGraph implements IGraph {
         .toDataURL(
           'image/png',
         )});background-repeat:repeat;position:absolute;top:0;bottom:0;left:0;right:0;pointer-events:none;z-index:99;`;
-      container.appendChild(box);
+      graphContainer.appendChild(box);
     } else {
       // 当需要兼容不支持 pointer-events属性的浏览器时，将 compatible 设置为 true
-      container.style.cssText = `background-image: url(${canvas
+      graphContainer.style.cssText = `background-image: url(${canvas
         .get('el')
         .toDataURL('image/png')});background-repeat:repeat;`;
     }
@@ -686,6 +686,7 @@ export default class Graph extends AbstractGraph implements IGraph {
 
     this.get('graphWaterMarker')?.destroy();
     document.querySelector('.g6-graph-watermarker')?.remove();
+    document.querySelector('#watermarker-wrapper')?.remove();
 
     super.destroy();
   }

@@ -8,7 +8,7 @@ document.body.appendChild(div);
 describe('menu', () => {
   it('menu with default', () => {
     const menu = new Menu({
-      handleMenuClick: (target, item) => {},
+      handleMenuClick: (target, item) => { },
     });
 
     const graph = new G6.Graph({
@@ -130,8 +130,8 @@ describe('menu', () => {
       canvasX: 100,
       canvasY: 100,
       bubbles: false,
-      preventDefault: () => {},
-      stopPropagation: () => {},
+      preventDefault: () => { },
+      stopPropagation: () => { },
     };
     graph.emit('contextmenu', event);
     // getElementsByClassName only returns HTMLCollection<Element>
@@ -205,8 +205,8 @@ describe('menu', () => {
       canvasX: 100,
       canvasY: 100,
       bubbles: false,
-      preventDefault: () => {},
-      stopPropagation: () => {},
+      preventDefault: () => { },
+      stopPropagation: () => { },
     };
     graph.emit('contextmenu', event);
     menuDOM = (document.getElementsByClassName(
@@ -228,8 +228,8 @@ describe('menu', () => {
       canvasX: 100,
       canvasY: 100,
       bubbles: false,
-      preventDefault: () => {},
-      stopPropagation: () => {},
+      preventDefault: () => { },
+      stopPropagation: () => { },
     };
     graph.emit('contextmenu', event2);
     menuDOM = (document.getElementsByClassName(
@@ -241,7 +241,7 @@ describe('menu', () => {
 
   it('click trigger', () => {
     const menu = new Menu({
-      handleMenuClick: (target, item) => {},
+      handleMenuClick: (target, item) => { },
       trigger: 'click',
       className: 'menu-click',
     });
@@ -275,8 +275,8 @@ describe('menu', () => {
       canvasX: 100,
       canvasY: 100,
       bubbles: false,
-      preventDefault: () => {},
-      stopPropagation: () => {},
+      preventDefault: () => { },
+      stopPropagation: () => { },
     };
     graph.emit('click', event);
     let menuDOM = (document.getElementsByClassName(
@@ -289,8 +289,8 @@ describe('menu', () => {
       canvasX: 100,
       canvasY: 100,
       bubbles: false,
-      preventDefault: () => {},
-      stopPropagation: () => {},
+      preventDefault: () => { },
+      stopPropagation: () => { },
     });
     menuDOM = (document.getElementsByClassName(
       'menu-click',

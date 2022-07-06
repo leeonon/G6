@@ -1,4 +1,4 @@
-import { IGroup, IShape } from '@antv/g-base';
+import { IGroup, IShape } from '@antv/g6-g-adapter';
 import {
   registerNode,
   Item,
@@ -70,7 +70,7 @@ registerNode(
       });
       group['shapeMap'][`${this.type}-keyShape`] = keyShape;
 
-      const { width: w, height: h, show, text } = icon;
+      const { width: w = 20, height: h = 20, show, text } = icon;
       if (show) {
         if (text) {
           group['shapeMap'][`${this.type}-icon`] = group.addShape('text', {
@@ -327,7 +327,7 @@ registerNode(
       let y = Math.sin(((18 + 72 * 0) / 180) * Math.PI) * outerR;
       if (markRight) {
         if (!right && right !== undefined) {
-          markRight.remove();
+          group.removeChild(markRight, true);
           delete group['shapeMap']['link-point-right'];
         } else {
           markRight.attr({
@@ -353,7 +353,7 @@ registerNode(
       y = Math.sin(((18 + 72 * 1) / 180) * Math.PI) * outerR;
       if (markTop) {
         if (!top && top !== undefined) {
-          markTop.remove();
+          group.removeChild(markTop, true);
           delete group['shapeMap']['link-point-top'];
         } else {
           markTop.attr({
@@ -379,7 +379,7 @@ registerNode(
       y = Math.sin(((18 + 72 * 2) / 180) * Math.PI) * outerR;
       if (markLeft) {
         if (!left && left !== undefined) {
-          markLeft.remove();
+          group.removeChild(markLeft, true);
           delete group['shapeMap']['link-point-left'];
         } else {
           markLeft.attr({
@@ -405,7 +405,7 @@ registerNode(
       y = Math.sin(((18 + 72 * 3) / 180) * Math.PI) * outerR;
       if (markLeftBottom) {
         if (!leftBottom && leftBottom !== undefined) {
-          markLeftBottom.remove();
+          group.removeChild(markLeftBottom, true);
           delete group['shapeMap']['link-point-left-bottom'];
         } else {
           markLeftBottom.attr({
@@ -431,7 +431,7 @@ registerNode(
       y = Math.sin(((18 + 72 * 4) / 180) * Math.PI) * outerR;
       if (markRightBottom) {
         if (!rightBottom && rightBottom !== undefined) {
-          markRightBottom.remove();
+          group.removeChild(markRightBottom, true);
           delete group['shapeMap']['link-point-right-bottom'];
         } else {
           markRightBottom.attr({

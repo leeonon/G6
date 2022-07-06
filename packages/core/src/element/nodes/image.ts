@@ -1,4 +1,5 @@
-import { IGroup, IShape } from '@antv/g-base';
+// import { IGroup, IShape } from '@antv/g-base';
+import { IGroup, IShape } from '@antv/g6-g-adapter';
 import Shape from '../shape';
 import { NodeConfig, Item } from '../../types';
 import Global from '../../global';
@@ -75,7 +76,10 @@ Shape.registerNode(
         return;
       }
       // 支持 circle、rect、ellipse、Polygon 及自定义 path clip
-      const { type, x, y, style } = clip;
+      const { type, x: clipCfgX, y: clipCfgY, style } = clip;
+      // G 5.0 中，clip 作为 shape 的一个子图形，坐标是相对于 shape 的。因此需要对齐到 shape 的中心
+      const x = clipCfgX + shape.attr('width') / 2;
+      const y = clipCfgY + shape.attr('height') / 2;
       if (type === 'circle') {
         const { r } = clip;
         shape.setClip({

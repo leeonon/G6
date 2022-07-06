@@ -44,7 +44,7 @@ describe('graph', () => {
         enableOptimize: true
       }, {
         type: 'drag-canvas',
-        enableOptimize: true
+        // enableOptimize: true
       }, 'drag-node']
     }
   });
@@ -71,7 +71,7 @@ describe('graph', () => {
       });
     setTimeout(() => done(), 1000);
   });
-  it.only('global refresh: drag', done => {
+  it('global refresh: drag', done => {
     let begin, duration = 0;
     for (let i = 0; i < TIMES; i++) {
       begin = performance.now();
@@ -112,21 +112,21 @@ describe('graph', () => {
 
 
     // fps monitor loops
-    // let count = 0;
-    // let currentPos = 150;
-    // function animate() {
-    //   stats.update();
-    //   let e = eIn;
-    //   if (Math.round(count / 100) % 2) e = eOut;
-    //   else  e = eIn;
-    //   graph.emit('wheel', e);
-    //   count ++;
-    //   requestAnimationFrame( animate );
-    // }
-    // requestAnimationFrame( animate );
+    let count = 0;
+    let currentPos = 150;
+    function animate() {
+      stats.update();
+      let e = eIn;
+      if (Math.round(count / 100) % 2) e = eOut;
+      else e = eIn;
+      graph.emit('wheel', e);
+      count++;
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
     done()
   });
-  it('local refresh: update one item', done => {
+  it.only('local refresh: update one item', done => {
     const nodeTargetConfig = {
       size: 10,
       style: {
@@ -157,28 +157,28 @@ describe('graph', () => {
     console.log(`ave time (${TIMES} times) for updating one item: `, duration / TIMES, 'ms')
 
 
-    // // fps monitor loops
-    // graph.fitView();
-    // let count = 0;
-    // let currentPos = 150;
-    // function animate() {
-    //   stats.update();
-    //   let config;
-    //   const seed = Math.random() > 0.5
-    //   if (seed) config = {...nodeTargetConfig};
-    //   else config = {...edgeTargetConfig};
-    //   const item = seed ? 
-    //     graph.getNodes()[Math.floor(Math.random() * nodeNum)] :
-    //     graph.getEdges()[Math.floor(Math.random() * edgeNum)];
-    //   graph.updateItem(item, config);
-    //   count ++;
-    //   requestAnimationFrame( animate );
-    // }
-    // requestAnimationFrame( animate );
+    // fps monitor loops
+    graph.fitView();
+    let count = 0;
+    let currentPos = 150;
+    function animate() {
+      stats.update();
+      let config;
+      const seed = Math.random() > 0.5
+      if (seed) config = { ...nodeTargetConfig };
+      else config = { ...edgeTargetConfig };
+      const item = seed ?
+        graph.getNodes()[Math.floor(Math.random() * nodeNum)] :
+        graph.getEdges()[Math.floor(Math.random() * edgeNum)];
+      graph.updateItem(item, config);
+      count++;
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
 
     done()
   });
-  it('state refresh: setting and clear one item state', done => {
+  xit('state refresh: setting and clear one item state', done => {
     let begin, duration = 0;
     const items = [];
     const nodeNum = graph.getNodes().length;

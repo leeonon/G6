@@ -339,7 +339,7 @@ describe('dagre layout with combo', () => {
     })
   });
 
-  it('layout with nested combos', () => {
+  it('layout with nested combos', (done) => {
 
     const data3 = {
       nodes: [
@@ -492,8 +492,6 @@ describe('dagre layout with combo', () => {
         type: 'rect'
       }
     });
-    graph.data(data3);
-    graph.render();
 
     graph.on('afterlayout', () => {
       console.log(graph.findById('5').getModel());
@@ -501,22 +499,25 @@ describe('dagre layout with combo', () => {
       console.log(graph.findById('8').getModel());
       console.log(graph.findById('9').getModel());
 
-      expect(graph.findById('5').getModel().x).toBe(527.5);
+      expect(graph.findById('5').getModel().x).toBe(520);
       expect(graph.findById('5').getModel().y).toBe(260);
-      expect(graph.findById('7').getModel().x).toBe(282.5);
+      expect(graph.findById('7').getModel().x).toBe(65);
       expect(graph.findById('7').getModel().y).toBe(260);
-      expect(graph.findById('8').getModel().x).toBe(352.5);
+      expect(graph.findById('8').getModel().x).toBe(135);
       expect(graph.findById('8').getModel().y).toBe(260);
-      expect(graph.findById('9').getModel().x).toBe(192.5);
+      expect(graph.findById('9').getModel().x).toBe(365);
       expect(graph.findById('9').getModel().y).toBe(260);
 
       graph.destroy();
-    })
+      done();
+    });
+    graph.data(data3);
+    graph.render();
   });
 });
 
 describe('dagre layout', () => {
-  it('layout with default configs', () => {
+  it('layout with default configs', (done) => {
     const graph = new G6.Graph({
       container: div,
       width: 500,
@@ -537,8 +538,6 @@ describe('dagre layout', () => {
         },
       },
     });
-    graph.data(data);
-    graph.render();
 
     graph.on('afterlayout', () => {
       const endNode = data.nodes[0];
@@ -551,9 +550,12 @@ describe('dagre layout', () => {
       expect(mathEqual(edge.controlPoints[0].x, 70)).toEqual(true);
       expect(mathEqual(edge.controlPoints[0].y, 165)).toEqual(true);
       graph.destroy();
+      done();
     });
+    graph.data(data);
+    graph.render();
   });
-  it('dagre with number nodeSize and sepFunc', () => {
+  it('dagre with number nodeSize and sepFunc', (done) => {
     data.edges.forEach((edgeItem) => {
       delete edgeItem.startPoint;
       delete edgeItem.endPoint;
@@ -581,8 +583,6 @@ describe('dagre layout', () => {
         default: ['drag-canvas'],
       },
     });
-    graph.data(data);
-    graph.render();
 
     graph.on('afterlayout', () => {
       const node = data.nodes[0];
@@ -592,10 +592,13 @@ describe('dagre layout', () => {
       expect(mathEqual(node.y, 25)).toEqual(true);
       expect(edge.controlPoints).toBe(undefined);
       // console.log(graph);
-      // graph.destroy();
+      graph.destroy();
+      done()
     });
+    graph.data(data);
+    graph.render();
   });
-  it('dagre with array nodeSize', () => {
+  it('dagre with array nodeSize', (done) => {
     data.edges.forEach((edgeItem) => {
       delete edgeItem.startPoint;
       delete edgeItem.endPoint;
@@ -623,8 +626,6 @@ describe('dagre layout', () => {
       height: 500,
       fitView: true,
     });
-    graph.data(data);
-    graph.render();
 
     graph.on('afterlayout', () => {
       const node = data.nodes[0];
@@ -634,10 +635,13 @@ describe('dagre layout', () => {
       expect(mathEqual(node.y, 215)).toEqual(true);
       expect(edge.controlPoints).toEqual(undefined);
       graph.destroy();
+      done();
     });
+    graph.data(data);
+    graph.render();
   });
 
-  it('dagre with number size in node data, controlpoints', () => {
+  it('dagre with number size in node data, controlpoints', (done) => {
     data.edges.forEach((edgeItem) => {
       delete edgeItem.startPoint;
       delete edgeItem.endPoint;
@@ -667,8 +671,6 @@ describe('dagre layout', () => {
       height: 500,
       fitView: true,
     });
-    graph.data(data);
-    graph.render();
 
     graph.on('afterlayout', () => {
       const node = data.nodes[0];
@@ -680,9 +682,12 @@ describe('dagre layout', () => {
       expect(mathEqual(edge.controlPoints[0].x, 125)).toEqual(true);
       expect(mathEqual(edge.controlPoints[0].y, 60)).toEqual(true);
       graph.destroy();
+      done();
     });
+    graph.data(data);
+    graph.render();
   });
-  it('dagre with array size in node data', () => {
+  it('dagre with array size in node data', (done) => {
     data.edges.forEach((edgeItem) => {
       delete edgeItem.startPoint;
       delete edgeItem.endPoint;
@@ -704,8 +709,6 @@ describe('dagre layout', () => {
       height: 500,
       fitView: true,
     });
-    graph.data(data);
-    graph.render();
 
     graph.on('afterlayout', () => {
       const node = data.nodes[0];
@@ -716,6 +719,9 @@ describe('dagre layout', () => {
       expect(edge.controlPoints).toEqual(undefined);
 
       graph.destroy();
+      done();
     });
+    graph.data(data);
+    graph.render();
   });
 });

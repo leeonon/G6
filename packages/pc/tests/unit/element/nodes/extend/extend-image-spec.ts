@@ -240,7 +240,7 @@ describe('register node with getCustomConfig function, extend image', () => {
       const nodeShape = node.get('group').get('children')[0];
       expect(nodeShape.get('clipShape').attr('width')).toEqual(100);
       expect(nodeShape.get('clipShape').attr('height')).toEqual(50);
-      expect(nodeShape.get('clipShape').attr('x')).toEqual(-100);
+      expect(nodeShape.get('clipShape').attr('x')).toEqual(-25);
 
       graph.destroy();
       expect(graph.destroyed).toBe(true);
@@ -291,7 +291,7 @@ describe('register node with getCustomConfig function, extend image', () => {
       const nodeShape = node.get('group').get('children')[0];
       expect(nodeShape.get('clipShape').attr('rx')).toEqual(100);
       expect(nodeShape.get('clipShape').attr('ry')).toEqual(50);
-      expect(nodeShape.get('clipShape').attr('x')).toEqual(-50);
+      expect(nodeShape.get('clipShape').attr('x')).toEqual(25);
 
       graph.destroy();
       expect(graph.destroyed).toBe(true);

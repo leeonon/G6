@@ -217,8 +217,8 @@ export default class Tooltip extends Base {
     const offsetX = this.get('offsetX') || 0;
     const offsetY = this.get('offsetY') || 0;
 
-    // const mousePos = graph.getPointByClient(e.clientX, e.clientY);
-    let point = graph.getPointByClient(e.clientX, e.clientY);
+    let x = e.canvasX;
+    let y = e.canvasY;
 
     const fixToNode = this.get('fixToNode');
     const { item } = e;
@@ -230,19 +230,19 @@ export default class Tooltip extends Base {
       fixToNode.length >= 2
     ) {
       const itemBBox = item.getBBox();
-      point = {
-        x: itemBBox.minX + itemBBox.width * fixToNode[0],
-        y: itemBBox.minY + itemBBox.height * fixToNode[1],
-      };
+      const point = graph.getCanvasByPoint(itemBBox.minX + itemBBox.width * fixToNode[0], itemBBox.minY + itemBBox.height * fixToNode[1]);
+      x = point.x;
+      y = point.y;
     }
 
-    const { x, y } = graph.getCanvasByPoint(point.x, point.y);
-
-    const graphContainer = graph.getContainer();
+    // 需要考虑 canvas 到父容器的边距
+    const canvasDOM = graph.get('canvas').get('el');
+    const graphTop = canvasDOM.offsetTop;
+    const graphLeft = canvasDOM.offsetLeft;
 
     const res = {
-      x: x + graphContainer.offsetLeft + offsetX,
-      y: y + graphContainer.offsetTop + offsetY,
+      x: x + graphLeft + offsetX,
+      y: y + graphTop + offsetY,
     };
 
     // 先修改为 visible 方可正确计算 bbox

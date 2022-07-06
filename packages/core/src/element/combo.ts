@@ -2,13 +2,15 @@
  * @fileOverview common combo shape
  * @author shiwu.wyy@antfin.com
  */
-import { IGroup, IShape } from '@antv/g-base';
+// import { IGroup, IShape } from '@antv/g-base';
+import { IGroup, IShape } from '@antv/g6-g-adapter';
 import { isArray, isNil, clone } from '@antv/util';
 import { ILabelConfig, ShapeOptions } from '../interface/shape';
 import { Item, LabelStyle, ComboConfig, ModelConfig, ShapeStyle } from '../types';
 import Global from '../global';
 import Shape from './shape';
 import { shapeBase } from './shapeBase';
+import { filterByAnimateAttrs } from '../util/graphic';
 
 const singleCombo: ShapeOptions = {
   itemType: 'combo',
@@ -178,12 +180,13 @@ const singleCombo: ShapeOptions = {
     const keyShape = item.get('keyShape');
     const itemAnimate = item.get('animate');
     const animate = itemAnimate && (cfg.animate === undefined ? this.options.animate : cfg.animate);
+    const filteredAttrs = filterByAnimateAttrs(keyShapeStyle);
     if (animate && keyShape.animate) {
       // 更新到展开状态，先将 collapsedIcon 隐藏。否则在动画完成后再出现 collapsedIcon
       if (!cfg.collapsed) {
         this.updateCollapsedIcon(cfg, item, keyShapeStyle);
       }
-      keyShape.animate(keyShapeStyle, {
+      keyShape.animate(filteredAttrs, {
         duration: 200,
         easing: 'easeLinear',
         callback: () => {

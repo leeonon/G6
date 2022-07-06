@@ -1,0 +1,1 @@
+export type Renderer = 'SVG' | 'Canvas' | 'WebGl';

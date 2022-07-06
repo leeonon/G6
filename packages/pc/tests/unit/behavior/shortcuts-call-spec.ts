@@ -26,9 +26,10 @@ describe('shortcuts-call', () => {
     graph.emit('keydown', { key: 'ctrl' });
     graph.emit('keydown', { key: '1' });
     graph.emit('keyup');
-    const matrix = graph.getGroup().getMatrix();
-    expect(matrix[6]).toBe(200);
-    expect(matrix[7]).toBe(200);
+    const centerPoint = graph.getPointByCanvas(250, 250);
+    console.log(centerPoint)
+    expect(centerPoint.x).toBe(50);
+    expect(centerPoint.y).toBe(50);
 
     graph.destroy();
   });
@@ -58,9 +59,7 @@ describe('shortcuts-call', () => {
     graph.emit('keydown', { key: 'ctrl' });
     graph.emit('keydown', { key: '1' });
     graph.emit('keyup');
-    const matrix = graph.getGroup().getMatrix();
-    expect(matrix[0]).toBe(2);
-    expect(matrix[4]).toBe(2);
+    expect(graph.getZoom()).toBe(2);
 
     graph.destroy();
   });

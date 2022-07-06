@@ -1,9 +1,11 @@
 /* eslint @typescript-eslint/no-use-before-define: 0 */
-import { IGroup, Event as GraphEvent, BBox, AnimateCfg, ICanvas, IShape } from '@antv/g-base';
+// import { IGroup, Event as GraphEvent, BBox, AnimateCfg, ICanvas, IShape } from '@antv/g-base';
+import { IGroup, BBox, AnimateCfg, ICanvas, IShape } from '@antv/g6-g-adapter';
 import Node from '../item/node';
 import { IAbstractGraph } from '../interface/graph';
 import { IEdge, INode, ICombo } from '../interface/item';
 import { ILabelConfig } from '../interface/shape';
+import { EVENTS } from '../constants';
 
 export * from '../interface';
 
@@ -12,33 +14,7 @@ export type UpdateType = 'move' | 'bbox' | 'style' | 'bbox|label' | 'style|label
 // Node Edge Combo 实例
 export type Item = INode | IEdge | ICombo;
 
-export type CommonInteractionEvent =
-  | 'click'
-  | 'dblclick'
-  | 'dragstart'
-  | 'drag'
-  | 'dragend'
-  | 'dragenter'
-  | 'dragleave'
-  | 'dragover'
-  | 'dragout' // TODO: not in documentation page: https://g6.antv.vision/en/docs/api/Event/
-  | 'drop'
-  | 'focus'
-  | 'blur'
-  | 'keyup'
-  | 'keydown'
-  | 'mousedown'
-  | 'mouseenter'
-  | 'mouseup'
-  | 'mousemove'
-  | 'mouseout'
-  | 'mouseover'
-  | 'mouseleave'
-  | 'touchstart'
-  | 'touchmove'
-  | 'touchend'
-  | 'contextmenu'
-  | 'wheel';
+export type CommonInteractionEvent = (typeof EVENTS)[number];
 
 export type NodeInteractionEvent =
   | 'click'
@@ -171,10 +147,15 @@ type MobileInteractionEvent =
   | 'panmove'
   | 'panend'
 
+// TODO: jest-electron 无法识别这种定义方式
 export type NodeEventType = `node:${NodeInteractionEvent}`;
 export type EdgeEventType = `edge:${EdgeInteractionEvent}`;
 export type ComboEventType = `combo:${ComboInteractionEvent}`;
 export type CanvasEventType = `canvas:${CanvasInteractionEvent}`;
+// export type NodeEventType = string; //  = `node:${NodeInteractionEvent}`;
+// export type EdgeEventType = string; //  = `edge:${EdgeInteractionEvent}`;
+// export type ComboEventType = string; //  = `combo:${ComboInteractionEvent}`;
+// export type CanvasEventType = string; //  = `canvas:${CanvasInteractionEvent}`;
 export type GraphTimingEventType = GraphTimingEvents;
 export type MobileInteractionEventType = MobileInteractionEvent;
 
@@ -185,9 +166,9 @@ export type MobileInteractionEventType = MobileInteractionEvent;
  * @example
  * https://g6.antv.vision/en/docs/api/Event#combo-interaction-event
  */
-export type G6Event = NodeEventType | EdgeEventType | ComboEventType | CanvasEventType | GraphTimingEventType | MobileInteractionEventType | CommonInteractionEvent | CommonInteractionEvent | (string & {});
+export type G6Event = NodeEventType | EdgeEventType | ComboEventType | CanvasEventType | GraphTimingEventType | MobileInteractionEventType | CommonInteractionEvent | (string & {});
 
-export interface IG6GraphEvent extends GraphEvent {
+export interface IG6GraphEvent { //  extends GraphEvent
   item: Item | null;
   canvasX: number;
   canvasY: number;
@@ -197,11 +178,15 @@ export interface IG6GraphEvent extends GraphEvent {
   y: number;
   wheelDelta: number;
   detail: number;
-  key?: string;
   target: IShapeBase & ICanvas;
+  type?: string;
+  key?: string;
   //type:
   //name: should we add types to `@antv/g-base/event`?
   [key: string]: unknown;
+  preventDefault?: Function;
+  stopPropagation?: Function;
+  stopImmediatePropagation?: Function;
 }
 
 // Math types
@@ -225,7 +210,7 @@ export interface IBBox extends BBox {
 
 export type Padding = number | string | number[];
 
-export interface ArrowConfig {
+export interface ArrowCfg {
   d?: number;
   path?: string;
   stroke?: string;
@@ -257,8 +242,8 @@ export type ShapeStyle = Partial<{
   matrix: number[];
   opacity: number;
   size: number | number[];
-  endArrow: boolean | ArrowConfig;
-  startArrow: boolean | ArrowConfig;
+  endArrow: boolean | ArrowCfg;
+  startArrow: boolean | ArrowCfg;
   shadowColor: string;
   shadowBlur: number;
   shadowOffsetX: number;

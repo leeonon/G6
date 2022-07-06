@@ -148,7 +148,7 @@ describe('graph setmode and clean the delegates', () => {
         type: 'drag-node',
         enableDelegate: true
       },
-      'zoom-canvas',
+        'zoom-canvas',
       {
         type: 'brush-select',
         trigger: 'drag'

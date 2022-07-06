@@ -1,4 +1,4 @@
-import { IGroup } from '@antv/g-base';
+import { IGroup } from '@antv/g6-g-adapter';
 import { dataToPath, linePathToAreaPath, dataToRectPath } from './path';
 import { ShapeStyle } from '@antv/g6-core';
 
@@ -29,7 +29,7 @@ export interface TrendCfg {
   // 样式
   readonly smooth?: boolean;
   readonly isArea?: boolean;
-  
+
   readonly lineStyle?: ShapeStyle;
   readonly areaStyle?: ShapeStyle;
   readonly interval?: Interval;

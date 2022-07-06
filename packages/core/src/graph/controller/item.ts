@@ -1,4 +1,4 @@
-import { IGroup } from '@antv/g-base';
+import { IGroup } from '@antv/g6-g-adapter';
 import { clone, deepMix, each, isArray, isObject, isString, upperFirst, throttle } from '@antv/util';
 import Edge from '../../item/edge';
 import Node from '../../item/node';

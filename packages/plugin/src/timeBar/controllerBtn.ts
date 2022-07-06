@@ -1,4 +1,4 @@
-import { IGroup, IShape } from '@antv/g-base';
+import { IGroup, IShape } from '@antv/g6-g-adapter';
 import { deepMix } from '@antv/util';
 import { ext } from '@antv/matrix-util';
 import Button from './timeButton';
@@ -405,11 +405,11 @@ export default class ControllerBtn {
           width - (!hideTimeTypeController ? SPEED_CONTROLLER_OFFSET : TOGGLE_MODEL_OFFSET),
           0,
         ),
-        matrix: [1, 0, 0, 0, 1, 0, 0, this.speedAxisY[4], 1],
         ...pointer,
       },
       name: 'speed-pointer'
     });
+    this.speedPoint.setMatrix([1, 0, 0, 0, 1, 0, 0, this.speedAxisY[4], 1]);
 
     // 根据配置在 speedControllerStyle 中的 scale offsetX offsetY 缩放和移动速度控制器
     const currentBBox = this.speedGroup.getCanvasBBox();
@@ -482,7 +482,7 @@ export default class ControllerBtn {
         fontFamily:
           typeof window !== 'undefined'
             ? window.getComputedStyle(document.body, null).getPropertyValue('font-family') ||
-              'Arial, sans-serif'
+            'Arial, sans-serif'
             : 'Arial, sans-serif',
         ...text,
       } as any,
@@ -503,14 +503,14 @@ export default class ControllerBtn {
   }
 
   private bindEvent() {
-    this.speedGroup.on('speed-rect:click', (evt) => {
+    this.speedGroup.on('click', (evt) => {
       const currentPointerY = evt.target.attr('y1');
-      let pointerMatrix = this.speedPoint.attr('matrix');
+      let pointerMatrix = this.speedPoint.getMatrix();
       const currentYIdx = this.speedAxisY.indexOf(pointerMatrix[7] || 0);
       const targetYIdx = this.speedAxisY.indexOf(currentPointerY);
       const yDiff = this.speedAxisY[targetYIdx] - this.speedAxisY[currentYIdx];
 
-      pointerMatrix = transform(pointerMatrix, [['t', 0, yDiff]]);
+      pointerMatrix[7] += yDiff;
 
       this.speedPoint.setMatrix(pointerMatrix);
       this.currentSpeed = this.speedAxisY.length - targetYIdx;
@@ -521,9 +521,9 @@ export default class ControllerBtn {
       });
     });
 
-    this.speedGroup.on('mousewheel', (evt) => {
-      evt.preventDefault();
-      let pointerMatrix = this.speedPoint.attr('matrix') || [1, 0, 0, 0, 1, 0, 0, 0, 1];
+    this.speedGroup.on('wheel', (evt) => {
+      // evt.preventDefault?.();
+      let pointerMatrix = this.speedPoint.getMatrix() || [1, 0, 0, 0, 1, 0, 0, 0, 1];
       const currentPointerY = pointerMatrix[7];
       let currentYIdx = this.speedAxisY.indexOf(currentPointerY);
       if (currentYIdx === -1) {
@@ -541,9 +541,9 @@ export default class ControllerBtn {
       else currentYIdx = Math.min(this.speedAxisY.length - 1, currentYIdx + 1);
 
       const yDiff = this.speedAxisY[currentYIdx] - currentPointerY;
-      pointerMatrix = transform(pointerMatrix, [['t', 0, yDiff]]);
-
+      pointerMatrix[7] += yDiff;
       this.speedPoint.setMatrix(pointerMatrix);
+
       this.currentSpeed = this.speedAxisY.length - currentYIdx;
       this.speedText.attr('text', `${this.currentSpeed}.0X`);
       this.group.emit(TIMEBAR_CONFIG_CHANGE, {

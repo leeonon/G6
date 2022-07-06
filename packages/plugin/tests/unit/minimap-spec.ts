@@ -399,7 +399,7 @@ const isFireFox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 const dragEvent = isFireFox ? 'dragover' : 'drag';
 
 describe('minimap', () => {
-  it('minimap with default settings & destroy', (done) => {
+  it.only('minimap with default settings & destroy', (done) => {
     const minimap = new Minimap({ size: [200, 200] });
     const graph = new G6.Graph({
       container: div,
@@ -456,7 +456,7 @@ describe('minimap', () => {
       const top = parseFloat(viewport.style.top.substr(0, viewport.style.top.length - 2));
       const width = parseFloat(viewport.style.width.substr(0, viewport.style.width.length - 2));
       const height = parseFloat(viewport.style.height.substr(0, viewport.style.height.length - 2));
-      
+
       expect(mathEqual(left, 47)).toBe(true);
       expect(mathEqual(top, 37)).toBe(true);
       expect(mathEqual(width, 152, 2)).toBe(true);
@@ -485,7 +485,7 @@ describe('minimap', () => {
       }, 100);
     }, 100);
   });
-  it('move viewport', (done) => {
+  it.only('move viewport', (done) => {
     const minimap = new Minimap({ size: [200, 200] });
     const graph = new G6.Graph({
       container: div,
@@ -530,10 +530,10 @@ describe('minimap', () => {
     graph.translate(50, 50);
 
     setTimeout(() => {
-      expect(viewport.style.left).toEqual('68.8474px');
-      expect(viewport.style.top).toEqual('59.5016px');
-      expect(viewport.style.width).toEqual('131.153px');
-      expect(viewport.style.height).toEqual('140.498px');
+      expect(viewport.style.left).toEqual('53.125px');
+      expect(viewport.style.top).toEqual('43.75px');
+      expect(viewport.style.width).toEqual('146.875px');
+      expect(viewport.style.height).toEqual('156.25px');
 
       Simulate.simulate(viewport, 'dragstart', {
         clientX: 100,
@@ -552,19 +552,18 @@ describe('minimap', () => {
       });
 
       setTimeout(() => {
-        expect(viewport.style.left).toEqual('66.8474px');
-        expect(viewport.style.top).toEqual('50.5016px');
-        expect(viewport.style.width).toEqual('133.153px');
-        expect(viewport.style.height).toEqual('149.498px');
-        const matrix = graph.get('group').getMatrix();
-        expect(matrix[0]).toEqual(2);
-        expect(matrix[4]).toEqual(2);
+        expect(viewport.style.left).toEqual('49.125px');
+        expect(viewport.style.top).toEqual('25.75px');
+        expect(viewport.style.width).toEqual('150.875px');
+        expect(viewport.style.height).toEqual('156.25px');
+        const zoomg = graph.get('canvas').getCamera().getZoom();
+        expect(zoomg).toEqual(2);
         graph.destroy();
         done();
       }, 300);
     }, 300);
   });
-  it('invalid dom event', () => {
+  it.only('invalid dom event', () => {
     const minimap = new Minimap({ size: [200, 200] });
     const graph = new G6.Graph({
       container: div,
@@ -611,8 +610,9 @@ describe('minimap', () => {
       clientY: 100,
       target: null,
     });
+    graph.destroy();
   });
-  it('delegate type of minimap', (done) => {
+  it.only('delegate type of minimap', (done) => {
     const minimap = new Minimap({
       size: [200, 200],
       type: 'delegate',
@@ -643,7 +643,7 @@ describe('minimap', () => {
       done();
     }, 110);
   });
-  it('minimap container', () => {
+  it.only('minimap container', () => {
     const minimap = new Minimap({
       container,
       size: [200, 200],
@@ -682,7 +682,7 @@ describe('minimap', () => {
     graph.destroy();
     expect(container.innerHTML).toEqual('');
   });
-  it('canvas minX minY < 0', (done) => {
+  it.only('canvas minX minY < 0', (done) => {
     const minimap = new Minimap({
       size: [200, 200],
     });
@@ -711,7 +711,7 @@ describe('minimap', () => {
       done();
     }, 100);
   });
-  it('keyShapeOnly minimap', (done) => {
+  it.only('keyShapeOnly minimap', (done) => {
     const minimap = new Minimap({ size: [200, 200], type: 'keyShape' });
     const graph = new G6.Graph({
       container: div,
@@ -736,7 +736,7 @@ describe('minimap', () => {
       done();
     }, 100);
   });
-  it('get minimap container', () => {
+  it.only('get minimap container', () => {
     const minimap = new Minimap({ size: [200, 200], type: 'keyShape' });
     const graph = new G6.Graph({
       container: div,
@@ -750,7 +750,7 @@ describe('minimap', () => {
     expect(container.className).toBe('g6-minimap');
     graph.destroy();
   });
-  it('minimap beforeanimate afteranimate', () => {
+  it.only('minimap beforeanimate afteranimate', () => {
     const minimap = new Minimap({ size: [200, 200] });
     const graph = new G6.Graph({
       container: div,
@@ -767,7 +767,8 @@ describe('minimap', () => {
   });
 });
 
-describe('minimap with hidden shape', () => {
+// TODO: 待 SVG 完成后测试
+xdescribe('minimap with hidden shape', () => {
   G6.registerNode(
     'my-node',
     {
@@ -1074,8 +1075,8 @@ describe('minimap with combo', () => {
       }
     ]
   };
-  
-  it('keyShape minimap with combo', (done) => {
+
+  it.only('keyShape minimap with combo', (done) => {
     const minimap = new Minimap({
       size: [200, 200],
       type: 'keyShape'
@@ -1109,7 +1110,7 @@ describe('minimap with combo', () => {
       done();
     }, 600);
   });
-  it('delegate minimap with combo', (done) => {
+  it.only('delegate minimap with combo', (done) => {
     const minimap = new Minimap({
       size: [500, 500],
       type: 'delegate'

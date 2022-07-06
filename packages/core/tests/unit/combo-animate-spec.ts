@@ -222,7 +222,7 @@ describe('collapse combo initially', () => {
       done()
     }, 16);
   });
-  it('collapse combo initially and no animation', (done) => {
+  it('collapse combo initially and no animation', (done) => { // done
     const graph = new Graph({
       container: div,
       width: 500,
@@ -249,7 +249,7 @@ describe('collapse combo initially', () => {
         graph.collapseExpandCombo('CHILD-92-5-1');
         expect(graph.get('edges').filter(e => e.isVisible()).length).toBe(1)
         expect(graph.get('vedges').length).toBe(4)
-        // graph.destroy()
+        graph.destroy()
         done();
       }, 201)
     }, 201)

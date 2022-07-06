@@ -1,8 +1,5 @@
-export type IBBox = {
-  minX: number;
-  maxX: number;
-  minY: number;
-  maxY: number;
-  x: number;
-  y: number;
-}
+export * from './shape';
+export * from './element';
+export * from './canvas';
+export * from './event';
+export * from './animate';

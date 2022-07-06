@@ -181,46 +181,30 @@ describe('legend', () => {
     setTimeout(() => {
       graph.addPlugin(legend)
       expect(document.getElementsByClassName('g6-legend-container').length).not.toBe(0);
-      
+
       const legendCanvas = legend.get('legendCanvas');
       const rootGroup = legendCanvas.get('children')[0];
       const nodeGroup = rootGroup.find(e => e.get('name') === 'node-group');
       const edgeGroup = rootGroup.find(e => e.get('name') === 'edge-group');
       const legendNode0Shape = nodeGroup.get('children')[0].get('children')[0];
-      legendCanvas.emit('node-container:click', {
-        target: legendNode0Shape,
-        x: 0,
-        y: 0,
-      });
+      // G 5.0 通过 canvas.emit 会强制把 target 变为 canvas，因此无法通过 legendCanvas.emit 来测试触发图例项点击事件
+      legend.filterData({ target: legendNode0Shape });
       expect(graph.findAllByState('node', 'active').length).toBe(1)
 
       const legendNode2Shape = nodeGroup.get('children')[2].get('children')[0];
-      legendCanvas.emit('node-container:click', {
-        target: legendNode2Shape,
-        x: 0,
-        y: 0,
-      });
+      legend.filterData({ target: legendNode2Shape });
       expect(graph.findAllByState('node', 'active').length).toBe(3)
 
-      legendCanvas.emit('click', {
-        target: legendCanvas
-      })
+      legend.clearFilter();
+      legend.clearActiveLegend();
       expect(graph.findAllByState('node', 'active').length).toBe(0)
 
 
       const legendEdge0Shape = edgeGroup.get('children')[0].get('children')[0];
-      legendCanvas.emit('node-container:click', {
-        target: legendEdge0Shape,
-        x: 0,
-        y: 0,
-      });
-      expect(graph.findAllByState('edge', 'active').length).toBe(2)
-      
-      legendCanvas.emit('click', {
-        target: legendCanvas
-      })
+      legend.filterData({ target: legendEdge0Shape });
+      expect(graph.findAllByState('edge', 'active').length).toBe(2);
 
-      // graph.destroy()
+      graph.destroy()
       done();
     }, 500);
   });
@@ -264,7 +248,7 @@ describe('legend', () => {
         }
       }
     });
-  
+
     const graph = new G6.Graph({
       container: div,
       width: 400,
@@ -286,58 +270,33 @@ describe('legend', () => {
     setTimeout(() => {
       graph.addPlugin(legend)
       expect(document.getElementsByClassName('g6-legend-container').length).not.toBe(0);
-      
+
       const legendCanvas = legend.get('legendCanvas');
       const rootGroup = legendCanvas.get('children')[0];
       const nodeGroup = rootGroup.find(e => e.get('name') === 'node-group');
       const edgeGroup = rootGroup.find(e => e.get('name') === 'edge-group');
       const legendNode0Shape = nodeGroup.get('children')[0].get('children')[0];
-      legendCanvas.emit('node-container:mouseenter', {
-        target: legendNode0Shape,
-        x: 0,
-        y: 0,
-      });
+      legend.filterData({ target: legendNode0Shape });
       expect(graph.findAllByState('node', 'active').length).toBe(1)
-      legendCanvas.emit('node-container:mouseleave', {
-        target: legendNode0Shape,
-        x: 0,
-        y: 0,
-      });
+      legend.clearFilter();
+      legend.clearActiveLegend();
 
       const legendNode2Shape = nodeGroup.get('children')[2].get('children')[0];
-      legendCanvas.emit('node-container:mouseenter', {
-        target: legendNode2Shape,
-        x: 0,
-        y: 0,
-      });
+      legend.filterData({ target: legendNode2Shape });
       expect(graph.findAllByState('node', 'active').length).toBe(2)
-      legendCanvas.emit('node-container:mouseleave', {
-        target: legendNode2Shape,
-        x: 0,
-        y: 0,
-      });
+      legend.clearFilter();
+      legend.clearActiveLegend();
       expect(graph.findAllByState('node', 'active').length).toBe(0)
 
-      legendCanvas.emit('click', {
-        target: legendCanvas
-      })
+      legend.clearFilter();
+      legend.clearActiveLegend();
       expect(graph.findAllByState('node', 'active').length).toBe(0)
 
 
       const legendEdge0Shape = edgeGroup.get('children')[0].get('children')[0];
-      legendCanvas.emit('node-container:mouseenter', {
-        target: legendEdge0Shape,
-        x: 0,
-        y: 0,
-      });
+      legend.filterData({ target: legendEdge0Shape });
       expect(graph.findAllByState('edge', 'active').length).toBe(2)
-      
-      legendCanvas.emit('node-container:mouseleave', {
-        target: legendEdge0Shape,
-        x: 0,
-        y: 0,
-      });
-      
+
       graph.destroy()
       done();
     }, 500);

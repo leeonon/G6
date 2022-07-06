@@ -133,7 +133,7 @@ function looseJSONParse(text) {
  */
 interface NodeInstructure {
   type: string;
-  attrs: { [key: string]: any };
+  style: { [key: string]: any };
   children: NodeInstructure[];
   bbox: {
     x: number;
@@ -224,18 +224,18 @@ export function parseXML(xml: HTMLElement, cfg) {
     }
   });
 
-  rst.attrs = attrs;
+  rst.style = attrs;
 
   if (cfg && cfg.style && rst.name && typeof cfg.style[rst.name] === 'object') {
-    rst.attrs = {
-      ...rst.attrs,
+    rst.style = {
+      ...rst.style,
       ...cfg.style[rst.name],
     };
   }
 
   if (cfg && cfg.style && rst.keyshape) {
-    rst.attrs = {
-      ...rst.attrs,
+    rst.style = {
+      ...rst.style,
       ...cfg.style,
     };
   }
@@ -255,7 +255,7 @@ export function getBBox(
   offset: { x: number; y: number },
   chilrenBBox: { width: number; height: number },
 ) {
-  const { attrs = {} } = node;
+  const { style: attrs = {} } = node;
   const bbox = {
     x: offset.x || 0,
     y: offset.y || 0,
@@ -279,7 +279,7 @@ export function getBBox(
         bbox.y += shapeHeight;
         bbox.height = shapeHeight;
         bbox.width = shapeWidth;
-        node.attrs = {
+        node.style = {
           fontSize: 12,
           fill: '#000',
           ...attrs,
@@ -327,8 +327,8 @@ export function generateTarget(target: NodeInstructure, lastOffset = { x: 0, y: 
   };
 
   if (target.children?.length) {
-    const { attrs = {} } = target;
-    const { marginTop } = attrs;
+    const { style = {} } = target;
+    const { marginTop } = style;
     const offset = { ...lastOffset };
 
     if (marginTop) {
@@ -336,11 +336,11 @@ export function generateTarget(target: NodeInstructure, lastOffset = { x: 0, y: 
     }
 
     for (let index = 0; index < target.children.length; index++) {
-      target.children[index].attrs.key = `${attrs.key || 'root'} -${index} `;
+      target.children[index].style.key = `${style.key || 'root'} -${index} `;
       const node = generateTarget(target.children[index], offset);
       if (node.bbox) {
         const { bbox } = node;
-        if (node.attrs.next === 'inline') {
+        if (node.style.next === 'inline') {
           offset.x += node.bbox.width;
         } else {
           offset.y += node.bbox.height;
@@ -357,8 +357,8 @@ export function generateTarget(target: NodeInstructure, lastOffset = { x: 0, y: 
 
   target.bbox = getBBox(target, lastOffset, defaultBbox);
 
-  target.attrs = {
-    ...target.attrs,
+  target.style = {
+    ...target.style,
     ...target.bbox,
   };
 
@@ -373,10 +373,10 @@ export function generateTarget(target: NodeInstructure, lastOffset = { x: 0, y: 
  */
 export function compareTwoTarget(nowTarget: NodeInstructure, formerTarget: NodeInstructure) {
   const { type } = nowTarget || {};
-  const { key } = formerTarget?.attrs || {};
+  const { key } = formerTarget?.style || {};
 
   if (key && nowTarget) {
-    nowTarget.attrs.key = key;
+    nowTarget.style.key = key;
   }
 
   if (!nowTarget && formerTarget) {
@@ -412,8 +412,8 @@ export function compareTwoTarget(nowTarget: NodeInstructure, formerTarget: NodeI
     }
   }
 
-  const formerKeys = Object.keys(formerTarget.attrs);
-  const nowKeys = Object.keys(nowTarget.attrs);
+  const formerKeys = Object.keys(formerTarget.style);
+  const nowKeys = Object.keys(nowTarget.style);
 
   if (formerTarget.type !== nowTarget.type) {
     return {
@@ -428,7 +428,7 @@ export function compareTwoTarget(nowTarget: NodeInstructure, formerTarget: NodeI
   if (
     formerKeys
       .filter((e) => e !== 'children')
-      .some((e) => nowTarget.attrs[e] !== formerTarget.attrs[e] || !nowKeys.includes(e))
+      .some((e) => nowTarget.style[e] !== formerTarget.style[e] || !nowKeys.includes(e))
   ) {
     return {
       action: 'change',
@@ -471,10 +471,10 @@ export function createNodeFromXML(gen: string | ((node: any) => string)) {
       const resultTarget = compileXML(cfg);
       let keyshape = group;
       const renderTarget = (target) => {
-        const { attrs = {}, bbox, type, children, ...rest } = target;
+        const { style = {}, bbox, type, children, ...rest } = target;
         if (target.type !== 'group') {
           const shape = group.addShape(target.type, {
-            attrs,
+            attrs: style,
             origin: {
               bbox,
               type,
@@ -509,14 +509,14 @@ export function createNodeFromXML(gen: string | ((node: any) => string)) {
       const diffResult = compareTwoTarget(newTarget, lastTarget);
       const addShape = (shape) => {
         if (shape.type !== 'group') {
-          container.addShape(shape.type, { attrs: shape.attrs });
+          container.addShape(shape.type, { attrs: shape.style });
         }
         if (shape.children?.length) {
           shape.children.map((e) => addShape(e));
         }
       };
       const delShape = (shape) => {
-        const targetShape = children.find((e) => e.attrs.key === shape.attrs.key);
+        const targetShape = children.find((e) => e.style.key === shape.style.key);
         if (targetShape) {
           container.removeChild(targetShape);
         }
@@ -527,12 +527,12 @@ export function createNodeFromXML(gen: string | ((node: any) => string)) {
       const updateTarget = (target) => {
         const { key } = target;
         if (target.type !== 'group') {
-          const targetShape = children.find((e) => e.attrs.key === key);
+          const targetShape = children.find((e) => e.style.key === key);
           switch (target.action) {
             case 'change':
               if (targetShape) {
                 const originAttr = target.val.keyshape ? node.getOriginStyle() : {};
-                targetShape.attr({ ...originAttr, ...target.val.attrs });
+                targetShape.attr({ ...originAttr, ...target.val.style });
               }
               break;
             case 'add':

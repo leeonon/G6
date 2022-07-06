@@ -4,7 +4,7 @@
  * @Description: 拖动 Combo
  */
 import { each } from '@antv/util';
-import { IGroup } from '@antv/g-base';
+import { IGroup } from '@antv/g6-g-adapter';
 import { G6Event, IG6GraphEvent, Item, ComboConfig, ICombo, INode } from '@antv/g6-core';
 import { IGraph } from '../interface/graph';
 import Util from '../util';
@@ -304,8 +304,8 @@ export default {
     }
   },
   onDragEnd(evt: IG6GraphEvent) {
-    if (!this.targets || this.targets.length === 0) return;
     const item = evt.item;
+    if (!item || !this.targets || this.targets.length === 0) return;
     if (this.currentShouldEnd) {
       this.updatePositions(evt);
     }

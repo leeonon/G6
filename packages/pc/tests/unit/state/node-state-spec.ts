@@ -445,8 +445,8 @@ describe('graph node states', () => {
         case 'node2':
           expect(keyShape.attr('lineWidth')).toEqual(1);
           expect(keyShape.attr('fill')).toEqual('#0f0');
-          expect(keyShape.attr('shadowColor')).toEqual(undefined);
-          expect(keyShape.attr('shadowBlur')).toEqual(undefined);
+          expect(keyShape.attr('shadowColor')).toEqual(null);
+          expect(keyShape.attr('shadowBlur')).toEqual(null);
           break;
       }
     });

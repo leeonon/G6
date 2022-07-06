@@ -2,7 +2,7 @@
  * 基于 G 的按钮组件
  */
 
-import { IGroup, IShape } from '@antv/g-base';
+import { IGroup, IShape } from '@antv/g6-g-adapter';
 import { deepMix } from '@antv/util';
 import { PLAY_PAUSE_BTN, ExtendedShapeStyle } from './constant';
 

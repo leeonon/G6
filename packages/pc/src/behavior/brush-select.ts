@@ -14,8 +14,8 @@ export default {
         stroke: '#DDEEFE',
         lineWidth: 1,
       },
-      onSelect() {},
-      onDeselect() {},
+      onSelect() { },
+      onDeselect() { },
       selectedState: 'selected',
       trigger: DEFAULT_TRIGGER,
       includeEdges: true,
@@ -67,7 +67,7 @@ export default {
     if (!brush) {
       brush = this.createBrush();
     }
-    this.originPoint = { x: e.canvasX, y: e.canvasY };
+    this.originPoint = { x: e.x, y: e.y };
     brush.attr({ width: 0, height: 0 });
     brush.show();
     this.dragging = true;
@@ -94,7 +94,8 @@ export default {
       return;
     }
 
-    this.brush.remove(true); // remove and destroy
+    const group = graph.getGroup();
+    group.removeChild(this.brush, true);
     this.brush = null;
     this.getSelectedNodes(e);
     this.dragging = false;
@@ -186,7 +187,7 @@ export default {
   },
   createBrush() {
     const self = this;
-    const brush = self.graph.get('canvas').addShape('rect', {
+    const brush = self.graph.getGroup().addShape('rect', {
       attrs: self.brushStyle,
       capture: false,
       name: 'brush-shape',
@@ -198,10 +199,10 @@ export default {
   updateBrush(e: IG6GraphEvent) {
     const { originPoint } = this;
     this.brush.attr({
-      width: abs(e.canvasX - originPoint.x),
-      height: abs(e.canvasY - originPoint.y),
-      x: min(e.canvasX, originPoint.x),
-      y: min(e.canvasY, originPoint.y),
+      width: abs(e.x - originPoint.x),
+      height: abs(e.y - originPoint.y),
+      x: min(e.x, originPoint.x),
+      y: min(e.y, originPoint.y),
     });
   },
   onKeyDown(e: IG6GraphEvent) {
@@ -223,9 +224,11 @@ export default {
     }
   },
   onKeyUp() {
+    const { graph } = this;
     if (this.brush) {
       // 清除所有选中状态后，设置拖得动状态为false，并清除框选的brush
-      this.brush.remove(true);
+      const group = graph.getGroup();
+      group.removeChild(this.brush, true);
       this.brush = null;
       this.dragging = false;
     }

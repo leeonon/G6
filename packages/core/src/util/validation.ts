@@ -1,4 +1,4 @@
-import { isString, isPlainObject } from '@antv/util';
+import { isString } from '@antv/util';
 import { GraphData, TreeGraphData, NodeConfig, EdgeConfig, ComboConfig, ITEM_TYPE } from '../types';
 import { traverseTree } from './graphic';
 

@@ -11,7 +11,7 @@ describe('graph node states', () => {
     nodes: [{ id: 'node1', x: 100, y: 100 }]
   };
 
-  it('image state changing', (done) => {
+  it('image state changing', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -23,9 +23,9 @@ describe('graph node states', () => {
         size: 24,
         labelCfg: {
           position: 'bottom',
-          style: {  fill: '#e80a0a', fontSize: 10,}
+          style: { fill: '#e80a0a', fontSize: 10, }
         },
-      }
+      },
       nodeStateStyles: {
         hover: {
           img: 'https://gw.alipayobjects.com/zos/bmw-prod/5d015065-8505-4e7a-baec-976f81e3c41d.svg',
@@ -41,7 +41,6 @@ describe('graph node states', () => {
     graph.setItemState(node, 'hover', false)
     expect(node.getKeyShape().attr('img')).toBe('https://gw.alipayobjects.com/mdn/rms_f8c6a0/afts/img/A*eD7nT6tmYgAAAAAAAAAAAABkARQnAQ')
     graph.destroy();
-    done();
   });
 
   it('custom node with image and state changing', (done) => {
@@ -109,22 +108,19 @@ describe('graph node states', () => {
       height: 500,
       fitCenter: true,
       defaultNode: {
-        type: 'item-node'
+        type: 'item-node',
       }
     });
-    graph.data({nodes: [{ id: 'node1', x: 100, y: 100 }]});
+    graph.data({ nodes: [{ id: 'node1', x: 100, y: 100 }] });
     graph.render();
 
     const node = graph.getNodes()[0];
     graph.setItemState(node, 'highlight', true)
     expect(node.getContainer().find(e => e.get('name') === 'image-shape').attr('opacity')).toBe(0.2);
-    
-    setTimeout(() => {
-      graph.setItemState(node, 'highlight', false)
-      console.log(node)
-    }, 500)
+    graph.setItemState(node, 'highlight', false)
+    // expect(node.getContainer().find(e => e.get('name') === 'image-shape').attr('opacity')).toBe(1);
 
-    // graph.destroy();
+    graph.destroy();
     done();
   })
 });

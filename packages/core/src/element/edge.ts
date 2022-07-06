@@ -3,7 +3,8 @@
  * @description 自定义边中有大量逻辑同自定义节点重复，虽然可以提取成为 mixin ，但是考虑到代码的可读性，还是单独实现。
  */
 
-import { IGroup, IShape, IElement, Point } from '@antv/g-base';
+//  import { IGroup, IShape, IElement, Point } from '@antv/g-base';
+import { IGroup, IShape, IElement, Point } from '@antv/g6-g-adapter';
 import { deepMix, mix, each, isNil, isNumber, isArray } from '@antv/util';
 import { ILabelConfig, ShapeOptions } from '../interface/shape';
 import { EdgeConfig, EdgeData, IPoint, LabelStyle, ShapeStyle, Item, ModelConfig, UpdateType } from '../types';
@@ -251,7 +252,7 @@ const singleEdge: ShapeOptions = {
     else autoRotate = labelCfg.autoRotate;
 
     if (autoRotate) {
-      style.matrix = label.attr('matrix') || [1, 0, 0, 0, 1, 0, 0, 0, 1];
+      style.matrix = label.getMatrix() || [1, 0, 0, 0, 1, 0, 0, 0, 1];
     }
     return style;
   },
@@ -342,6 +343,7 @@ const singleEdge: ShapeOptions = {
 
     const style = this.getLabelBgStyleByPosition(label, labelCfg);
     const rect = group.addShape('rect', { name: 'text-bg-shape', attrs: style, labelRelated: true });
+    if (style.matrix) rect.setMatrix(style.matrix);
     group['shapeMap']['text-bg-shape'] = rect;
     return rect;
   },

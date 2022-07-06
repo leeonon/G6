@@ -53,7 +53,7 @@ describe('graph state controller', () => {
     }, 100);
   });
 
-  it('state with activate-relations', (done) => {
+  it('state with activate-relations', () => {
     graph.off();
 
     graph.addBehaviors('activate-relations', 'default');
@@ -66,7 +66,6 @@ describe('graph state controller', () => {
 
     expect(Object.keys(modes)).toEqual(['default']);
     expect(modes.default).toEqual([]);
-    done();
   });
 
   it('updateGraphStates', (done) => {

@@ -207,7 +207,7 @@ describe('graph with combo', () => {
     graph.destroy();
   });
 
-  it('collapse expand combo', () => {
+  it('collapse expand combo', done => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -262,12 +262,14 @@ describe('graph with combo', () => {
       expect(node.isVisible()).toBe(false);
     });
 
-    graph.collapseExpandCombo(comboA);
-    comboA.getChildren().nodes.forEach((node) => {
-      expect(node.isVisible()).toBe(true);
-    });
-
-    graph.destroy();
+    setTimeout(() => {
+      graph.collapseExpandCombo(comboA);
+      comboA.getChildren().nodes.forEach((node) => {
+        expect(node.isVisible()).toBe(true);
+      });
+      graph.destroy();
+      done()
+    }, 600);
   });
 
   it('combo mapper', () => {
@@ -396,14 +398,17 @@ describe('graph with combo', () => {
         },
       ],
     };
-    // graph.changeData(newData);
-    // graph.fitView();
-    // // the nodes with no parent combo will not be counted into comboTrees
-    // expect(graph.get('comboTrees').length).toBe(2);
-    // const comboAChildren = (graph.findById('a') as ICombo).getChildren();
-    // expect(comboAChildren.nodes.length).toBe(2);
-    // expect(comboAChildren.combos.length).toBe(2);
-    // graph.destroy();
+    graph.changeData(newData);
+    // setTimeout(() => {
+    //   graph.translate(290, 327);
+    // }, 1000)
+    graph.fitView();
+    // the nodes with no parent combo will not be counted into comboTrees
+    expect(graph.get('comboTrees').length).toBe(2);
+    const comboAChildren = (graph.findById('a') as ICombo).getChildren();
+    expect(comboAChildren.nodes.length).toBe(2);
+    expect(comboAChildren.combos.length).toBe(2);
+    graph.destroy();
   });
   it('updateComboTree', () => {
     const graph = new Graph({
@@ -437,9 +442,6 @@ describe('graph with combo', () => {
       container: div,
       width: 500,
       height: 600,
-      layout: {
-        type: 'comboForce',
-      },
       modes: {
         default: ['drag-canvas', 'zoom-canvas'],
       },
@@ -481,9 +483,12 @@ describe('graph with combo', () => {
       label: 'newsubnode2',
       comboId: 'new combo 2',
     });
+    // core 没有布局机制
     graph.layout();
+    graph.fitView();
     expect(newComboItem2.getChildren().nodes.length).toBe(1);
     expect(newComboItem2.getChildren().combos.length).toBe(0);
+    graph.translate(100, 100);
 
     // add an exist combo
     graph.addItem('combo', {
@@ -549,10 +554,11 @@ describe('empty combo', () => {
         default: ['drag-canvas', 'drag-node', 'drag-combo', 'collapse-expand-combo'],
       },
     });
-    graph.on('canvas:click', (e) => {
-      graph.createCombo('combo1', ['node1', 'node2']);
-    });
+    // graph.on('canvas:click', (e) => {
+    //   graph.createCombo('combo1', ['node1', 'node2']);
+    // });
     graph.data(data);
     graph.render();
+    graph.createCombo('combo1', ['node1', 'node2']);
   });
 });

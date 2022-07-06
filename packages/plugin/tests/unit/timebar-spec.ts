@@ -182,7 +182,8 @@ describe('timeline filter edges', () => {
 
     graph.data(data);
     graph.render();
-    // graph.destroy();
+    graph.destroy();
+
   });
 });
 
@@ -216,9 +217,9 @@ describe('timeline play with timebar', () => {
       type: 'trend',
       trend: {
         data: timeBarData,
-        // areaStyle: {
-        //   fill: 'pink'
-        // },
+        areaStyle: {
+          fill: 'pink'
+        },
         isArea: true,
         lineStyle: {
           stroke: 'green',
@@ -256,7 +257,7 @@ describe('timeline play with timebar', () => {
         //   }
         // }
       },
-      // loop: true
+      loop: true
     });
     const graph = new G6.Graph({
       container: div,
@@ -276,6 +277,7 @@ describe('timeline play with timebar', () => {
 
     graph.data(data);
     graph.render();
+    graph.destroy();
     // graph.on('sliderchange', evt => {
     //   console.log('范围', evt)
     // })
@@ -319,7 +321,7 @@ describe('timeline play with timebar', () => {
       width: 500,
       height: 150,
       padding: 10,
-      type: 'trend',
+      type: 'simple',
       trend: {
         data: timeBarData,
         isArea: true,
@@ -379,6 +381,7 @@ describe('timeline play with timebar', () => {
 
     graph.data(data);
     graph.render();
+    graph.destroy();
     // graph.on('sliderchange', evt => {
     //   console.log('范围', evt)
     // })
@@ -388,7 +391,7 @@ describe('timeline play with timebar', () => {
     // })
   });
 
-  it('simple timebar', () => {
+  it('simple timebar filter edge only', () => {
 
     const data = {
       nodes: [],
@@ -519,6 +522,7 @@ describe('timeline play with timebar', () => {
 
     graph.data(data);
     graph.render();
+    graph.destroy();
     // graph.on('sliderchange', evt => {
     //   console.log('范围', evt)
     // })
@@ -528,7 +532,7 @@ describe('timeline play with timebar', () => {
     // })
   });
 
-  it('slice timebar', () => {
+  it('tick timebar', () => {
     const data = {
       nodes: [
         {
@@ -555,8 +559,8 @@ describe('timeline play with timebar', () => {
       width: 500,
       height: 150,
       padding: 10,
-      type: 'slice',
-      slice: {
+      type: 'tick',
+      tick: {
         data: timeBarData,
         width: 500,
         height: 42,
@@ -581,6 +585,7 @@ describe('timeline play with timebar', () => {
 
     graph.data(data);
     graph.render();
+    graph.destroy();
     // graph.on('sliderchange', evt => {
     //   console.log('范围', evt)
     // })
@@ -591,8 +596,8 @@ describe('timeline play with timebar', () => {
   });
 });
 
-xdescribe('timebar filter edges', () => {
-  it('trend timebar', () => {
+describe('timebar filter edges filter edges and nodes', () => {
+  it('trend timebar filter edges and nodes', () => {
     const timeBarData = [];
 
     for (let i = 1; i < 60; i++) {
@@ -683,7 +688,6 @@ xdescribe('timebar filter edges', () => {
         },
       },
     });
-    console.log('data', data);
 
     graph.data(data);
     graph.render();

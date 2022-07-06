@@ -3,7 +3,7 @@ import { IAbstractGraph as IGraph, GraphData, ShapeStyle } from '@antv/g6-core';
 import Base from '../base';
 import { isArray, isNumber, uniqueId } from '@antv/util';
 import { Util } from '@antv/g6-core';
-import { Canvas } from '@antv/g-canvas';
+import { Canvas, IElement } from '@antv/g6-g-adapter';
 
 const ALLOW_EVENTS = ['click', 'mouseenter'];
 
@@ -46,6 +46,7 @@ interface LegendConfig {
 }
 
 export default class Legend extends Base {
+  private preTarget: IElement;
   constructor(config?: LegendConfig) {
     super(config);
   }
@@ -157,16 +158,23 @@ export default class Legend extends Base {
     }
     const lc = self.get('legendCanvas');
     if (trigger === 'mouseenter') {
-      lc.on('node-container:mouseenter', (e) => self.filterData(e));
-      lc.on('node-container:mouseleave', (e) => {
-        self.clearFilter();
-        self.clearActiveLegend();
+      lc.on('node-container:mousemove', (e) => {
+        if (e.target !== self.preTarget) {
+          // mouseleave
+          if (self.preTarget) {
+            self.clearFilter();
+            self.clearActiveLegend();
+          }
+          // mouseenter
+          if (e.target) self.filterData(e);
+        }
+        self.preTarget = e.target;
       });
     }
     else {
       lc.on('node-container:click', (e) => self.filterData(e));
       lc.on('click', (e) => {
-        if (e.target && e.target.isCanvas && e.target.isCanvas()) {
+        if (e.target?.nodeName === 'document' || e.target?.isCanvas?.()) {
           self.clearFilter();
           self.clearActiveLegend();
         }
@@ -271,6 +279,7 @@ export default class Legend extends Base {
    * @param param
    */
   public filterData(e) {
+    console.log('filter')
     const filter = this.get('filter');
     const filterFunctions = filter?.filterFunctions;
     if (!filter || !filterFunctions) return;
@@ -283,11 +292,11 @@ export default class Legend extends Base {
     if (!multiple) this.clearActiveLegend()
     // 设置 legend 的高亮状态
     this.activateLegend(e.target);
-    const group = lc.find(e => e.get('name') === 'root');
-    const nodeGroup = group.find(e => e.get('name') === 'node-group');
-    const edgeGroup = group.find(e => e.get('name') === 'edge-group');
-    const activeNodeLegend = nodeGroup.get('children').filter(e => e.get('active'));
-    const activeEdgeLegend = edgeGroup.get('children').filter(e => e.get('active'));
+    const group = lc.find(ele => ele.get('name') === 'root');
+    const nodeGroup = group.find(ele => ele.get('name') === 'node-group');
+    const edgeGroup = group.find(ele => ele.get('name') === 'edge-group');
+    const activeNodeLegend = nodeGroup.get('children').filter(ele => ele.get('active'));
+    const activeEdgeLegend = edgeGroup.get('children').filter(ele => ele.get('active'));
 
     let activeCount = 0;
     const typeFuncs = ['getNodes', 'getEdges'];
@@ -348,6 +357,8 @@ export default class Legend extends Base {
         container: this.get('container'),
         width: 200,
         height: 200,
+        // @ts-ignore
+        renderer: 'canvas'
       });
       const rootGroup = lc.addGroup({ name: 'root' });
       rootGroup.addGroup({ name: 'node-group' });
@@ -366,7 +377,7 @@ export default class Legend extends Base {
     const itemGroup = [nodeGroup, edgeGroup];
     itemTypes.forEach((itemType, i) => {
       itemsData[itemType].forEach(data => {
-        const subGroup = itemGroup[i].addGroup({ id: data.id, name: 'node-container' });
+        const subGroup = itemGroup[i].addGroup({ id: data.id });
         let attrs;
         let shapeType = data.type;
         const { width, height, r } = this.getShapeSize(data);
@@ -437,6 +448,20 @@ export default class Legend extends Base {
             oriAttrs: attrs
           });
         }
+
+        // 用于拾取这个 legend 项的表面透明 rect
+        const subGroupBBox = subGroup.getBBox();
+        subGroup.addShape('rect', {
+          attrs: {
+            x: subGroupBBox.minX,
+            y: subGroupBBox.minY,
+            width: subGroupBBox.maxX - subGroupBBox.minX,
+            height: subGroupBBox.maxY - subGroupBBox.minY,
+            opacity: 0,
+            fill: '#fff',
+          },
+          name: 'node-container'
+        });
       });
     })
     const padding = this.get('padding')
@@ -627,7 +652,7 @@ export default class Legend extends Base {
     });
     const ew = edgeLegendSize.max - edgeLegendSize.min;
 
-    if (align && align !== '' && align !== 'left') {
+    if (!!align && align !== 'left') {
       const widthDiff = nw - ew;
       const movement = (align === 'center' ? Math.abs(widthDiff) / 2 : Math.abs(widthDiff));
       const shouldAdjustGroup = widthDiff < 0 ? nodeGroup : edgeGroup;

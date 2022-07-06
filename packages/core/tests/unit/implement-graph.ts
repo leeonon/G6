@@ -1,4 +1,6 @@
-import { Canvas as GCanvas } from '@antv/g-canvas';
+// import { Canvas as GCanvas } from '@antv/g';
+// import { Renderer as CanvasRenderer } from '@antv/g-canvas';
+import { Canvas } from '@antv/g6-g-adapter';
 import { AbstractGraph } from '../../src';
 
 export default class Graph extends AbstractGraph {
@@ -6,9 +8,9 @@ export default class Graph extends AbstractGraph {
     super(cfg);
   }
 
-  initEventController() {}
+  initEventController() { }
 
-  initLayoutController() {}
+  initLayoutController() { }
 
   initCanvas() {
     let container: string | HTMLElement | Element | null = this.get('container');
@@ -30,15 +32,16 @@ export default class Graph extends AbstractGraph {
       container,
       width,
       height,
+      renderer: 'canvas'
     };
     const pixelRatio = this.get('pixelRatio');
     if (pixelRatio) {
       canvasCfg.pixelRatio = pixelRatio;
     }
 
-    const canvas = new GCanvas(canvasCfg);
+    const canvas = new Canvas(canvasCfg);
 
     this.set('canvas', canvas);
   }
-  initPlugins() {}
+  initPlugins() { }
 }

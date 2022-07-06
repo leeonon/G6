@@ -68,24 +68,26 @@ describe('fisheye', () => {
     expect(fisheye.get('r')).toEqual(300);
     const lens = fisheye.get('delegate');
     const clientPos = graph.getClientByPoint(200, 200);
-    lens.emit('mousewheel', { clientX: clientPos.x, clientY: clientPos.y });
-    lens.emit('mousewheel', {
-      originalEvent: { wheelDelta: 120 },
+    lens.emit('wheel', { clientX: clientPos.x, clientY: clientPos.y });
+    lens.emit('wheel', {
+      deltaY: 120,
       clientX: clientPos.x,
       clientY: clientPos.y,
     });
     expect(fisheye.get('r')).toEqual(315.7894736842105);
-    lens.emit('mousewheel', {
-      originalEvent: { wheelDelta: -120 },
+    lens.emit('wheel', {
+      deltaY: -120,
       clientX: clientPos.x,
       clientY: clientPos.y,
     });
     expect(fisheye.get('r')).toEqual(300);
 
     // drag to adjust the magnify coefficient
+    // 新 G 没有内置 drag 相关事件，通过 mousedown 等事件触发，在 fisheye 中将处理成 drag
     expect(fisheye.get('d')).toEqual(1.5);
-    lens.emit('dragstart', { x: 200, y: 200 });
-    lens.emit('drag', { x: 250, y: 250 });
+    lens.emit('mousedown', {})
+    lens.emit('mousemove', { pointX: 200, pointY: 200 });
+    lens.emit('mousemove', { pointX: 250, pointY: 250 });
     expect(fisheye.get('d')).toEqual(1.6);
     expect(node0.x).toEqual(51.78827985608831);
     expect(node0.y).toEqual(51.78827985608831);
@@ -126,28 +128,29 @@ describe('fisheye', () => {
     // drag to adjust the radius
     expect(fisheye.get('r')).toEqual(300);
     const lens = fisheye.get('delegate');
-    lens.emit('dragstart', { x: 200, y: 200 });
-    lens.emit('drag', { x: 250, y: 250 });
+    lens.emit('mousedown', {});
+    lens.emit('mousemove', { pointX: 200, pointY: 200 });
+    lens.emit('mousemove', { pointX: 250, pointY: 250 });
     expect(fisheye.get('r')).toEqual(315.7894736842105);
 
     // wheel to adjust the magnify coefficient
     expect(fisheye.get('d')).toEqual(1.5);
     const clientPos = graph.getClientByPoint(200, 200);
-    lens.emit('mousewheel', {
-      originalEvent: { wheelDelta: 120 },
+    lens.emit('wheel', {
+      deltaY: 120,
       clientX: clientPos.x,
       clientY: clientPos.y,
     });
     expect(fisheye.get('d')).toEqual(1.6);
-    lens.emit('mousewheel', {
-      originalEvent: { wheelDelta: -120 },
+    lens.emit('wheel', {
+      deltaY: -12,
       clientX: clientPos.x,
       clientY: clientPos.y,
     });
     expect(fisheye.get('d')).toEqual(1.5);
     fisheye.updateParams({ d: fisheye.get('maxD') });
-    lens.emit('mousewheel', {
-      originalEvent: { wheelDelta: 120 },
+    lens.emit('wheel', {
+      deltaY: 120,
       clientX: clientPos.x,
       clientY: clientPos.y,
     });
@@ -176,8 +179,9 @@ describe('fisheye', () => {
     graph.emit('click', { x: 100, y: 100 });
     const lens = fisheye.get('delegate');
 
-    lens.emit('dragstart', { x: 100, y: 100 });
-    lens.emit('drag', { x: 200, y: 200 });
+    lens.emit('mousedown', {});
+    lens.emit('mousemove', { pointX: 100, pointY: 100 });
+    lens.emit('mousemove', { pointX: 200, pointY: 200 });
     expect(node0.x).toEqual(53.55339059327375);
     expect(node0.y).toEqual(53.55339059327375);
     expect(node1.x).toEqual(200);

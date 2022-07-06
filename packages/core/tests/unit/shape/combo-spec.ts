@@ -4,7 +4,7 @@
  */
 
 import Shape from '../../../src/element/shape';
-import { Canvas } from '@antv/g-canvas';
+import { Canvas } from '@antv/g6-g-adapter';
 import { translate } from '../../../src/util/math';
 import '../../../src/element/combo';
 import '../../../src/element/combos';
@@ -53,7 +53,7 @@ describe('combo node test', () => {
 
     it('circle with label', () => {
       const group = canvas.addGroup();
-      translate(group, { x: 150, y: 100 });
+      translate(group, { x: 150, y: 250 });
       factory.draw(
         'circle',
         {
@@ -71,7 +71,7 @@ describe('combo node test', () => {
       const group = canvas.addGroup({
         id: 'rect',
       });
-      translate(group, { x: 100, y: 100 });
+      translate(group, { x: 150, y: 100 });
       const shape = factory.draw(
         'rect',
         {
@@ -168,6 +168,8 @@ describe('combo node test', () => {
         model: {
           id: 'rectnode',
           type: 'rect',
+          x: 300,
+          y: 300,
           stateStyles: {
             active: {
               fillOpacity: 0.8,
@@ -178,11 +180,11 @@ describe('combo node test', () => {
       });
       const shape = rectGroup.get('children')[0];
 
-      expect(shape.attr('fillOpacity')).toBe(1);
+      expect(shape.attr('fillOpacity')).toBe("");
       factory.setState('rectnode', 'active', true, item);
-      expect(shape.attr('fillOpacity')).not.toBe(1);
+      expect(shape.attr('fillOpacity')).not.toBe("");
       factory.setState('rectnode', 'active', false, item);
-      expect(shape.attr('fillOpacity')).toBe(1);
+      expect(shape.attr('fillOpacity')).toBe("");
     });
 
     it('label position', () => {

@@ -19,15 +19,13 @@
   },
   "dependencies": {
     "@antv/dom-util": "^2.0.2",
-    "@antv/g-base": "^0.5.1",
-    "@antv/g-canvas": "^0.5.2",
-    "@antv/g-svg": "^0.5.2",
     "@antv/g6-core": "0.6.15",
-    "@antv/g6-element": "0.6.15",
+    "@antv/g6-g-adapter": "*",
     "@antv/matrix-util": "^3.1.0-beta.3",
     "@antv/scale": "^0.3.4",
     "@antv/util": "^2.0.9",
-    "insert-css": "^2.0.0"
+    "insert-css": "^2.0.0",
+    "interactjs": "^1.10.11"
   },
   "sideEffects": false,
   "author": "",

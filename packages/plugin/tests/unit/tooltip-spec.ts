@@ -1,6 +1,10 @@
 import G6 from '@antv/g6';
 import Tooltip from '../../src/tooltip';
 
+function mathEqual(a: number, b: number, threshold: number = 1) {
+  return Math.abs(a - b) < threshold;
+}
+
 const div = document.createElement('div');
 div.id = 'tooltip-plugin';
 document.body.appendChild(div);
@@ -140,7 +144,7 @@ describe('tooltip', () => {
     data.nodes[1].y = 450;
     const offsetX = 0 // 5 + 20; // 当前 canvas 的左侧元素宽度总和
     const offsetY = 0 // 162 + 20; // 当前 canvas 的上方元素高度总和
-    const fixToNode = [1, 0.5];
+    const fixToNode: [number, number] = [1, 0.5];
     const tooltip = new Tooltip({
       getContent(e) {
         return `<div style='width: 180px;'>
@@ -186,12 +190,12 @@ describe('tooltip', () => {
       y: nodeBBox.minY + nodeBBox.height * fixToNode[1]
     }
     const expectCanvasXY = graph.getCanvasByPoint(expectPoint.x, expectPoint.y);
-    const graphContainer = graph.getContainer();
-    expectCanvasXY.x += graphContainer.offsetLeft + offsetX;
-    expectCanvasXY.y += graphContainer.offsetTop + offsetY;
+    const canvasDOM = graph.get('canvas').get('el');
+    expectCanvasXY.x += canvasDOM.offsetLeft + offsetX;
+    expectCanvasXY.y += canvasDOM.offsetTop + offsetY;
 
-    expect(dom.style.left).toEqual(`${expectCanvasXY.x}px`)
-    expect(dom.style.top).toEqual(`${expectCanvasXY.y}px`)
+    expect(mathEqual(Number(dom.style.left.replace('px', '')), expectCanvasXY.x, 0.1)).toEqual(true)
+    expect(mathEqual(Number(dom.style.top.replace('px', '')), expectCanvasXY.y, 0.1)).toEqual(true)
 
     graph.emit('canvas:click', { item: graph.getNodes()[0] });
     expect(dom.style.visibility).toEqual('hidden');
@@ -203,8 +207,8 @@ describe('tooltip', () => {
       y: nodeBBox2.minY + nodeBBox2.height * fixToNode[1]
     }
     const expectCanvasXY2 = graph.getCanvasByPoint(expectPoint2.x, expectPoint2.y);
-    expectCanvasXY2.x += graphContainer.offsetLeft + offsetX;
-    expectCanvasXY2.y += graphContainer.offsetTop + offsetY;
+    expectCanvasXY2.x += canvasDOM.offsetLeft + offsetX;
+    expectCanvasXY2.y += canvasDOM.offsetTop + offsetY;
 
     // 此时超出了下边界和右边界
     const bbox = dom.getBoundingClientRect();
@@ -303,9 +307,10 @@ describe('tooltip mouse out of view', () => {
               y: -16,
               width: 32,
               height: 32,
-              stroke: null,
+              // stroke: null, // TODO: G 5.0 暂不支持设置为 null
               fill: '#f00',
-              radius: [12, 12],
+              radius: 12,
+              // radius: [12, 12], // TODO：G 5.0 暂不支持数组 radius
             },
             zIndex: 1,
             name: 'rect-shape',
@@ -567,6 +572,7 @@ describe('tooltip mouse out of view', () => {
       height: 500,
       fitCenter: true, // 图居中
       enabledStack: true, // 设置为true，启用 redo & undo 栈功能
+      plugins: [tooltip],
       defaultNode: {
         type: 'pai-studio-node',
         size: [180, 40],

@@ -2,7 +2,8 @@
  * @fileOverview 自定义节点和边的过程中，发现大量重复代码
  * @author dxq613@gmail.com
  */
-import { IGroup, IShape, IElement } from '@antv/g-base';
+// import { IGroup, IShape, IElement } from '@antv/g-base';
+import { IGroup, IShape, IElement } from '@antv/g6-g-adapter';
 import { ShapeOptions, ILabelConfig } from '../interface/shape';
 import { IPoint, Item, LabelStyle, ShapeStyle, ModelConfig, EdgeConfig, UpdateType } from '../types';
 import Global from '../global';
@@ -289,14 +290,10 @@ export const shapeBase: ShapeOptions = {
         // 计算 label 的旋转矩阵
         if (!isNaN(rotate) && rotate !== '') {
           // if G 4.x define the rotateAtStart, use it directly instead of using the following codes
-          let rotateMatrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-          rotateMatrix = transform(rotateMatrix, [
-            ['t', -labelStyle.x, -labelStyle.y],
-            ['r', rotate],
-            ['t', labelStyle.x, labelStyle.y],
-          ]);
-          labelStyle.matrix = rotateMatrix;
           label.attr(labelStyle);
+          // TODO: shape 自带的 API 类型
+          // @ts-ignore
+          label.rotateAtStart(rotate - (label.getLocalEulerAngles() / 180 * Math.PI || 0));
         } else {
           if (label.getMatrix()?.[4] !== 1) {
             label.resetMatrix();

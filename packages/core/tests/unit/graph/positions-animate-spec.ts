@@ -53,7 +53,7 @@ describe('graph', () => {
   globalGraph.data(data);
   globalGraph.render();
 
-  it('new & destroy graph', () => {
+  it('new & destroy graph', () => { // done
     const inst = new Graph({
       container: div,
       width: 500,
@@ -63,11 +63,23 @@ describe('graph', () => {
       },
     });
     const length = div.childNodes.length;
+    inst.read(data);
 
     data.nodes.forEach(node => {
-      node.x = Math.random() * 100;
-      node.y = Math.random() * 100;
+      node.x = node.x + 100;
+      node.y = node.y + 100;
     });
+    // inst.on('afteranimate', () => {
+    //   console.log('after aniamte')
+    //   expect(data.nodes[0].x).not.toBe(150);
+    //   expect(data.nodes[0].y).not.toBe(50);
+    //   done();
+    // })
     inst.positionsAnimate();
+    // setTimeout(() => {
+    //   expect(data.nodes[0].x).not.toBe(150);
+    //   expect(data.nodes[0].y).not.toBe(50);
+    //   done();
+    // }, 500);
   });
 });

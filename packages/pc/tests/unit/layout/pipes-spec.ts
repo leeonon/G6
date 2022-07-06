@@ -27,7 +27,7 @@ div.id = 'pipes-layout';
 document.body.appendChild(div);
 
 describe('pipes layout', () => {
-  it('pipe circular and grid layout with default configs', () => {
+  it('pipe circular and grid layout with default configs', (done) => {
     const graph = new G6.Graph({
       container: div,
       layout: {
@@ -48,16 +48,17 @@ describe('pipes layout', () => {
       width: 500,
       height: 500,
     });
-    graph.data(data);
-    graph.render();
 
     graph.on('afterlayout', () => {
       expect(graph.getNodes()[0].getModel().x != null).toEqual(true);
-      // graph.destroy();
+      graph.destroy();
+      done();
     });
+    graph.data(data);
+    graph.render();
   });
 
-  it('pipe force and grid layout with default configs', () => {
+  it('pipe force and grid layout with default configs', (done) => {
     const graph = new G6.Graph({
       container: div,
       layout: {
@@ -79,18 +80,19 @@ describe('pipes layout', () => {
       width: 500,
       height: 500,
     });
-    graph.data(data);
-    graph.render();
 
     graph.on('afterlayout', () => {
       const firstNode = graph.getNodes()[0].getModel();
       expect(mathEqual(firstNode.x, 300)).toBeFalsy();
       expect(mathEqual(firstNode.y, 150)).toBeFalsy();
-      // graph.destroy();
+      graph.destroy();
+      done()
     });
+    graph.data(data);
+    graph.render();
   });
 
-  it('pipe circular and grid layout with center configs', () => {
+  it('pipe circular and grid layout with center configs', (done) => {
     const graph = new G6.Graph({
       container: div,
       layout: {
@@ -111,18 +113,19 @@ describe('pipes layout', () => {
       width: 500,
       height: 500,
     });
-    graph.data(data);
-    graph.render();
 
     graph.on('afterlayout', () => {
       const firstNode = graph.getNodes()[0].getModel();
       expect(mathEqual(firstNode.x, 450)).toEqual(true);
       expect(mathEqual(firstNode.y, 300)).toEqual(true);
-      // graph.destroy();
+      graph.destroy();
+      done()
     });
+    graph.data(data);
+    graph.render();
   });
 
-  it('pipe circular and grid layout with adjust configs', () => {
+  it('pipe circular and grid layout with adjust configs', (done) => {
     const graph = new G6.Graph({
       container: div,
       layout: {
@@ -146,14 +149,15 @@ describe('pipes layout', () => {
         default: ['drag-canvas', 'zoom-canvas']
       }
     });
-    graph.data(data);
-    graph.render();
-
     graph.on('afterlayout', () => {
       const firstNode = graph.getNodes()[0].getModel();
       expect(mathEqual(firstNode.x, 677)).toEqual(true);
-      expect(mathEqual(firstNode.y, 399)).toEqual(true);
-      // graph.destroy();
+      expect(mathEqual(firstNode.y, 398)).toEqual(true);
+      graph.destroy();
+      done();
     });
+    graph.data(data);
+    graph.render();
+
   });
 });

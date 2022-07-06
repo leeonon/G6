@@ -5,8 +5,7 @@
 
 import Shape from '../../../src/element/shape';
 import Global from '../../../src/global';
-import { IGroup } from '@antv/g-base';
-import { Canvas } from '@antv/g-canvas';
+import { Canvas, IGroup } from '@antv/g6-g-adapter';
 import Node from '../../../src/item/node';
 import { translate } from '../../../src/util/math';
 import '../../../src/element/node';
@@ -215,11 +214,11 @@ describe('shape node test', () => {
       });
       const shape = rectGroup.get('children')[0];
 
-      expect(shape.attr('fillOpacity')).toBe(1);
+      expect(shape.attr('fillOpacity')).toBe("");
       factory.setState('rectnode', 'active', true, item);
       expect(shape.attr('fillOpacity')).not.toBe(1);
       factory.setState('rectnode', 'active', false, item);
-      expect(shape.attr('fillOpacity')).toBe(1);
+      expect(shape.attr('fillOpacity')).toBe("");
     });
 
     it('selected', () => {

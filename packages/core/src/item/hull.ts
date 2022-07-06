@@ -1,4 +1,5 @@
-import { IGroup } from '@antv/g-base';
+// import { IGroup } from '@antv/g-base';
+import { IGroup } from '@antv/g6-g-adapter';
 import { deepMix, isString } from '@antv/util';
 import { parsePathString } from '@antv/path-util';
 import { Item, BubblesetCfg, HullCfg } from '../types';
@@ -128,7 +129,11 @@ export default class Hull {
   }
 
   render() {
-    this.group.addShape('path', {
+    const previousPath = this.group.shapeMap?.[this.cfg.id];
+    if (previousPath) {
+      this.group.removeChild(previousPath, true);
+    }
+    const path = this.group.addShape('path', {
       attrs: {
         path: this.path,
         ...this.cfg.style,
@@ -137,6 +142,8 @@ export default class Hull {
       name: this.cfg.id,
       capture: false
     });
+    if (!this.group.shapeMap) this.group.shapeMap = {};
+    this.group.shapeMap[this.cfg.id] = path;
     this.group.toBack();
   }
 
@@ -208,7 +215,7 @@ export default class Hull {
   }
 
   public updateData(members: Item[] | string[], nonMembers: string[] | Item[]) {
-    this.group.findById(this.id).remove();
+    this.group.removeChild(this.group.findById(this.id), true);
     if (members)
       this.members = (members as any[]).map((item) =>
         isString(item) ? this.graph.findById(item) : item,
@@ -285,7 +292,12 @@ export default class Hull {
   }
 
   public destroy() {
-    this.group.remove();
+    const parentGroup = this.group.getParent();
+    if (parentGroup) {
+      parentGroup.removeChild(this.group, true);
+    } else {
+      this.group.remove(true);
+    }
     this.cfg = null;
   }
 }

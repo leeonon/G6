@@ -63,7 +63,7 @@ describe('combo edge', () => {
         { source: "41010", target: "5920" },
         { source: "41010", target: "3830" },
         { source: "3830", target: "2400" },
-    
+
         { source: "5930", target: "41280" },
         { source: "41280", target: "5920" },
         { source: "41280", target: "3830" }
@@ -201,7 +201,7 @@ describe('combo edge', () => {
       defaultEdge: {
         type: "line",
         style: {
-          stroke: "#ff",
+          stroke: "#fff",
           size: 2,
           endArrow: true
         },
@@ -226,7 +226,7 @@ describe('combo edge', () => {
 
     graph.data(data);
     graph.render();
-    
+
     graph.collapseCombo('PARENT-4-1')
     expect(graph.getEdges().filter(edge => edge.isVisible()).length).toBe(1);
     expect(graph.get('vedges').length).toBe(3);
@@ -333,7 +333,7 @@ describe('combo edge', () => {
       defaultEdge: {
         type: "line",
         style: {
-          stroke: "#ff",
+          stroke: "#fff",
           size: 2,
           endArrow: true
         },

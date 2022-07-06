@@ -145,8 +145,10 @@ export default class Menu extends Base {
     const offsetX = this.get('offsetX') || 0;
     const offsetY = this.get('offsetY') || 0;
 
-    const graphTop = graph.getContainer().offsetTop;
-    const graphLeft = graph.getContainer().offsetLeft;
+    // 需要考虑 canvas 到父容器的边距
+    const canvasDOM = graph.get('canvas').get('el');
+    const graphTop = canvasDOM.offsetTop;
+    const graphLeft = canvasDOM.offsetLeft;
 
     let x = e.canvasX + graphLeft + offsetX;
     let y = e.canvasY + graphTop + offsetY;

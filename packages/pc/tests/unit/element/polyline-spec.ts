@@ -6,7 +6,7 @@ div.id = 'edge-shape';
 document.body.appendChild(div);
 
 describe('polyline edge', () => {
-  xit('polyline edge', () => {
+  it('polyline edge', () => {
     const graph = new Graph({
       container: div,
       width: 500,
@@ -114,7 +114,7 @@ describe('polyline edge', () => {
     graph.render();
     const edge = graph.getEdges()[0];
     const keyShape = edge.getKeyShape();
-    let path = keyShape.attr('path');
+    let path = keyShape.attr('path').split(' ');
     graph.getGroup().addShape('circle', {
       attrs: {
         r: 1,
@@ -131,12 +131,12 @@ describe('polyline edge', () => {
         y: 300
       }
     })
-    expect(path[0][1]).toBe(105.5);
-    expect(path[0][2]).toBe(300);
-    expect(path[2][1]).toBe(110.5);
-    expect(path[2][2]).toBe(289.5);
-    expect(path[4][1]).toBe(122);
-    expect(path[4][2]).toBe(294.5);
+    expect(path[0]).toBe('M105');
+    expect(path[1]).toBe("300L110");
+    expect(path[2]).toBe("300L110");
+    expect(path[3]).toBe("290L122");
+    expect(path[4]).toBe("290L122");
+    expect(path[5]).toBe("295");
 
     graph.destroy();
   });

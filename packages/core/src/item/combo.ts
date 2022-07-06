@@ -1,4 +1,5 @@
-import { IGroup } from '@antv/g-base';
+// import { IGroup } from '@antv/g-base';
+import { IGroup } from '@antv/g6-g-adapter';
 import { ICombo, INode, IItemBaseConfig } from '../interface/item';
 import Node from './node';
 import { IBBox, IShapeBase, ModelConfig, UpdateType } from '../types';
@@ -249,7 +250,12 @@ export default class Combo extends Node implements ICombo {
       this.clearCache();
       this.set(CACHE_SIZE, null);
       this.set('bbox', null);
-      group.remove();
+      const parentGroup = group.getParent();
+      if (parentGroup) {
+        parentGroup.removeChild(group, true);
+      } else {
+        group.remove(true);
+      }
       (this._cfg as IItemBaseConfig | null) = null;
       this.destroyed = true;
     }

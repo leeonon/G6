@@ -396,14 +396,14 @@ describe('graph with combo', () => {
         },
       ],
     };
-    // graph.changeData(newData);
-    // graph.fitView();
-    // // the nodes with no parent combo will not be counted into comboTrees
-    // expect(graph.get('comboTrees').length).toBe(2);
-    // const comboAChildren = (graph.findById('a') as ICombo).getChildren();
-    // expect(comboAChildren.nodes.length).toBe(2);
-    // expect(comboAChildren.combos.length).toBe(2);
-    // graph.destroy();
+    graph.changeData(newData);
+    graph.fitView();
+    // the nodes with no parent combo will not be counted into comboTrees
+    expect(graph.get('comboTrees').length).toBe(2);
+    const comboAChildren = (graph.findById('a') as ICombo).getChildren();
+    expect(comboAChildren.nodes.length).toBe(2);
+    expect(comboAChildren.combos.length).toBe(2);
+    graph.destroy();
   });
   it('updateComboTree', () => {
     const graph = new Graph({
@@ -554,5 +554,6 @@ describe('empty combo', () => {
     });
     graph.data(data);
     graph.render();
+    graph.destroy();
   });
 });

@@ -9,7 +9,7 @@ describe('tooltip', () => {
     container: div,
     width: 500,
     height: 500,
-    modes: { default: ['drag-node'] },
+    modes: { default: ['drag-node', 'drag-canvas', 'zoom-canvas'] },
   });
   it('basic tooltip', () => {
     graph.addBehaviors(

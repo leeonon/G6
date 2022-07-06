@@ -157,41 +157,6 @@ describe('toolbar', () => {
 
     graph.destroy();
   });
-  it('test default config', () => {
-    const toolbar = new ToolBar();
-    const graph = new G6.Graph({
-      container: div,
-      width: 500,
-      height: 500,
-      plugins: [toolbar],
-      modes: {
-        default: ['drag-node', 'zoom-canvas', 'drag-canvas'],
-      },
-      enabledStack: true,
-    });
-
-    const data = {
-      nodes: [
-        {
-          id: 'node1',
-          label: 'node1',
-          x: 100,
-          y: 100,
-        },
-        {
-          id: 'node2',
-          label: 'node2',
-          x: 300,
-          y: 100,
-        },
-      ],
-    };
-
-    graph.data(data);
-    graph.render();
-
-    graph.destroy();
-  });
   it('set config', () => {
     const tc = document.createElement('div');
     tc.id = 'toolbarContainer';
