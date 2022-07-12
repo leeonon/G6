@@ -182,87 +182,25 @@ export default {
     // hide the shapes when zoomming
     const enableOptimize = this.get('enableOptimize');
     if (enableOptimize) {
-      const optimizeZoom = this.get('optimizeZoom');
       const optimized = this.get('optimized');
       const nodes = graph.getNodes();
       const edges = graph.getEdges();
-      const nodesLength = nodes.length;
-      const edgesLength = edges.length;
 
       // hiding
       if (!optimized) {
-        for (let n = 0; n < nodesLength; n++) {
-          const node = nodes[n];
-          if (!node.destroyed) {
-            const children = node.get('group').get('children');
-            const childrenLength = children.length;
-            for (let c = 0; c < childrenLength; c++) {
-              const shape = children[c];
-              if (!shape.destoryed && !shape.get('isKeyShape')) {
-                shape.set('ori-visibility', shape.get('ori-visibility') || shape.get('visible'));
-                shape.hide();
-              }
-            }
-          }
-        }
-
-        for (let edgeIndex = 0; edgeIndex < edgesLength; edgeIndex++) {
-          const edge = edges[edgeIndex];
-          const children = edge.get('group').get('children');
-          const childrenLength = children.length;
-          for (let c = 0; c < childrenLength; c++) {
-            const shape = children[c];
-            shape.set('ori-visibility', shape.get('ori-visibility') || shape.get('visible'));
-            shape.hide();
-          }
-        }
+        this.hideItemShapes(nodes, 'node');
+        this.hideItemShapes(edges, 'edge');
         this.set('optimized', true);
       }
 
       // showing after 100ms
       clearTimeout(this.get('timeout'));
       const timeout = setTimeout(() => {
-        const currentZoom = graph.getZoom();
         const curOptimized = this.get('optimized');
         if (curOptimized) {
           this.set('optimized', false);
-          for (let n = 0; n < nodesLength; n++) {
-            const node = nodes[n];
-            const children = node.get('group').get('children');
-            const childrenLength = children.length;
-            if (currentZoom < optimizeZoom) {
-              const keyShape = node.getKeyShape();
-              const oriVis = keyShape.get('ori-visibility');
-              if (oriVis) keyShape.show();
-            } else {
-              for (let c = 0; c < childrenLength; c++) {
-                const shape = children[c];
-                const oriVis = shape.get('ori-visibility');
-                if (!shape.get('visible') && oriVis) {
-                  if (oriVis) shape.show();
-                }
-              }
-            }
-          }
-
-          for (let edgeIndex = 0; edgeIndex < edgesLength; edgeIndex++) {
-            const edge = edges[edgeIndex];
-            const children = edge.get('group').get('children');
-            const childrenLength = children.length;
-            if (currentZoom < optimizeZoom) {
-              const keyShape = edge.getKeyShape();
-              const oriVis = keyShape.get('ori-visibility');
-              if (oriVis) keyShape.show();
-            } else {
-              for (let c = 0; c < childrenLength; c++) {
-                const shape = children[c];
-                if (!shape.get('visible')) {
-                  const oriVis = shape.get('ori-visibility');
-                  if (oriVis) shape.show();
-                }
-              }
-            }
-          }
+          this.showItemShapes(nodes);
+          this.showItemShapes(edges);
         }
       }, 100);
       this.set('timeout', timeout);
@@ -300,10 +238,13 @@ export default {
               group.setMatrix(groupMatrix);
             }
           } else {
-            const children = group.get('children');
-            const childrenLength = children.length;
-            for (let c = 0; c < childrenLength; c++) {
-              const shape = children[c];
+            let children = [].concat(group.get('children'));
+            while (children.length) {
+              const shape = children.pop();
+              if (shape.isGroup?.()) {
+                children = children.concat(shape.get('children') || []);
+                continue;
+              }
               let fontSize, lineWidth;
               if (fixSelectedItems.fixLabel) {
                 const shapeType = shape.get('type');
@@ -338,7 +279,7 @@ export default {
         for (let fe = 0; fe < fixEdgesLength; fe++) {
           const edge = fixEdges[fe];
           const group = edge.getContainer();
-          const children = group.get('children');
+          let children = [].concat(group.get('children'));
           const nodeModel = edge.getModel();
           const itemStateStyle = edge.getStateStyle(fixSelectedItems.fixState);
           const shapeStateStyle = edge
@@ -346,9 +287,12 @@ export default {
             .getShape(nodeModel.type)
             .getStateStyle(fixSelectedItems.fixState, edge)[fixSelectedItems.fixState];
 
-          const childrenLength = children.length;
-          for (let c = 0; c < childrenLength; c++) {
-            const shape = children[c];
+          while (children?.length) {
+            const shape = children.pop();
+            if (shape.isGroup?.()) {
+              children = children.concat(shape.get('children') || []);
+              continue;
+            }
             let fontSize, lineWidth;
             if (fixSelectedItems.fixLabel || fixSelectedItems.fixAll) {
               const shapeType = shape.get('type');
@@ -380,4 +324,42 @@ export default {
     graph.zoomTo(zoom, { x: point.x, y: point.y }, animate, animateCfg);
     graph.emit('wheelzoom', e);
   },
+  hideItemShapes(items, itemType) {
+    const num = items.length;
+    for (let n = 0; n < num; n++) {
+      const item = items[n];
+      if (!item.destroyed) {
+        let children = [].concat(item.get('group').get('children'));
+        while (children?.length) {
+          const shape = children.pop();
+          if (shape.destroyed) continue;
+          if (itemType === 'edge' || !shape.get('isKeyShape')) {
+            shape.set('ori-visibility', shape.get('ori-visibility') || shape.get('visible'));
+            shape.hide();
+          }
+        }
+      }
+    }
+  },
+  showItemShapes(items) {
+    const { graph } = this;
+    const num = items.length;
+    const optimizeZoom = this.get('optimizeZoom');
+    const currentZoom = graph.getZoom();
+    for (let n = 0; n < num; n++) {
+      const item = items[n];
+      if (currentZoom < optimizeZoom) {
+        const keyShape = item.getKeyShape();
+        const oriVis = keyShape.get('ori-visibility');
+        if (oriVis) keyShape.show();
+      } else {
+        let children = [].concat(item.get('group').get('children'));
+        while (children?.length) {
+          const shape = children.pop();
+          const oriVis = shape.get('ori-visibility');
+          if (!shape.get('visible') && oriVis) shape.show();
+        }
+      }
+    }
+  }
 };

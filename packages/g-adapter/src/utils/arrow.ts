@@ -21,7 +21,14 @@ const getArrowHead = (arrow) => {
     if (arrow.nodeName) {
       arrowHead = arrow;
     } else {
-      arrowHead = new Path({ style: { ...arrow, anchor: [0, 0.5] } });
+      const { d, ...otherAttrs } = arrow;
+      arrowHead = new Path({
+        style: {
+          x: 0,
+          y: 0,
+          ...otherAttrs,
+        }
+      });
     }
   }
   return arrowHead;
@@ -29,11 +36,14 @@ const getArrowHead = (arrow) => {
 
 const updateArrow = (combinedShape, key, value) => {
   if (!combinedShape) return;
-  const newArrow = getArrowHead(value);
+  const { d = 0, ...arrowStyle } = value;
+  const newArrow = getArrowHead(arrowStyle);
   if (key === 'startArrow') {
     combinedShape.style.startHead = newArrow;
+    combinedShape.style.startHeadOffset = - 2 * d;
   } else {
     combinedShape.style.endHead = newArrow;
+    combinedShape.style.endHeadOffset = - 2 * d;
   }
 }
 

@@ -78,14 +78,15 @@ describe('shape(text) test', () => {
   });
 
   it('rotateAtStart rotateAtPoint', () => {
-    // 恢复以方便测试
+    // // 恢复以方便测试
     text.attr({
       textAlign: 'left',
       textBaseline: 'bottom'
     });
 
     text.rotateAtStart(Math.PI / 2);
-    const bbox = text.getBBox();
+    const bbox = text.getCanvasBBox();
+    console.log('bbox', bbox)
     expect(approximate(bbox.maxX - bbox.minX, 19)).toBe(true);
     expect(approximate(bbox.maxY - bbox.minY, 70)).toBe(true);
 

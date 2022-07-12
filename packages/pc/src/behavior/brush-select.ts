@@ -198,7 +198,6 @@ export default {
   },
   updateBrush(e: IG6GraphEvent) {
     const { originPoint } = this;
-    debugger
     const { x = 0, y = 0 } = e;
     const { x: originX = 0, y: originY = 0 } = originPoint;
     this.brush.attr({

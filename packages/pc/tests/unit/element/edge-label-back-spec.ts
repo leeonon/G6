@@ -68,11 +68,19 @@ describe('text background label', () => {
     width: 500,
     height: 500,
     // translate the graph to align the canvas's center, support by v3.5.1
-    // fitCenter: true,
+    fitCenter: true,
     defaultNode: {
       type: 'circle',
       labelCfg: {
         position: 'bottom',
+        style: {
+          background: {
+            fill: '#ffffff',
+            stroke: '#9EC9FF',
+            padding: [2, 2, 2, 2],
+            radius: 2,
+          },
+        }
       },
     },
     defaultEdge: {
@@ -104,60 +112,48 @@ describe('text background label', () => {
       },
     },
   });
-  it('text background label', done => {
-<<<<<<< HEAD
-=======
-
->>>>>>> 480c3f5f35 (chore: svg verified)
+  it('text background label', (done) => { // 
     const mat = [1, 0, 0, 0, 1, 0, 0, 0, 1];
     graph.data(data);
     graph.render();
-<<<<<<< HEAD
-    console.log(graph.getEdges()[0].getContainer().children[2].getMatrix())
-    console.log(graph.getEdges()[0].getContainer().children[2].attr())
-    const edge1bg = graph.getEdges()[1].getContainer().find(ele => ele.get('classname') === 'edge-label-bg');
-    let edge1bgMatrix = edge1bg.getMatrix();
-    expect(edge1bgMatrix[0]).toBe(0.7071067811865476);
-    expect(edge1bgMatrix[6]).toBe(-223.7023625196221);
-    expect(edge1bgMatrix[7]).toBe(187.5118869365008);
-=======
-    // const edge1bg = graph.getEdges()[1].getContainer().find(ele => ele.get('classname') === 'edge-label-bg');
-    // let edge1bgMatrix = edge1bg.getMatrix();
-    // expect(edge1bgMatrix[0]).toBe(0.7071067811865476);
-    // expect(edge1bgMatrix[6]).toBe(-223.7023625196221);
-    // expect(edge1bgMatrix[7]).toBe(187.5118869365008);
->>>>>>> 480c3f5f35 (chore: svg verified)
+    const labelGroup = graph.getEdges()[1].getContainer().find(ele => ele.get('className') === 'label-group');
+    let edge1bgMatrix = labelGroup.getMatrix();
+    console.log('edge1bgMatrix', edge1bgMatrix);
+    expect(edge1bgMatrix[0]).toBe(0.7071068286895752);
+    expect(edge1bgMatrix[6]).toBe(114.14213562011719);
+    expect(edge1bgMatrix[7]).toBe(364.14215087890625);
 
     graph.updateItem('node3', {
       x: 110,
       y: 250,
     });
     setTimeout(() => {
-      edge1bgMatrix = edge1bg.getMatrix();
-      expect(edge1bgMatrix[0]).toBe(0.9417419115948376);
-      expect(edge1bgMatrix[6]).toBe(-83.53467171518344);
-      expect(edge1bgMatrix[7]).toBe(55.06982476376146);
+      edge1bgMatrix = labelGroup.getMatrix();
+      expect(edge1bgMatrix[0]).toBe(0.9417418837547302);
+      expect(edge1bgMatrix[6]).toBe(116.72673034667969);
+      expect(edge1bgMatrix[7]).toBe(268.8348388671875);
       graph.updateItem('node3', {
         x: 250,
         y: 200,
       })
       setTimeout(() => {
-        edge1bgMatrix = edge1bg.getMatrix();
+        edge1bgMatrix = labelGroup.getMatrix();
+        const pos = labelGroup.get('pos');
         expect(edge1bgMatrix[0]).toBe(1);
-        expect(edge1bgMatrix[6]).toBe(0);
-        expect(edge1bgMatrix[7]).toBe(0);
-        expect(edge1bg.attr('x')).toBe(258);
-        expect(edge1bg.attr('y')).toBe(164);
+        expect(edge1bgMatrix[6]).toBe(260);
+        expect(edge1bgMatrix[7]).toBe(180);
+        expect(pos.x).toBe(260);
+        expect(pos.y).toBe(180);
         done()
       }, 30);
     }, 100)
   });
-  it('text background with autoRotate false and clearItemStates', (done) => {
+  it('text background with autoRotate false and clearItemStates', (done) => { // done
     let edge = graph.getEdges()[0];
-    let labelBgShape = edge.getContainer().get('children')[1];
-    let { x, y } = labelBgShape.attr();
-    expect(x).toBe(176.85302734375);
-    expect(y).toBe(116);
+    const labelGroup = edge.getContainer().find(ele => ele.get('className') === 'label-group');
+    let { x, y } = labelGroup.get('pos');
+    expect(x).toBe(200);
+    expect(y).toBe(125);
 
     graph.updateItem(graph.getNodes()[0], {
       x: graph.getNodes()[0].getModel().x + 100,
@@ -165,11 +161,10 @@ describe('text background label', () => {
     });
     graph.clearItemStates(edge, ['active']);
 
-    labelBgShape = edge.getContainer().get('children')[1];
     setTimeout(() => {
-      const { x: newX, y: newY } = labelBgShape.attr();
-      expect(numberEqual(newX, 226, 2)).toBe(true);
-      expect(numberEqual(newY, 166, 2)).toBe(true);
+      const { x: newX, y: newY } = labelGroup.get('pos');
+      expect(numberEqual(newX, 250, 2)).toBe(true);
+      expect(numberEqual(newY, 175, 2)).toBe(true);
       done()
     }, 16);
   });

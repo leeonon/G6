@@ -61,10 +61,11 @@ describe('shape edge test', () => {
       );
 
       expect(shape.attr('path').length).toEqual(2);
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
       expect(shape.attr('path').length).toEqual(2);
-      expect(label.attr('x')).toEqual((100 + 150) / 2);
-      expect(label.attr('y')).toEqual((100 + 50) / 2);
+      let labelPos = group.find(ele => ele.get('name') === 'label-group').get('pos')
+      expect(labelPos.x).toEqual((100 + 150) / 2);
+      expect(labelPos.y).toEqual((100 + 50) / 2);
       expect(group.getCount()).toEqual(2);
 
       const item = {
@@ -89,8 +90,9 @@ describe('shape edge test', () => {
         item,
       );
       canvas.draw();
-      expect(label.attr('x')).toEqual(150);
-      expect(label.attr('y')).toEqual(50);
+      labelPos = group.find(ele => ele.get('name') === 'label-group').get('pos')
+      expect(labelPos.x).toEqual(150);
+      expect(labelPos.y).toEqual(50);
       factory.baseUpdate(
         'shape',
         {
@@ -106,8 +108,9 @@ describe('shape edge test', () => {
         item,
       );
       canvas.draw();
-      expect(label.attr('x')).toEqual(100);
-      expect(label.attr('y')).toEqual(100);
+      labelPos = group.find(ele => ele.get('name') === 'label-group').get('pos')
+      expect(labelPos.x).toEqual(100);
+      expect(labelPos.y).toEqual(100);
     });
     it('line with overlapped nodes and label', () => {
       const group = canvas.addGroup();
@@ -123,10 +126,11 @@ describe('shape edge test', () => {
       );
 
       expect(shape.attr('path').length).toEqual(2);
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
       expect(shape.attr('path').length).toEqual(2);
-      expect(label.attr('x')).toEqual(150);
-      expect(label.attr('y')).toEqual(150);
+      const labelPos = group.find(ele => ele.get('name') === 'label-group').get('pos')
+      expect(labelPos.x).toEqual(150);
+      expect(labelPos.y).toEqual(150);
       expect(group.getCount()).toEqual(2);
       canvas.draw();
     });
@@ -165,9 +169,10 @@ describe('shape edge test', () => {
       );
 
       expect(shape.attr('path')[0]).toEqual(['M', 300, 300]);
-      const label = group.get('children')[1];
-      expect(label.attr('x')).toEqual((300 + 250) / 2);
-      expect(label.attr('y')).toEqual((300 + 200) / 2);
+      const label = group.get('children')[1].get('children')[0];
+      const labelPos = group.find(ele => ele.get('name') === 'label-group').get('pos')
+      expect(labelPos.x).toEqual((300 + 250) / 2);
+      expect(labelPos.y).toEqual((300 + 200) / 2);
 
       canvas.draw();
     });
@@ -517,7 +522,7 @@ describe('shape edge test', () => {
       const path = edge.get('group').get('children')[0];
       let bbox = path.getBBox();
       // console.log(bbox);
-      expect(bbox.minX).toEqual(92.48424530029297);
+      expect(bbox.minX).toEqual(92.53958892822266);
     });
 
     it('clear', () => {
@@ -567,12 +572,14 @@ describe('shape edge test', () => {
       canvasGroup.setMatrix([0.8, 0, 0, 0, 0.8, 0, 0, 0, 1]);
       canvasGroup.setMatrix([0.8, 0, 0, 0, 0.8, 0, 200, 200, 1]);
       canvas.draw();
-      const label = canvasGroup.get('children')[1].get('children')[1];
+      const label = canvasGroup.get('children')[1].get('children')[1].get('children')[0];
+      const labelGroup = canvasGroup.get('children')[1].find(ele => ele.get('name') === 'label-group');
+      const labelMatrix = labelGroup.getMatrix();
       expect(label.attr('rotate')).toBe(null);
-      expect(label.attr('matrix')[0]).toBe(0.7071068286895752);
-      expect(label.attr('matrix')[3]).toBe(-0.7071067690849304);
-      expect(label.attr('matrix')[6]).toBe(128.28427124023438);
-      expect(label.attr('matrix')[7]).toBe(128.28427124023438);
+      expect(labelMatrix[0]).toBe(0.7071068286895752);
+      expect(labelMatrix[3]).toBe(-0.7071067690849304);
+      expect(labelMatrix[6]).toBe(128.28427124023438);
+      expect(labelMatrix[7]).toBe(128.28427124023438);
     });
     it('not auto rotate, middle', () => {
       const center = { x: 100, y: 100 };
@@ -600,7 +607,7 @@ describe('shape edge test', () => {
           },
           group,
         );
-        const label = group.get('children')[1];
+        const label = group.get('children')[1].get('children')[0];
         // expect(label.attr('textAlign')).toEqual('center');
 
         // expect(label.attr('stroke')).toEqual('white');
@@ -639,7 +646,7 @@ describe('shape edge test', () => {
           },
           group,
         );
-        const label = group.get('children')[1];
+        const label = group.get('children')[1].get('children')[0];
         if (angle < (1 / 2) * Math.PI) {
           expect(label.attr('textAlign')).toEqual('start');
         }
@@ -682,7 +689,7 @@ describe('shape edge test', () => {
           },
           group,
         );
-        const label = group.get('children')[1];
+        const label = group.get('children')[1].get('children')[0];
         if (angle < (1 / 2) * Math.PI) {
           expect(label.attr('textAlign')).toEqual('end');
         }
@@ -717,7 +724,7 @@ describe('shape edge test', () => {
           },
           group,
         );
-        const label = group.get('children')[1];
+        const label = group.get('children')[1].get('children')[0];
         expect(label.attr('textAlign')).toEqual('center');
       }
       canvas.draw();
@@ -755,7 +762,7 @@ describe('shape edge test', () => {
           },
           group,
         );
-        const label = group.get('children')[1];
+        const label = group.get('children')[1].get('children')[0];
         if (angle < (1 / 2) * Math.PI) {
           expect(label.attr('textAlign')).toEqual('start');
         }
@@ -799,7 +806,7 @@ describe('shape edge test', () => {
           },
           group,
         );
-        const label = group.get('children')[1];
+        const label = group.get('children')[1].get('children')[0];
         if (angle < (1 / 2) * Math.PI) {
           expect(label.attr('textAlign')).toEqual('end');
         }
@@ -808,8 +815,10 @@ describe('shape edge test', () => {
         }
 
         const point = shape.getPoint(1);
-        expect(label.attr('x')).toEqual(point.x);
-        expect(label.attr('y')).toEqual(point.y);
+        const labelGroup = group.find(ele => ele.get('name') === 'label-group');
+        const labelPos = labelGroup.get('pos');
+        expect(labelPos.x).toEqual(point.x);
+        expect(labelPos.y).toEqual(point.y);
       }
       canvas.draw();
     });
@@ -834,12 +843,14 @@ describe('shape edge test', () => {
         group,
       );
       const path = shape.attr('path');
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
       expect(path.length).toEqual(2);
 
       const point = shape.getPoint(0.5);
-      expect(point.x).toEqual(label.attr('x'));
-      expect(point.y).toEqual(label.attr('y'));
+      const labelGroup = group.find(ele => ele.get('name') === 'label-group');
+      const labelPos = labelGroup.get('pos');
+      expect(point.x).toEqual(labelPos.x);
+      expect(point.y).toEqual(labelPos.y);
 
       canvas.draw();
     });
@@ -865,12 +876,14 @@ describe('shape edge test', () => {
         group,
       );
       const path = shape.attr('path');
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
       expect(path.length).toEqual(2);
 
       const point = shape.getPoint(0);
-      expect(point.x).toEqual(label.attr('x'));
-      expect(point.y).toEqual(label.attr('y'));
+      const labelGroup = group.find(ele => ele.get('name') === 'label-group');
+      const labelPos = labelGroup.get('pos');
+      expect(point.x).toEqual(labelPos.x);
+      expect(point.y).toEqual(labelPos.y);
       expect(label.attr('rotate')).not.toEqual(0);
       canvas.draw();
     });
@@ -909,7 +922,7 @@ describe('shape edge test', () => {
           },
           group,
         );
-        const label = group.get('children')[1];
+        const label = group.get('children')[1].get('children')[0];
         if (angle < (1 / 2) * Math.PI) {
           expect(label.attr('textAlign')).toEqual('start');
         }
@@ -952,9 +965,11 @@ describe('shape edge test', () => {
       );
 
       const point = shape.getPoint(0.5);
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
+      const labelGroup = group.find(ele => ele.get('name') === 'label-group');
+      const labelPos = labelGroup.get('pos');
       // 3*3 + 4*4 = 5*5
-      expect(equal(distance(point, { x: label.attr('x'), y: label.attr('y') }), 5)).toEqual(true);
+      expect(equal(distance(point, { x: labelPos.x, y: labelPos.y }), 5)).toEqual(true);
       canvas.draw();
     });
 
@@ -976,8 +991,10 @@ describe('shape edge test', () => {
         group,
       );
       const point = shape.getPoint(0.5);
-      const label = group.get('children')[1];
-      expect(equal(distance(point, { x: label.attr('x'), y: label.attr('y') }), 5)).toEqual(true);
+      const label = group.get('children')[1].get('children')[0];
+      const labelGroup = group.find(ele => ele.get('name') === 'label-group');
+      const labelPos = labelGroup.get('pos');
+      expect(equal(distance(point, { x: labelPos.x, y: labelPos.y }), 5)).toEqual(true);
     });
   });
 });

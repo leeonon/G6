@@ -123,9 +123,6 @@ const singleEdge: ShapeOptions = {
   },
   updateShapeStyle(cfg: EdgeConfig, item: Item, updateType?: UpdateType) {
     const group = item.getContainer();
-    // const strokeStyle: ShapeStyle = {
-    //   stroke: cfg.color,
-    // };
     const shape =
       item.getKeyShape?.() || group['shapeMap']['edge-shape']; // group.find((element) => element.get('className') === 'edge-shape');
 
@@ -144,7 +141,6 @@ const singleEdge: ShapeOptions = {
     points.push(endPoint);
 
     const currentAttr = shape.attr();
-    // const previousStyle = mix({}, strokeStyle, currentAttr, cfg.style);
     const previousStyle = cfg.style || {};
     if (previousStyle.stroke === undefined) {
       previousStyle.stroke = cfg.color
@@ -230,30 +226,19 @@ const singleEdge: ShapeOptions = {
     if (!label) {
       return {};
     }
-    const bbox = label.getBBox();
+    const bbox = label.getBBox(); // 用于获取旋转之前的宽高及位置，getCanvasBBox 的宽高是旋转后的
     const backgroundStyle = labelCfg.style && labelCfg.style.background;
     if (!backgroundStyle) {
       return {};
     }
     const { padding } = backgroundStyle;
-    const backgroundWidth = bbox.width + padding[1] + padding[3];
-    const backgroundHeight = bbox.height + padding[0] + padding[2];
-
     const style = {
       ...backgroundStyle,
-      width: backgroundWidth,
-      height: backgroundHeight,
+      width: bbox.width + padding[1] + padding[3],
+      height: bbox.height + padding[0] + padding[2],
       x: bbox.minX - padding[3],
       y: bbox.minY - padding[0],
-      matrix: [1, 0, 0, 0, 1, 0, 0, 0, 1]
     };
-    let autoRotate;
-    if (isNil(labelCfg.autoRotate)) autoRotate = this.labelAutoRotate;
-    else autoRotate = labelCfg.autoRotate;
-
-    if (autoRotate) {
-      style.matrix = label.getMatrix() || [1, 0, 0, 0, 1, 0, 0, 0, 1];
-    }
     return style;
   },
   // 获取文本对齐方式
@@ -316,35 +301,41 @@ const singleEdge: ShapeOptions = {
       cfg.labelCfg,
     );
     const labelStyle = this.getLabelStyle!(cfg, labelCfg, group);
-    const rotate = labelStyle.rotate;
-    delete labelStyle.rotate;
-    const label = group.addShape('text', {
-      attrs: labelStyle,
+    const { rotate, x, y, background, ...labelShapeStyle } = labelStyle;
+    const labelGroup = group.addGroup({ name: 'label-group', className: 'label-group' });
+    labelGroup.setMatrix([1, 0, 0, 0, 1, 0, x, y, 1]);
+    labelGroup.set('pos', { x, y });
+    const label = labelGroup.addShape('text', {
+      attrs: {
+        ...labelShapeStyle,
+        x: 0,
+        y: 0
+      },
       name: 'text-shape',
       labelRelated: true
     });
     group['shapeMap']['text-shape'] = label;
+
     if (!isNaN(rotate) && rotate !== '') {
-      label.rotateAtStart(rotate);
+      labelGroup.rotateAtStart(rotate);
     }
 
-    if (labelStyle.background) {
-      const rect = this.drawLabelBg(cfg, group, label, labelStyle, rotate);
+    if (background) {
+      const rect = this.drawLabelBg(cfg, labelGroup, label);
       const labelBgClassname = this.itemType + CLS_LABEL_BG_SUFFIX;
-      rect.set('classname', labelBgClassname);
+      rect.set('className', labelBgClassname);
       group['shapeMap'][labelBgClassname] = rect;
-      label.toFront();
+      setTimeout(() => label.toFront(), 0)
     }
     return label;
   },
-  drawLabelBg(cfg: ModelConfig, group: IGroup, label: IElement, labelStyle: any, rotate: number) {
+  drawLabelBg(cfg: ModelConfig, group: IGroup, label: IElement) {
     const { labelCfg: defaultLabelCfg } = this.options as ModelConfig;
     const labelCfg = deepMix({}, defaultLabelCfg, cfg.labelCfg);
-
     const style = this.getLabelBgStyleByPosition(label, labelCfg);
     const rect = group.addShape('rect', { name: 'text-bg-shape', attrs: style, labelRelated: true });
-    if (style.matrix) rect.setMatrix(style.matrix);
-    group['shapeMap']['text-bg-shape'] = rect;
+    const edgeGroup = group.getParent() || group;
+    edgeGroup['shapeMap']['text-bg-shape'] = rect;
     return rect;
   },
 };

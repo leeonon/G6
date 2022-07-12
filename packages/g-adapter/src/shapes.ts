@@ -13,9 +13,9 @@ import {
   decompose
 } from '@antv/g';
 import { Arrow as GArrow } from '@antv/g-components';
-import { ext, mat3 } from '@antv/matrix-util';
+import { ext, mat3, vec3 } from '@antv/matrix-util';
 import { unitMatrix } from './utils/matrix';
-import { attr, createClipShape, getLineTangent, getPathBySymbol, isArrowKey, isCombinedShapeSharedAttr } from './utils/shape';
+import { attr, createClipShape, getLineTangent, getPathBySymbol, isArrowKey, isCombinedShapeSharedAttr, formatAttrValue } from './utils/shape';
 import { getArrowHead, updateArrow } from './utils/arrow';
 import { processAnimate } from './utils/animate';
 
@@ -32,16 +32,33 @@ import { processAnimate } from './utils/animate';
 // 看情况是否要全部改写，需要的话建一个文件夹包裹所有 shape 相关文件
 
 const getBBox = (shape, type = 'bBox') => {
-  const aabb = type === 'bBox' ? shape.getLocalBounds() : shape.getBounds();
+  let min, max;
+  if (type === 'bBox') {
+    // bbox 为图形自身包围盒，不考虑自身及父容器矩阵
+    const clonedShape = shape.clone()
+    const { x, y } = shape.style;
+    clonedShape.setMatrix(unitMatrix);
+    clonedShape.style.x = x;
+    clonedShape.style.y = y;
+    // 克隆一个无矩阵变换的图形，得到原始包围盒
+    const { min: oriMin, max: oriMax } = clonedShape.getBounds();
+    max = [oriMax[0] + x, oriMax[1] + y];
+    min = [oriMin[0] + x, oriMin[1] + y];
+  } else {
+    // 考虑父容器矩阵
+    const aabb = shape.getBounds();
+    min = aabb.min;
+    max = aabb.max;
+  }
   return {
-    minX: aabb.min[0],
-    maxX: aabb.max[0],
-    minY: aabb.min[1],
-    maxY: aabb.max[1],
-    x: aabb.min[0],
-    y: aabb.min[1],
-    width: aabb.max[0] - aabb.min[0],
-    height: aabb.max[1] - aabb.min[1],
+    minX: min[0],
+    minY: min[1],
+    maxX: max[0],
+    maxY: max[1],
+    x: min[0],
+    y: min[1],
+    width: max[0] - min[0],
+    height: max[1] - min[1],
   }
 }
 
@@ -180,16 +197,17 @@ const lineHandlerFunctionMap = {
     if (isObject(paramObj)) {
       // 第一个参数是对象 -> 设置对象中的所有值，忽略后面的参数
       Object.keys(paramObj).forEach(key => {
+        let value = formatAttrValue(key, paramObj[key]);
         if (isArrowKey(key)) {
-          updateArrow(target, key, paramObj[key]);
-          target.config[key] = paramObj[key];
+          updateArrow(target, key, value);
+          target.config[key] = value;
         } else {
-          target.style[key] = paramObj[key];
-          bodyShape.style[key] = paramObj[key];
+          target.style[key] = value;
+          bodyShape.style[key] = value;
           // 若是箭头共用样式，需要同时更新箭头
           if (isCombinedShapeSharedAttr(key)) {
-            if (target.startHead?.style) target.startHead.style[key] = paramObj[key];
-            if (target.endHead?.style) target.endHead.style[key] = paramObj[key];
+            if (target.startHead?.style) target.startHead.style[key] = value;
+            if (target.endHead?.style) target.endHead.style[key] = value;
           }
         }
       });
@@ -236,7 +254,7 @@ const setFunc = (shape, name, value) => {
       else shape.hide();
       break;
     case 'zIndex':
-      shape.style[name] = value;
+      shape.config[name] = value;
       break;
   }
   shape.cfg[name] = value;
@@ -251,7 +269,7 @@ const getFunc = (shape, name, superValue) => {
     case 'visible':
       return shape.attributes.visibility === 'visible' || shape.attributes.visibility === '';
     case 'zIndex':
-      return shape.style.zIndex;
+      return shape.config.zIndex;
     case 'type':
       if (superValue === 'arrow') return shape.style?.body?.get('type') || superValue;
     default:
@@ -416,7 +434,6 @@ class Ellipse extends GEllipse {
     return callAnimate;
   }
 }
-
 class Text extends GText {
   public shapeType: string;
   constructor(cfg) {
@@ -798,7 +815,7 @@ class HTML extends GHTML {
 
 const getLineConstructCfg = (cfg, Shape) => {
   const { style, ...otherCfg } = cfg;
-  const { startArrow, endArrow, lineAppendWidth, ...otherAttrs } = style;
+  const { startArrow, endArrow, lineAppendWidth, d = 0, ...otherAttrs } = style;
   if (isArray(otherAttrs.path)) {
     otherAttrs.path.forEach(pathItem => {
       pathItem.forEach((item, i) => {
@@ -830,16 +847,18 @@ const getLineConstructCfg = (cfg, Shape) => {
   const startHead = getArrowHead(startArrow);
   const endHead = getArrowHead(endArrow);
 
+  const offset = -2 * d;
   const combinedStyle = {
     body,
     startHead,
     endHead,
     ...sharedStyle,
     increasedLineWidthForHitTesting,
+    startHeadOffset: offset,
+    endHeadOffset: offset,
     x: 0,
     y: 0
   }
-
   return {
     style: combinedStyle,
     ...otherCfg,
@@ -891,7 +910,6 @@ class LineWithArrow extends GArrow {
 class PathWithArrow extends GArrow {
   public shapeType: string;
   constructor(cfg) {
-
     super(getLineConstructCfg(cfg, Path));
 
     const { startArrow, endArrow } = cfg?.style || {};

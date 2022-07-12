@@ -295,7 +295,6 @@ export default class TimeBar extends Base {
     const { value } = evt;
 
     let trendData = null;
-    debugger
     const type = this._cfgs.type;
     if (type === 'trend' || type === 'simple') {
       trendData = this._cfgs.trend.data;

@@ -34,6 +34,7 @@ describe('edge label with background', () => {
       },
     });
 
+
     graph.read({
       nodes: [{ id: '1', x: 100, y: 100 }, { id: '2', x: 100, y: 100 }],
       edges: [{ source: '1', target: '2', label: 'abc' }],
@@ -41,9 +42,11 @@ describe('edge label with background', () => {
 
     const edge = graph.getEdges()[0];
     const group = edge.getContainer();
+    const text = group.find(e => e.get('name') === 'text-shape');
     const bgRect = group.find(e => e.get('name') === 'text-bg-shape');
-    expect(Math.abs(bgRect.attr('x') - 86) < 1).toBe(true);
-    expect(Math.abs(bgRect.attr('y') - 91) < 2).toBe(true);
+    const labelBBox = text.getBBox();
+    expect(bgRect.attr('x')).toBe(-2 + labelBBox.minX);
+    expect(bgRect.attr('y')).toBe(-2 + labelBBox.minY);
     expect(Math.abs(bgRect.attr('width') - 27) < 3).toBe(true);
     expect(Math.abs(bgRect.attr('height') - 18) < 3).toBe(true);
     graph.destroy();

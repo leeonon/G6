@@ -11,11 +11,12 @@ import {
   NodeConfig,
   ComboTree,
   ComboConfig,
-  ICombo
+  ICombo,
+  ShapeStyle
 } from '../types';
 import { applyMatrix } from './math';
 import letterAspectRatio from './letterAspectRatio';
-import { isString, clone, isNumber, isObject, isArray } from '@antv/util';
+import { isString, clone, isNumber, isObject, isArray, uniqueId } from '@antv/util';
 import { IAbstractGraph } from '../interface/graph';
 
 const { PI, sin, cos } = Math;
@@ -700,4 +701,49 @@ export const filterByAnimateAttrs = (attrs) => {
     }
   });
   return filteredAttrs;
+}
+
+export const getItemStylesMap = (shapes, keyShapeName, item) => {
+  const stylesMap = {};
+  const group = item.getContainer();
+  for (let i = 0; i < shapes.length; i++) {
+    const child = shapes[i];
+    const shapeType = child.get('type');
+    const name = child.get('name');
+    if (child.isGroup?.()) {
+      const subGroupStylesMap = getItemStylesMap(child.get('children'), keyShapeName, item);
+      Object.keys(subGroupStylesMap).forEach(key => stylesMap[key] = subGroupStylesMap[key]);
+      continue;
+    }
+    if (name && name !== keyShapeName) {
+      stylesMap[name] =
+        shapeType !== 'image' ? clone(child.attr()) : item.getShapeStyleByName(name);
+
+      // The text's position and matrix is not allowed to be affected by states
+      if (shapeType === 'text' && stylesMap[name]) {
+        delete stylesMap[name].x;
+        delete stylesMap[name].y;
+        delete stylesMap[name].matrix;
+      }
+    } else {
+      const keyShapeStyle: ShapeStyle = item.getShapeStyleByName(); // 可优化，需要去除 child.attr 中其他 shape 名的对象
+      delete keyShapeStyle.path;
+      delete keyShapeStyle.matrix;
+      if (!keyShapeName) {
+        Object.assign(stylesMap, keyShapeStyle);
+      } else {
+        // 若 keyShape 有 name 且 !name，这个图形不是 keyShape，给这个图形一个 name
+        if (!name) {
+          const shapeName = uniqueId('shape');
+          child.set('name', shapeName);
+          group['shapeMap'][shapeName] = child;
+          stylesMap[shapeName] =
+            shapeType !== 'image' ? clone(child.attr()) : item.getShapeStyleByName(name);
+        } else {
+          stylesMap[keyShapeName] = keyShapeStyle;
+        }
+      }
+    }
+  }
+  return stylesMap;
 }

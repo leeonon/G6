@@ -66,7 +66,7 @@ const singleNode: ShapeOptions = {
     }
 
     let { offset = 0 } = labelCfg;
-    if (isNil(offset)) {
+    if (isNil(labelCfg.offset)) {
       // 考虑 offset = 0 的场景，不用用 labelCfg.offset || Global.nodeLabel.offset
       offset = this.offset as number; // 不居中时的偏移量
     }

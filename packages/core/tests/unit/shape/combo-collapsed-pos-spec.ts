@@ -1021,11 +1021,12 @@ describe('hierarchy data5: combo A has 2 children: combo B with 2 nodes, 2 nodes
     // the sibling node is not changed
     expect(comboModels[2].x).toBe(50);
     expect(comboModels[2].y).toBe(124.58618734850893);
-    // the parent combo follows the children
+    // // the parent combo follows the children
     setTimeout(() => {
       expect(comboModels[0].x).toBe(115.4138126514911);
       expect(comboModels[0].y).toBe(120);
-      expect(Math.abs(combos[0].getKeyShape().attr('r') - 164) < 1).toBe(true);
+      console.log('rrr', combos[0].getKeyShape().attr());
+      expect(isNumberEqual(combos[0].getKeyShape().attr('r'), 157, 1)).toBe(true);
       done();
     }, 500)
   });

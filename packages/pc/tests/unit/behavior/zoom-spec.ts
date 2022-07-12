@@ -197,7 +197,6 @@ describe('zoom-canvas', () => {
 
     graph.data(data);
     graph.render();
-    debugger
 
     let e = createWheelEvent(graph.get('canvas').get('el'), 100, 100, 100);
     graph.emit('wheel', e);

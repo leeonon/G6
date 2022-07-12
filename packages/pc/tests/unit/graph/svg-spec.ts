@@ -1075,7 +1075,7 @@ describe('auto rotate label on edge', () => {
     graph.render();
     const edge1 = graph.getEdges()[0];
     const label1 = edge1.get('group').get('children')[1];
-    const label1Matrix = label1.attr('matrix');
+    const label1Matrix = edge1.get('group').find(ele => ele.get('name') === 'label-group').getMatrix();
 
     expect(label1Matrix[0]).toBe(0.2873479127883911);
     expect(label1Matrix[1]).toBe(0.9578263759613037);
@@ -1085,7 +1085,7 @@ describe('auto rotate label on edge', () => {
     expect(label1Matrix[7]).toBe(100);
     const edge2 = graph.getEdges()[1];
     const label2 = edge2.get('group').get('children')[1];
-    const label2Matrix = label2.attr('matrix');
+    const label2Matrix = edge2.get('group').find(ele => ele.get('name') === 'label-group').getMatrix();
     expect(label2Matrix[1]).toBe(0);
     expect(label2Matrix[3]).toBe(-0);
   });
@@ -1096,17 +1096,17 @@ describe('auto rotate label on edge', () => {
     graph.emit('node:drag', { x: 200, y: 200, item: node });
     graph.emit('node:dragend', { x: 200, y: 200, item: node });
     const edge1 = graph.getEdges()[0];
-    const label1 = edge1.get('group').get('children')[1];
-    const label1Matrix = label1.attr('matrix');
+    const label1 = edge1.get('group').get('children')[1].get('children')[0];
+    const label1Matrix = edge1.get('group').find(ele => ele.get('name') === 'label-group').getMatrix();
     expect(label1Matrix[0]).toBe(0.7071068286895752);
-    expect(label1Matrix[1]).toBe(0.7071067094802856);
-    expect(label1Matrix[3]).toBe(-0.7071067094802856);
+    expect(label1Matrix[1]).toBe(0.7071067690849304);
+    expect(label1Matrix[3]).toBe(-0.7071067690849304);
     expect(label1Matrix[4]).toBe(0.7071068286895752);
     expect(label1Matrix[6]).toBe(125);
     expect(label1Matrix[7]).toBe(125);
     const edge2 = graph.getEdges()[1];
     const label2 = edge2.get('group').get('children')[1];
-    const label2Matrix = label2.attr('matrix');
+    const label2Matrix = edge2.get('group').find(ele => ele.get('name') === 'label-group').getMatrix();
     expect(label2Matrix[0]).toBe(1);
     expect(label2Matrix[4]).toBe(1);
   });
@@ -1835,7 +1835,7 @@ describe('built-in items', () => {
       },
     });
     const cubicShape = cubic.get('group').get('children')[0];
-    const cubicTextShape = cubic.get('group').get('children')[1];
+    const cubicTextShape = cubic.get('group').get('children')[1].get('children')[0];
     expect(cubicShape.attr('stroke')).toBe('#f00');
     expect(cubicTextShape.attr('text')).toBe('cubic label');
 

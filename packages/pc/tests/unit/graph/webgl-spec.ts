@@ -1147,10 +1147,11 @@ describe('mapper fn', () => {
     expect(keyShape.get('type')).toEqual('path');
 
     label = edge.getContainer().find((element) => element.get('className') === 'edge-label');
+    const labelPos = edge.getContainer().find((element) => element.get('className') === 'label-group').get('pos');
     expect(label).not.toBe(undefined);
     expect(label.attr('text')).toEqual('edge');
-    expect(label.attr('x')).toEqual(115);
-    expect(label.attr('y')).toEqual(100);
+    expect(labelPos.x).toEqual(115);
+    expect(labelPos.y).toEqual(100);
 
     graph.updateItem(node, { value: 50 });
     expect(node.getKeyShape().attr('fill')).toEqual('#ccc');
@@ -1343,17 +1344,17 @@ describe('auto rotate label on edge', () => {
     // TOOD: label 角度没更新！
 
     const edge1 = graph.getEdges()[0];
-    const label1 = edge1.get('group').get('children')[1];
-    const label1Matrix = label1.attr('matrix');
+    const label1Group = edge1.get('group').get('children')[1];
+    const label1Matrix = label1Group.getMatrix()
     expect(label1Matrix[0]).toBe(0.7071068286895752);
-    expect(label1Matrix[1]).toBe(0.7071067094802856);
-    expect(label1Matrix[3]).toBe(-0.7071067094802856);
+    expect(label1Matrix[1]).toBe(0.7071067690849304);
+    expect(label1Matrix[3]).toBe(-0.7071067690849304);
     expect(label1Matrix[4]).toBe(0.7071068286895752);
     expect(label1Matrix[6]).toBe(125);
     expect(label1Matrix[7]).toBe(125);
     const edge2 = graph.getEdges()[1];
-    const label2 = edge2.get('group').get('children')[1];
-    const label2Matrix = label2.attr('matrix');
+    const label2Group = edge2.get('group').get('children')[1];
+    const label2Matrix = label2Group.getMatrix()
     expect(label2Matrix[0]).toBe(1);
     expect(label2Matrix[4]).toBe(1);
   });

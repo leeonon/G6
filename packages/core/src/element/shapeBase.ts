@@ -125,10 +125,16 @@ export const shapeBase: ShapeOptions = {
     // image的情况下有可能为null
     const labelCfg = (defaultLabelCfg || {}) as ILabelConfig;
     const labelStyle = this.getLabelStyle!(cfg, labelCfg, group);
-    const rotate = labelStyle.rotate;
-    delete labelStyle.rotate;
-    const label = group.addShape('text', {
-      attrs: labelStyle,
+    const { rotate, rotateCenter, background, x, y, ...labelShapeStyle } = labelStyle;
+    const labelGroup = group.addGroup({ name: 'label-group', className: 'label-group' });
+    labelGroup.setMatrix([1, 0, 0, 0, 1, 0, x, y, 1]);
+    labelGroup.set('pos', { x, y });
+    const label = labelGroup.addShape('text', {
+      attrs: {
+        ...labelShapeStyle,
+        x: 0,
+        y: 0
+      },
       draggable: true,
       className: 'text-shape',
       name: 'text-shape',
@@ -136,10 +142,10 @@ export const shapeBase: ShapeOptions = {
     });
     group['shapeMap']['text-shape'] = label;
     if (!isNaN(rotate) && rotate !== '') {
-      const labelBBox = label.getBBox();
-      let labelMatrix = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-      if (labelStyle.rotateCenter) {
-        switch (labelStyle.rotateCenter) {
+      const labelBBox = labelGroup.getBBox();
+      let labelMatrix = [1, 0, 0, 0, 1, 0, x, y, 1];
+      if (rotateCenter) {
+        switch (rotateCenter) {
           case 'center':
             labelMatrix = transform(labelMatrix, [
               ['t', -labelBBox.width / 2, -labelBBox.height / 2],
@@ -176,12 +182,12 @@ export const shapeBase: ShapeOptions = {
           ['t', labelStyle.x, labelStyle.y! + labelBBox.height / 2],
         ]);
       }
-      label.setMatrix(labelMatrix);
+      labelGroup.setMatrix(labelMatrix);
     }
-    if (labelStyle.background) {
-      const rect = this.drawLabelBg(cfg, group, label);
+    if (background) {
+      const rect = this.drawLabelBg(cfg, labelGroup, label);
       const labelBgClassname = this.itemType + CLS_LABEL_BG_SUFFIX;
-      rect.set('classname', labelBgClassname);
+      rect.set('className', labelBgClassname);
       group['shapeMap'][labelBgClassname] = rect;
       label.toFront();
     }
@@ -192,7 +198,8 @@ export const shapeBase: ShapeOptions = {
     const labelCfg = mix({}, defaultLabelCfg, cfg.labelCfg) as ILabelConfig;
     const style = this.getLabelBgStyleByPosition(label, labelCfg);
     const rect = group.addShape('rect', { name: 'text-bg-shape', attrs: style, labelRelated: true });
-    group['shapeMap']['text-bg-shape'] = rect;
+    const shapeGroup = group.getParent() || group;
+    shapeGroup['shapeMap']['text-bg-shape'] = rect;
     return rect;
   },
   getLabelStyleByPosition(cfg: ModelConfig, labelCfg?: ILabelConfig, group?: IGroup): LabelStyle {
@@ -280,43 +287,51 @@ export const shapeBase: ShapeOptions = {
 
         // 取 nodeLabel，edgeLabel 的配置项
         const cfgStyle = cfg.labelCfg?.style;
-        // const cfgBgStyle = labelCfg.style?.background;
 
         // 需要融合当前 label 的样式 label.attr()。不再需要全局/默认样式，因为已经应用在当前的 label 上
         const labelStyle = { ...calculateStyle, ...cfgStyle };
-        const rotate = labelStyle.rotate;
-        delete labelStyle.rotate;
+        const { x, y, rotate, background, ...labelShapeStyle } = labelStyle;
 
+        const labelGroup = (group['shapeMap']['label-group'] || group.find(ele => ele.get('className') === 'label-group')) as IGroup;
+        let labelPos = { x, y }
+        if (isNaN(x) || isNaN(y)) {
+          labelPos = labelGroup.get('pos');
+        } else {
+          labelGroup.set('pos', { x, y });
+        }
         // 计算 label 的旋转矩阵
         if (!isNaN(rotate) && rotate !== '') {
           // if G 4.x define the rotateAtStart, use it directly instead of using the following codes
-          label.attr(labelStyle);
+          label.attr(labelShapeStyle);
           // TODO: shape 自带的 API 类型
           // @ts-ignore
-          label.rotateAtStart(rotate - (label.getLocalEulerAngles() / 180 * Math.PI || 0));
+          const angle = rotate - (label.getLocalEulerAngles() / 180 * Math.PI || 0);
+          labelGroup.setMatrix([1, 0, 0, 0, 1, 0, labelPos.x, labelPos.y, 1]);
+          labelGroup.rotateAtStart(angle);
         } else {
-          if (label.getMatrix()?.[4] !== 1) {
-            label.resetMatrix();
+          if (labelGroup.getMatrix()?.[4] !== 1) {
+            labelGroup.setMatrix([1, 0, 0, 0, 1, 0, labelPos.x, labelPos.y, 1]);
           }
-          label.attr(labelStyle);
+          label.attr(labelShapeStyle);
         }
 
         if (!labelBg) {
-          if (labelStyle.background) {
-            labelBg = this.drawLabelBg(cfg, group, label);
-            labelBg.set('classname', labelBgClassname);
+          if (background) {
+            labelBg = this.drawLabelBg(cfg, labelGroup, label);
+            labelBg.set('className', labelBgClassname);
             group['shapeMap'][labelBgClassname] = labelBg;
             label.toFront();
           }
-        } else if (labelStyle.background) {
+        } else if (background) {
           const calculateBgStyle = (this as any).getLabelBgStyleByPosition(
             label,
             labelCfg,
           );
           labelBg.attr(calculateBgStyle);
         } else {
-          group.removeChild(labelBg);
+          labelGroup.removeChild(labelBg);
         }
+
       }
     }
   },
@@ -350,7 +365,6 @@ export const shapeBase: ShapeOptions = {
     // 要设置或取消的状态的样式
     // 当没有 state 状态时，默认使用 model.stateStyles 中的样式
     const styles = mix({}, itemStateStyle || shapeStateStyle);
-
     const group = item.getContainer();
 
     // 从图元素现有的样式中删除本次要取消的 states 中存在的属性值。使用对象检索更快

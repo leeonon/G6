@@ -83,7 +83,7 @@ describe('combo node test', () => {
       canvas.draw();
       // expect(shape.attr('x')).toBe(-20);
       // expect(shape.attr('y')).toBe(-10);
-      // const label = group.get('children')[1];
+      // const label = group.get('children')[1].get('children')[0];
       // expect(label.attr('fill')).toBe('white');
       // expect(group.getCount()).toBe(2);
     });
@@ -133,7 +133,7 @@ describe('combo node test', () => {
         item,
       );
       expect(group.getCount()).toBe(2);
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
       expect(label.attr('text')).toBe('new rect');
       factory.baseUpdate(
         'rect',
@@ -206,7 +206,7 @@ describe('combo node test', () => {
         group,
       });
 
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
       expect(label.attr('x')).toBe(0);
     });
     it('clear', () => {

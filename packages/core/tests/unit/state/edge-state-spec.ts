@@ -666,7 +666,7 @@ describe('graph edge states', () => {
     // updateItem 以后，edge click states 的值以及变化了
     stateStyle = currentEdge.getStateStyle('click');
     expect(stateStyle).toEqual({ lineWidth: 2, stroke: '#333' });
-    const keyShape = currentEdge.getKeyShape();
+    keyShape = currentEdge.getKeyShape();
     expect(keyShape.attr('stroke')).toBe('#333');
     expect(keyShape.body.style.stroke).toBe('#333');
     expect(keyShape.endHead.style.stroke).toBe('#333');

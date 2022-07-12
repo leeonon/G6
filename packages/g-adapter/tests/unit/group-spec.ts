@@ -390,7 +390,6 @@ describe('group test', () => {
     let clickCount = 0;
     // const circle = subGroup.find(e => e.get('name') === 'circle-shape');
     subGroup.on('click', e => {
-      console.log('click')
       clickCount++;
     });
     subGroup.emit('click', {});

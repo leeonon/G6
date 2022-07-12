@@ -1,4 +1,4 @@
-import { Canvas as GCanvas, CanvasConfig, Group as GGroup } from '@antv/g';
+import { Canvas as GCanvas, CanvasConfig, Group as GGroup, CanvasEvent } from '@antv/g';
 import EventEmitter from '@antv/event-emitter';
 import { isString, noop } from '@antv/util';
 import { Plugin as DragDropPlugin } from '@antv/g-plugin-dragndrop';
@@ -24,6 +24,7 @@ export default class Canvas extends EventEmitter implements ICanvas {
   public adaptedEle: GGroup; // root group
   public canvasEle: GCanvas; // canvas
   public isPaused: boolean;
+  public isReady: boolean; // canvas is ready
   private children: IElement[]; // child groups and shapes
   private rootGroup: IGroup;
 
@@ -31,6 +32,7 @@ export default class Canvas extends EventEmitter implements ICanvas {
     super();
     let renderer = cfg.renderer || 'Canvas';
     this.renderer = cfg.renderer;
+    this.isReady = false;
     if (isString(renderer)) {
       this.rendererType = renderer as 'svg' | 'canvas' | 'webgl';
       switch (renderer.toLowerCase()) {
@@ -57,6 +59,7 @@ export default class Canvas extends EventEmitter implements ICanvas {
     cfg.renderer = renderer;
     cfg.devicePixelRatio = cfg.devicePixelRatio || cfg.pixelRatio;
     this.canvasEle = new GCanvas(cfg);
+    this.canvasEle.addEventListener(CanvasEvent.READY, e => this.isReady = true);
     this.adaptedEle = this.canvasEle.getRoot();
     this.rootGroup = new Group({ adaptedEle: this.adaptedEle }) as IGroup;
     this.set('children', []);

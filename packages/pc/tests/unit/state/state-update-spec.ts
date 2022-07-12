@@ -99,6 +99,7 @@ describe('node state label update', () => {
     });
 
     graph.on('node:click', (e) => {
+      if (e.item.hasState('selected')) debugger
       graph.setItemState(e.item, 'selected', !e.item.hasState('selected'));
     });
 
@@ -203,24 +204,24 @@ describe('force layout', () => {
 
       graph.emit('edge:mouseenter', { item: edge });
       const keyShape = edge.getKeyShape();
-      const text = edge.getContainer().find((e) => e.get('name') === 'text-shape');
+      let textPos = edge.getContainer().find((e) => e.get('name') === 'label-group').get('pos');
       expect(keyShape.attr('stroke')).toBe('rgb(95, 149, 255)');
-      expect(text.attr('x')).not.toBe(200);
+      expect(textPos.x).not.toBe(200);
 
       graph.emit('edge:mouseleave', { item: edge });
       expect(keyShape.attr('stroke')).toBe('#f00');
-      expect(text.attr('x')).not.toBe(200);
+      expect(textPos.x).not.toBe(200);
 
       graph.emit('edge:mouseenter', { item: edge });
       graph.emit('edge:click', { item: edge });
       expect(keyShape.attr('stroke')).toBe('rgb(95, 149, 255)');
-      expect(text.attr('x')).not.toBe(200);
+      expect(textPos.x).not.toBe(200);
       expect(keyShape.attr('lineWidth')).toBe(2);
 
       graph.emit('edge:mouseleave', { item: edge });
       graph.emit('canvas:click', {});
       expect(keyShape.attr('lineWidth')).toBe(1);
-      expect(text.attr('x')).not.toBe(200);
+      expect(textPos.x).not.toBe(200);
       expect(keyShape.attr('stroke')).toBe('#f00');
 
       graph.destroy();
@@ -282,16 +283,19 @@ describe('force layout', () => {
     const text = edge.getContainer().find((e) => e.get('name') === 'text-shape');
 
     graph.emit('edge:click', { item: edge });
-    expect(text.attr('x')).toBe(250);
-    expect(text.attr('y')).toBe(200);
+    let textPos = edge.getContainer().find((e) => e.get('name') === 'label-group').get('pos');
+    expect(textPos.x).toBe(250);
+    expect(textPos.y).toBe(200);
 
     graph.emit('node:click', { item: node });
-    expect(text.attr('x')).toBe(250);
-    expect(text.attr('y')).toBe(200);
+    textPos = edge.getContainer().find((e) => e.get('name') === 'label-group').get('pos');
+    expect(textPos.x).toBe(250);
+    expect(textPos.y).toBe(200);
 
     graph.emit('canvas:click', {});
-    expect(text.attr('x')).toBe(250);
-    expect(text.attr('y')).toBe(200);
+    textPos = edge.getContainer().find((e) => e.get('name') === 'label-group').get('pos');
+    expect(textPos.x).toBe(250);
+    expect(textPos.y).toBe(200);
 
     graph.destroy();
   });

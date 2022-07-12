@@ -94,7 +94,7 @@ describe('shape node test', () => {
       canvas.draw();
       expect(shape.attr('x')).toBe(-20);
       expect(shape.attr('y')).toBe(-10);
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
       expect(label.attr('fill')).toBe('white');
       expect(group.getCount()).toBe(2);
     });
@@ -116,9 +116,11 @@ describe('shape node test', () => {
       expect(shape.attr('x')).toBe(-20);
       expect(shape.attr('y')).toBe(-10);
       expect(shape.attr('img')).not.toBe(undefined);
-      const label = group.get('children')[1];
-      expect(label.attr('x')).toBe(0);
-      expect(label.attr('y')).toBe(10 + Global.nodeLabel.offset);
+      const label = group.get('children')[1].get('children')[0];
+      const labelGroup = group.find(ele => ele.get('name') === 'label-group');
+      const labelPos = labelGroup.get('pos');
+      expect(labelPos.x).toBe(0);
+      expect(labelPos.y).toBe(10 + Global.nodeLabel.offset);
       expect(group.getCount()).toBe(2);
     });
 
@@ -170,7 +172,7 @@ describe('shape node test', () => {
         item,
       );
       expect(group.getCount()).toBe(2);
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
       expect(label.attr('text')).toBe('new rect');
       factory.baseUpdate(
         'rect',
@@ -263,9 +265,11 @@ describe('shape node test', () => {
         model,
         group,
       });
-      let label = group.get('children')[1];
-      expect(label.attr('x')).toBe(0);
-      expect(label.attr('y')).toBe(-10 - Global.nodeLabel.offset);
+      let label = group.get('children')[1].get('children')[0];
+      const labelGroup = group.find(ele => ele.get('name') === 'label-group');
+      let labelPos = labelGroup.get('pos');
+      expect(labelPos.x).toBe(0);
+      expect(labelPos.y).toBe(-10 - Global.nodeLabel.offset);
 
       factory.baseUpdate(
         'ellipse',
@@ -279,10 +283,10 @@ describe('shape node test', () => {
         },
         item,
       );
-      label = group.get('children')[1];
-
-      expect(label.attr('y')).toBe(0);
-      expect(label.attr('x')).toBe(-30 - Global.nodeLabel.offset);
+      label = group.get('children')[1].get('children')[0];
+      labelPos = labelGroup.get('pos');
+      expect(labelPos.y).toBe(0);
+      expect(labelPos.x).toBe(-30 - Global.nodeLabel.offset);
 
       factory.baseUpdate(
         'ellipse',
@@ -296,8 +300,9 @@ describe('shape node test', () => {
         },
         item,
       );
-      expect(label.attr('y')).toBe(0);
-      expect(label.attr('x')).toBe(30 + Global.nodeLabel.offset);
+      labelPos = labelGroup.get('pos');
+      expect(labelPos.y).toBe(0);
+      expect(labelPos.x).toBe(30 + Global.nodeLabel.offset);
 
       factory.baseUpdate(
         'ellipse',
@@ -312,8 +317,9 @@ describe('shape node test', () => {
         },
         item,
       );
-      expect(label.attr('y')).toBe(0);
-      expect(label.attr('x')).toBe(30 + 20);
+      labelPos = labelGroup.get('pos');
+      expect(labelPos.y).toBe(0);
+      expect(labelPos.x).toBe(30 + 20);
 
       factory.baseUpdate(
         'ellipse',
@@ -328,8 +334,9 @@ describe('shape node test', () => {
         },
         item,
       );
-      expect(label.attr('y')).toBe(0);
-      expect(label.attr('x')).toBe(30);
+      labelPos = labelGroup.get('pos');
+      expect(labelPos.y).toBe(0);
+      expect(labelPos.x).toBe(30);
       canvas.draw();
     });
     it('clear', () => {
@@ -569,7 +576,6 @@ describe('shape node test', () => {
       };
       graph.data(data);
       graph.render();
-      debugger
 
       const node = graph.getNodes()[0];
       const group = node.get('group');

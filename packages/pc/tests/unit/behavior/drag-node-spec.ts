@@ -468,23 +468,22 @@ describe('drag-node', () => {
       label: 'test label',
       labelCfg: { autoRotate: true },
     });
-    const label = edge.get('group').find(g => {
-      return g.get('className') === 'edge-label';
-    });
+    const label = edge.get('group').find(g => g.get('className') === 'edge-label');
+    const labelGroup = edge.get('group').find(g => g.get('className') === 'label-group');
     expect(label).not.toBe(undefined);
-    let matrix = label.getMatrix();
-    expect(matrix[0]).toEqual(0.621911346912384);
-    expect(matrix[1]).toEqual(0.7830876111984253);
-    expect(matrix[3]).toEqual(-0.7830876111984253);
-    expect(matrix[4]).toEqual(0.621911346912384);
+    let matrix = labelGroup.getMatrix();
+    expect(matrix[0]).toEqual(0.6218732595443726);
+    expect(matrix[1]).toEqual(0.783117949962616);
+    expect(matrix[3]).toEqual(-0.783117949962616);
+    expect(matrix[4]).toEqual(0.6218732595443726);
     graph.emit('node:dragstart', { x: 100, y: 100, item: target });
     graph.emit('node:drag', { x: 120, y: 120, item: target });
     graph.emit('node:dragend', { x: 80, y: 120, item: target });
-    matrix = label.getMatrix();
-    expect(matrix[0]).toEqual(0.62934410572052);
-    expect(matrix[1]).toEqual(0.7771267890930176);
-    expect(matrix[3]).toEqual(-0.7771267890930176);
-    expect(matrix[4]).toEqual(0.62934410572052);
+    matrix = labelGroup.getMatrix();
+    expect(matrix[0]).toEqual(0.6293019652366638);
+    expect(matrix[1]).toEqual(0.7771608829498291);
+    expect(matrix[3]).toEqual(-0.7771608829498291);
+    expect(matrix[4]).toEqual(0.6293019652366638);
     graph.destroy();
   });
 

@@ -96,7 +96,7 @@ describe('shape node test', () => {
       canvas.draw();
       expect(shape.attr('x')).toBe(-20);
       expect(shape.attr('y')).toBe(-10);
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
       expect(label.attr('fill')).toBe('white');
       expect(group.getCount()).toBe(2);
     });
@@ -118,9 +118,10 @@ describe('shape node test', () => {
       expect(shape.attr('x')).toBe(-20);
       expect(shape.attr('y')).toBe(-10);
       expect(shape.attr('img')).not.toBe(undefined);
-      const label = group.get('children')[1];
-      expect(label.attr('x')).toBe(0);
-      expect(label.attr('y')).toBe(10 + Global.nodeLabel.offset);
+      const label = group.get('children')[1].get('children')[0];
+      const labelPos = group.get('children')[1].get('pos')
+      expect(labelPos.x).toBe(0);
+      expect(labelPos.y).toBe(10 + Global.nodeLabel.offset);
       expect(group.getCount()).toBe(2);
     });
 
@@ -172,7 +173,7 @@ describe('shape node test', () => {
         item,
       );
       expect(group.getCount()).toBe(2);
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
       expect(label.attr('text')).toBe('new rect');
       factory.baseUpdate(
         'rect',
@@ -262,7 +263,7 @@ describe('shape node test', () => {
         group,
       );
       canvas.draw();
-      const label = group.get('children')[1];
+      const label = group.get('children')[1].get('children')[0];
 
       expect(label.attr('text')).toBe(mockLabel.substring(0, 5) + '...');
     });

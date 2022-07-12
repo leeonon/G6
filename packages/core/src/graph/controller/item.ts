@@ -274,10 +274,7 @@ export default class ItemController {
       const refreshEdge = updateType?.includes('bbox') || updateType === 'move';
       if (updateType === 'move') {
         each(edges, (edge: IEdge) => {
-          this.edgeToBeUpdateMap[edge.getID()] = {
-            edge: edge,
-            updateType
-          };
+          this.edgeToBeUpdateMap[edge.getID()] = { edge, updateType };
           this.throttleRefresh();
         });
       } else if (refreshEdge) {

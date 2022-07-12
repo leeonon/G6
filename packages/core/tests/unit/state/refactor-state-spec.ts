@@ -170,7 +170,7 @@ describe('graph refactor states', () => {
     graph.setItemState(item, 'select', false);
     expect(item.hasState('select')).toBe(false);
     expect(item.getStates()).toEqual(['hover']);
-    expect(keyShape.attr('lineWidth')).toBe("0");
+    expect(keyShape.attr('lineWidth')).toBe("");
     expect(keyShape.attr('stroke')).toBe('');
 
     // remove hover states
@@ -232,14 +232,14 @@ describe('graph refactor states', () => {
     const keyShape = item.getKeyShape();
     expect(keyShape.attr('fill')).toEqual('green');
     // default value
-    expect(keyShape.attr('lineWidth')).toEqual("0");
+    expect(keyShape.attr('lineWidth')).toEqual("");
     expect(keyShape.attr('opacity')).toEqual(0.8);
 
     const group = item.getContainer();
     const subShape = group.find((element) => element.get('name') === 'sub-node');
     expect(subShape.attr('fill')).toEqual('#fff');
     // // default value
-    expect(subShape.attr('lineWidth')).toEqual("0");
+    expect(subShape.attr('lineWidth')).toEqual("");
 
     graph.destroy();
   });
@@ -445,7 +445,7 @@ describe('graph refactor states', () => {
     expect(item.getStates().length).toBe(1);
     expect(item.hasState('select')).toBe(false);
     expect(keyShape.attr('stroke')).toEqual('');
-    expect(keyShape.attr('lineWidth')).toEqual("0");
+    expect(keyShape.attr('lineWidth')).toEqual("");
     expect(keyShape.attr('opacity')).toEqual(0.3);
 
     graph.setItemState(item, 'selfCircle', 'selected');
@@ -477,8 +477,8 @@ describe('graph refactor states', () => {
     expect(keyShape.attr('fill')).toEqual('yellow');
     expect(subShape.attr('stroke')).toEqual('#fff');
     // default lineWidth value
-    expect(keyShape.attr('lineWidth')).toEqual("0");
-    expect(subShape.attr('lineWidth')).toEqual("0");
+    expect(keyShape.attr('lineWidth')).toEqual("");
+    expect(subShape.attr('lineWidth')).toEqual("");
 
     graph.clearItemStates(item, ['selfCircle:hover']);
     expect(item.getStates().length).toBe(0);
@@ -605,7 +605,7 @@ describe('graph refactor states', () => {
     // 清除 node1 的状态
     graph.clearItemStates(node1, ['selfCircle:selected']);
     expect(node1.getStates().length).toBe(0);
-    expect(keyshape1.attr('lineWidth')).toEqual("0");
+    expect(keyshape1.attr('lineWidth')).toEqual("");
 
     graph.destroy();
   });

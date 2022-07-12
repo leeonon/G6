@@ -355,6 +355,7 @@ export default class Group extends EventEmitter implements IGroup {
    * @return {IElement} group
    */
   public rotateAtStart(radian: number): IElement {
+    const { minX, minY } = this.getCanvasBBox();
     this.adaptedEle.setOrigin(0, 0)
     this.adaptedEle.rotateLocal(radian / Math.PI * 180);
     return this;
@@ -541,7 +542,7 @@ export default class Group extends EventEmitter implements IGroup {
     const eventnames = eventname.split(':');
     const name = eventnames[1] || eventname;
     if (EVENTS.includes(name as typeof EVENTS[number])) {
-      this.emit(eventname, event);
+      this.adaptedEle.emit(eventname, event);
     } else {
       // 除内置事件外的其他事件，为自定义事件，需要使用 CustomEvent 并将参数放入 detail
       const gEvent = new CustomEvent(eventname, { detail: event });

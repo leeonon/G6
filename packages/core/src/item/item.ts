@@ -16,7 +16,7 @@ import {
   ITEM_TYPE,
   UpdateType,
 } from '../types';
-import { getBBox } from '../util/graphic';
+import { getBBox, getItemStylesMap } from '../util/graphic';
 import { translate } from '../util/math';
 import { uniqueId } from '../util/base';
 
@@ -210,41 +210,7 @@ export default class ItemBase implements IItemBase {
 
     if (!this.get('originStyle')) {
       // 第一次 set originStyle，直接拿首次渲染所有图形的 attrs
-      const originStyles = {};
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i];
-        const shapeType = child.get('type');
-        const name = child.get('name');
-        if (name && name !== keyShapeName) {
-          originStyles[name] =
-            shapeType !== 'image' ? clone(child.attr()) : self.getShapeStyleByName(name);
-
-          // The text's position and matrix is not allowed to be affected by states
-          if (shapeType === 'text' && originStyles[name]) {
-            delete originStyles[name].x;
-            delete originStyles[name].y;
-            delete originStyles[name].matrix;
-          }
-        } else {
-          const keyShapeStyle: ShapeStyle = self.getShapeStyleByName(); // 可优化，需要去除 child.attr 中其他 shape 名的对象
-          delete keyShapeStyle.path;
-          delete keyShapeStyle.matrix;
-          if (!keyShapeName) {
-            Object.assign(originStyles, keyShapeStyle);
-          } else {
-            // 若 keyShape 有 name 且 !name，这个图形不是 keyShape，给这个图形一个 name
-            if (!name) {
-              const shapeName = uniqueId('shape');
-              child.set('name', shapeName);
-              group['shapeMap'][shapeName] = child;
-              originStyles[shapeName] =
-                shapeType !== 'image' ? clone(child.attr()) : self.getShapeStyleByName(name);
-            } else {
-              originStyles[keyShapeName] = keyShapeStyle;
-            }
-          }
-        }
-      }
+      const originStyles = getItemStylesMap(children, keyShapeName, self);
       self.set('originStyle', originStyles);
     } else {
       // 第二次 set originStyles，需要找到不是 stateStyles 的样式，更新到 originStyles 中
@@ -258,10 +224,15 @@ export default class ItemBase implements IItemBase {
       const currentStatesStyle = this.getCurrentStatesStyle();
 
       // 遍历当前所有图形的 attrs，找到不是 stateStyles 的样式更新到 originStyles 中
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i];
+      let shapes = [].concat(children)
+      while (shapes.length) {
+        const child = shapes.pop();
         const name = child.get('name');
         const shapeAttrs = child.attr();
+        if (child.isGroup?.()) {
+          shapes = shapes.concat(child.get('children') || []);
+          continue;
+        }
         if (name && name !== keyShapeName) {
           // 有 name 的非 keyShape 图形
           const shapeStateStyle = currentStatesStyle[name];
@@ -400,8 +371,8 @@ export default class ItemBase implements IItemBase {
 
     if (currentShape) {
       const styles: ShapeStyle & Indexable<any> = {};
-
-      each(currentShape.attr(), (val, key) => {
+      const attrs = currentShape.attr();
+      each(attrs, (val, key) => {
         // 修改 img 通过 updateItem 实现
         if (key !== 'img' || isString(val)) {
           styles[key] = val;

@@ -1,7 +1,7 @@
 {
-  "name": "@antv/g6-g-adapter",
-  "version": "0.0.1",
-  "description": "Adapt the rendering engine G to G6",
+  "name": "@antv/g-adapter",
+  "version": "0.0.1-alpha.2",
+  "description": "Adapt the rendering engine G",
   "keywords": [
     "antv",
     "g6",

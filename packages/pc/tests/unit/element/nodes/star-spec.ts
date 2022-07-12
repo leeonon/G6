@@ -141,7 +141,7 @@ describe('star test', () => {
           lineWidth: 2,
         },
       });
-      const label = node.get('group').get('children')[1];
+      const label = node.get('group').get('children')[1].get('children')[0];
       expect(label.attr('text')).toEqual('new label');
       expect(keyShape.attr('fill')).toEqual('blue');
 

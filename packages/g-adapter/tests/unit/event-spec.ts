@@ -23,7 +23,7 @@ describe('shape(text) test', () => {
   const subGroup = rootGroup.addGroup({ id: 'sub-group' });
   let text, circle;
 
-  it.only('canvas.on off', () => {
+  it('canvas.on off', () => {
     let count = 0;
     const func = e => {
       expect(e.item.isCanvas()).toBe(true);
@@ -44,7 +44,7 @@ describe('shape(text) test', () => {
     expect(count).toBe(2);
   });
 
-  it.only('group.on off', () => {
+  it('group.on off', () => {
     // 加入四个顶点撑开
     circle = subGroup.addShape('circle', {
       attrs: {
@@ -76,7 +76,7 @@ describe('shape(text) test', () => {
     expect(count).toBe(2);
   });
 
-  it.only('shape:click', () => {
+  it('shape:click', () => {
     let count = 0;
     const func = e => {
       expect(e.item.isCanvas()).toBe(false);
@@ -110,7 +110,7 @@ describe('shape(text) test', () => {
 
   // pageXY：文档坐标系，考虑页面滚动
 
-  it.only('canvas agency', () => { // 不能写 done，因为上方的 div 在 done 之后才会渲染，导致测试的坐标不准确
+  it('canvas agency', () => { // 不能写 done，因为上方的 div 在 done 之后才会渲染，导致测试的坐标不准确
     // 设置相机位置之后，响应不到图形事件
     // canvas.getCamera().setPosition(-50, -50)
 

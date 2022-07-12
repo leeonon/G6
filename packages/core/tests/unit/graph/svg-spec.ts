@@ -320,7 +320,7 @@ describe('graph', () => {
     globalGraph.zoom(3, { x: 100, y: 100 });
     expect(globalGraph.getZoom()).toBe(3);
     const currentCenterPoint = globalGraph.getPointByCanvas(250, 250);
-    expect(currentCenterPoint.x).toBe(166.6666717529297);
+    expect(numberEqual(currentCenterPoint.x, 166.6666717529297, 1)).toBe(true);
     expect(currentCenterPoint.y).toBe(150);
   });
 
@@ -1174,7 +1174,7 @@ describe('built-in items', () => {
       },
     });
     const cubicShape = cubic.get('group').get('children')[0];
-    const cubicTextShape = cubic.get('group').get('children')[1];
+    const cubicTextShape = cubic.get('group').get('children')[1].get('children')[0];
     expect(cubicShape.attr('stroke')).toBe('#f00');
     expect(cubicTextShape.attr('text')).toBe('cubic label');
     graph.destroy();

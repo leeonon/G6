@@ -69,7 +69,6 @@ export const ShapeFactoryBase = {
 
     // 防止没定义 update 函数
     if (shape.update) {
-      // shape.mergeStyle = updateType === 'move' || updateType === 'bbox' ? {} : shape.getOptions?.(cfg);
       shape.mergeStyle = shape.getOptions?.(cfg, updateType);
       shape.update?.(cfg, item, updateType);
     }

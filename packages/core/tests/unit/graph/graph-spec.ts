@@ -165,7 +165,7 @@ describe('graph', () => {
     globalGraph.zoom(3, { x: 100, y: 100 });
     expect(globalGraph.getZoom()).toBe(3);
     const currentCenterPoint = globalGraph.getPointByCanvas(250, 250);
-    expect(currentCenterPoint.x).toBe(166.6666717529297);
+    expect(numberEqual(currentCenterPoint.x, 166.6666717529297, 1)).toBe(true);
     expect(currentCenterPoint.y).toBe(150);
     globalGraph.resetViewport();
   });
@@ -806,11 +806,11 @@ describe('all node link center', () => {
     expect(edge4.getKeyShape().attr('path')[0][2]).toEqual(edge3.getKeyShape().attr('path')[1][6]);
 
     const pathWithAnchor = edgeWithAnchor.getKeyShape().attr('path');
-    expect(pathWithAnchor[0][1]).toEqual(139.5);
-    expect(pathWithAnchor[0][2]).toEqual(139.5);
+    expect(pathWithAnchor[0][1]).toEqual(140);
+    expect(pathWithAnchor[0][2]).toEqual(140);
     expect(pathWithAnchor[1][0]).toEqual('C');
-    expect(pathWithAnchor[1][5]).toEqual(139.5);
-    expect(pathWithAnchor[1][6]).toEqual(160.5);
+    expect(pathWithAnchor[1][5]).toEqual(140);
+    expect(pathWithAnchor[1][6]).toEqual(160);
   });
 
   it('loop - addItems', () => {
@@ -1162,10 +1162,11 @@ describe('mapper fn', () => {
     expect(keyShape.get('type')).toEqual('path');
 
     label = edge.getContainer().find(element => element.get('className') === 'edge-label');
+    const labelPos = edge.getContainer().find(element => element.get('className') === 'label-group').get('pos');
     expect(label).not.toBe(undefined);
     expect(label.attr('text')).toEqual('edge');
-    expect(label.attr('x')).toEqual(115);
-    expect(label.attr('y')).toEqual(100);
+    expect(labelPos.x).toEqual(115);
+    expect(labelPos.y).toEqual(100);
 
     graph.updateItem(node, { value: 50 });
     expect(node.getKeyShape().attr('fill')).toEqual('#ccc');

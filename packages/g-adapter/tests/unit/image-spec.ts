@@ -78,8 +78,8 @@ describe('image test', () => {
     expect(matrix3[6]).toBe(70);
     expect(matrix3[7]).toBe(70);
 
-    expect(image.attr('x')).toBe(70);
-    expect(image.attr('y')).toBe(70);
+    expect(image.attr('x')).toBe(80);
+    expect(image.attr('y')).toBe(100);
 
     image.resetMatrix();
     const matrix4 = image.getMatrix();
@@ -107,7 +107,7 @@ describe('image test', () => {
 
     image.rotateAtPoint(20, 25, Math.PI / 2 + Math.PI / 4);
     expect(approximate(image.getLocalEulerAngles(), 180)).toBe(true);
-    const bbox = image.getBBox();
+    const bbox = image.getCanvasBBox();
     expect(approximate(bbox.x, 50)).toBe(true);
     expect(approximate(bbox.y, 45)).toBe(true);
     expect(approximate(bbox.maxX, 130)).toBe(true);
