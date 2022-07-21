@@ -1,5 +1,5 @@
 import { INode, ICombo } from '@antv/g6-core';
-import { Point } from '@antv/g6-g-adapter';
+import { Point } from '@antv/g-adapter';
 
 export interface PolyPoint {
   x: number;

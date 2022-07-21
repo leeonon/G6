@@ -3,7 +3,7 @@
  * @author dxq613@gmai.com
  */
 
-import { Canvas, IGroup } from '@antv/g6-g-adapter';
+import { Canvas, IGroup } from '@antv/g-adapter';
 import { Shape, Node, Util } from '@antv/g6-core';
 import { Graph, Global } from '../../../src';
 import '../../../src';

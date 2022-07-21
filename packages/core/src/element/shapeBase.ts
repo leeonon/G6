@@ -3,7 +3,7 @@
  * @author dxq613@gmail.com
  */
 // import { IGroup, IShape, IElement } from '@antv/g-base';
-import { IGroup, IShape, IElement } from '@antv/g6-g-adapter';
+import { IGroup, IShape, IElement } from '@antv/g-adapter';
 import { ShapeOptions, ILabelConfig } from '../interface/shape';
 import { IPoint, Item, LabelStyle, ShapeStyle, ModelConfig, EdgeConfig, UpdateType } from '../types';
 import Global from '../global';
@@ -309,9 +309,7 @@ export const shapeBase: ShapeOptions = {
           labelGroup.setMatrix([1, 0, 0, 0, 1, 0, labelPos.x, labelPos.y, 1]);
           labelGroup.rotateAtStart(angle);
         } else {
-          if (labelGroup.getMatrix()?.[4] !== 1) {
-            labelGroup.setMatrix([1, 0, 0, 0, 1, 0, labelPos.x, labelPos.y, 1]);
-          }
+          labelGroup.setMatrix([1, 0, 0, 0, 1, 0, labelPos.x, labelPos.y, 1]);
           label.attr(labelShapeStyle);
         }
 

@@ -1,5 +1,5 @@
 import { addEventListener } from '@antv/dom-util';
-import { ICanvas, IShape, IElement } from '@antv/g6-g-adapter';
+import { ICanvas, IShape, IElement } from '@antv/g-adapter';
 import { each, isNil, wrapBehavior } from '@antv/util';
 import { AbstractEvent, IG6GraphEvent, G6GraphEvent, Item, Util, EVENTS } from '@antv/g6-core';
 import Graph from '../graph';
@@ -8,7 +8,7 @@ const { cloneEvent } = Util;
 
 type Fun = () => void;
 
-const cloneEventFromG = (e: any, eventName: string): IG6GraphEvent => {
+const cloneEventFromG = (e: any, eventName: string, canvas): IG6GraphEvent => {
   const event = new G6GraphEvent(eventName, e);
   event.target = e.target;
   event.currentTarget = e.currentTarget;
@@ -37,10 +37,25 @@ const cloneEventFromG = (e: any, eventName: string): IG6GraphEvent => {
   event.clientX = clientXY.x;
   event.clientY = clientXY.y;
 
-  event.wheelDelta = e.deltaY;
+  event.wheelDelta = -e.deltaY;
   event.originalEvent = e.originalEvent;
   event.gEvent = e;
-  event.preventDefault = eventName === 'wheel' ? () => { } : e.preventDefault;
+  if (eventName === 'wheel' || eventName === 'rightdown' || eventName === 'contextmenu') {
+    event.preventDefault = () => {
+      canvas
+        .getContextService()
+        .getDomElement() // g-canvas/webgl 为 <canvas>，g-svg 为 <svg>
+        .addEventListener(
+          eventName,
+          (e) => {
+            e.preventDefault();
+          },
+          eventName === 'wheel' ? { passive: false } : undefined
+        );
+    }
+  } else {
+    event.preventDefault = e.preventDefault;
+  }
   event.stopPropagation = e.stopPropagation;
   event.stopImmediatePropagation = e.stopImmediatePropagation;
 
@@ -120,13 +135,18 @@ export default class EventController extends AbstractEvent {
     const { graph } = this;
     let eventType = eventTypeProp;
     if (eventType === 'click') {
-      eventType = gEvt.detail === 2 ? 'dblclick' : 'click';
-    } else if (eventType === 'rightup') {
+      // button = 0 为左键，在 G6 认为这种情况为 click。其它情况可能是右键，不认为是 click
+      if (gEvt.button !== 0) return;
+      // 双击情况下，多触发一次双击事件
+      if (eventType === 'click' && gEvt.detail === 2) {
+        this.onCanvasEvents(gEvt, 'dblclick')
+      }
+    } else if (eventType === 'rightdown') {
       eventType = 'contextmenu';
     }
-    const evt = cloneEventFromG(gEvt, eventType);
 
     const canvas = graph.get('canvas');
+    const evt = cloneEventFromG(gEvt, eventType, canvas);
 
     evt.currentTarget = graph;
 
@@ -226,8 +246,6 @@ export default class EventController extends AbstractEvent {
         this.emitCustomEvent(type, 'mouseenter', evt);
       }
     }
-
-
     this.preItem = item;
 
     // 图形的 mouseenter 与 mouseleave

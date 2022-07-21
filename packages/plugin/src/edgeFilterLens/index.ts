@@ -151,7 +151,7 @@ export default class EdgeFilterLens extends Base {
     const hitNodesMap = {};
     const r = self.get('r');
     const type = self.get('type');
-    const fCenter = { x: e.x || e.pointX, y: e.y || e.pointY };
+    const fCenter = { x: (e.x || e.pointX) as number, y: (e.y || e.pointY) as number };
     self.updateDelegate(fCenter, r);
     const shouldShow = self.get('shouldShow');
 

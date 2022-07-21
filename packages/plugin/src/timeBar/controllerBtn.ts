@@ -1,4 +1,4 @@
-import { IGroup, IShape } from '@antv/g6-g-adapter';
+import { IGroup, IShape } from '@antv/g-adapter';
 import { deepMix } from '@antv/util';
 import { ext } from '@antv/matrix-util';
 import Button from './timeButton';
@@ -204,7 +204,7 @@ export default class ControllerBtn {
       ['M', x, y - len],
       ['L', x + len, y],
       ['L', x, y + len],
-      ['Z', x, y - len],
+      ['L', x, y - len],
       ['M', x, y],
       ['L', x - len, y - len],
       ['L', x - len, y + len],

@@ -3,12 +3,21 @@ import { each, isEqual, noop, isFunction, isObject, isNumber } from '@antv/util'
 // 可以在 toAttrs 中设置，但不属于绘图属性的字段
 const RESERVED_PORPS = ['repeat'];
 
+const formatKey = (key, shapeType) => {
+  if (shapeType === 'circle' || shapeType === 'ellipse') {
+    if (key === 'x' || key === 'y') return `c${key}`;
+  }
+  return key;
+}
+
 const getFormatToAttrs = (props, shape) => {
   const toAttrs = {};
   const attrs = shape.attr();
+  const shapeType = shape.nodeName;
   each(props, (v, k) => {
-    if (RESERVED_PORPS.indexOf(k) === -1 && !isEqual(attrs[k], v)) {
-      toAttrs[k] = v;
+    const key = formatKey(k, shapeType);
+    if (RESERVED_PORPS.indexOf(key) === -1 && !isEqual(attrs[key], v)) {
+      toAttrs[key] = v;
     }
   });
   return toAttrs;
@@ -17,9 +26,11 @@ const getFormatToAttrs = (props, shape) => {
 const getFormatFromAttrs = (toAttrs, shape) => {
   const fromAttrs = {};
   const attrs = shape.attr();
+  const shapeType = shape.nodeName;
   for (const k in toAttrs) {
-    if (attrs[k] !== undefined) {
-      fromAttrs[k] = attrs[k];
+    const key = formatKey(k, shapeType);
+    if (attrs[key] !== undefined) {
+      fromAttrs[key] = attrs[key];
     }
   }
   return fromAttrs;
@@ -40,7 +51,6 @@ const getFormatFromAttrs = (toAttrs, shape) => {
  *   delay    动画延迟时间
  */
 const processAnimate = (args, shape, callAnimate) => {
-  // this.set('animating', true);
   const animations = shape.get('animations') || [];
   let [toAttrs, duration, easing = 'easeLinear', callback = noop, delay = 0] = args;
   let onFrame; // : OnFrame;

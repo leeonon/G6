@@ -4,7 +4,7 @@
  */
 
 //  import { IGroup, IShape, IElement, Point } from '@antv/g-base';
-import { IGroup, IShape, IElement, Point } from '@antv/g6-g-adapter';
+import { IGroup, IShape, IElement, Point } from '@antv/g-adapter';
 import { deepMix, mix, each, isNil, isNumber, isArray } from '@antv/util';
 import { ILabelConfig, ShapeOptions } from '../interface/shape';
 import { EdgeConfig, EdgeData, IPoint, LabelStyle, ShapeStyle, Item, ModelConfig, UpdateType } from '../types';
@@ -126,6 +126,7 @@ const singleEdge: ShapeOptions = {
     const shape =
       item.getKeyShape?.() || group['shapeMap']['edge-shape']; // group.find((element) => element.get('className') === 'edge-shape');
 
+    if (!shape) return;
     const { size } = cfg;
     cfg = this.getPathPoints!(cfg);
 
@@ -140,7 +141,6 @@ const singleEdge: ShapeOptions = {
     // 添加结束点
     points.push(endPoint);
 
-    const currentAttr = shape.attr();
     const previousStyle = cfg.style || {};
     if (previousStyle.stroke === undefined) {
       previousStyle.stroke = cfg.color
@@ -156,25 +156,11 @@ const singleEdge: ShapeOptions = {
     if (updateType === 'move') {
       style = { path };
     } else {
-      if (currentAttr.endArrow && previousStyle.endArrow === false) {
-        cfg.style.endArrow = {
-          path: '',
-        };
-      }
-      if (currentAttr.startArrow && previousStyle.startArrow === false) {
-        cfg.style.startArrow = {
-          path: '',
-        };
-      }
-      style = { ...cfg.style };
-      if (style.lineWidth === undefined) style.lineWdith = (isNumber(size) ? size : size?.[0]) || currentAttr.lineWidth
+      if (style.lineWidth === undefined) style.lineWidth = (isNumber(size) ? size : size?.[0]) || undefined
       if (style.path === undefined) style.path = path;
-      if (style.stroke === undefined) style.stroke = currentAttr.stroke || cfg.color;
+      if (style.stroke === undefined) style.stroke = cfg.color || undefined;
     }
-
-    if (shape) {
-      shape.attr(style);
-    }
+    shape.attr(style);
   },
   getLabelStyleByPosition(cfg: EdgeConfig, labelCfg: ILabelConfig, group?: IGroup): LabelStyle {
     const labelPosition = labelCfg.position || this.labelPosition; // 文本的位置用户可以传入

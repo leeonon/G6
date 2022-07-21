@@ -7,7 +7,7 @@ import {
   NodeConfigMap,
   EdgeConfig,
 } from '@antv/g6-core';
-import { Point } from '@antv/g6-g-adapter';
+import { Point } from '@antv/g-adapter';
 
 interface BundlingConfig extends IPluginBaseConfig {
   edgeBundles?: IEdge[];

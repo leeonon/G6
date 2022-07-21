@@ -1,5 +1,5 @@
 import EventEmitter from '@antv/event-emitter';
-import { ICanvas, IGroup, Point } from '@antv/g6-g-adapter';
+import { ICanvas, IGroup, Point } from '@antv/g-adapter';
 import { clone, deepMix, each, isPlainObject, isString, debounce } from '@antv/util';
 import {
   getDegree,

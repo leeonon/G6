@@ -1,6 +1,6 @@
 {
   "name": "@antv/g6-element",
-  "version": "0.6.15",
+  "version": "0.7.0-alpha.1",
   "description": "A Graph Visualization Framework in JavaScript",
   "keywords": [
     "antv",
@@ -62,8 +62,8 @@
   "dependencies": {
     "@antv/g": "^5.2.2",
     "@antv/g-svg": "^1.2.2",
-    "@antv/g6-core": "0.6.15",
-    "@antv/g6-g-adapter": "*",
+    "@antv/g6-core": "0.7.0-alpha.1",
+    "@antv/g-adapter": "^0.0.1-alpha.3",
     "@antv/util": "~2.0.5"
   },
   "devDependencies": {

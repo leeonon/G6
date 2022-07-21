@@ -28,7 +28,7 @@ import {
   isUnitMatrix,
 } from '../../../src/util/math';
 import Graph from '../implement-graph';
-import { Canvas } from '@antv/g6-g-adapter';
+import { Canvas } from '@antv/g-adapter';
 
 const equal = (a: number, b: number): boolean => Math.abs(a - b) < 0.0001;
 

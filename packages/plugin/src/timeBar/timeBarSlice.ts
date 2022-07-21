@@ -2,7 +2,7 @@
  * 基于 G 的刻度时间轴组件
  */
 import { ext } from '@antv/matrix-util';
-import { ICanvas, IGroup } from '@antv/g6-g-adapter';
+import { ICanvas, IGroup } from '@antv/g-adapter';
 import { isNumber, isString } from '@antv/util';
 import { ShapeStyle, IAbstractGraph as IGraph } from '@antv/g6-core';
 import TimeBarTooltip from './timeBarTooltip';

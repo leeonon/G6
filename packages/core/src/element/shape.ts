@@ -1,5 +1,5 @@
 // import { IGroup, IShape } from '@antv/g-base';
-import { IGroup, IShape } from '@antv/g6-g-adapter';
+import { IGroup, IShape } from '@antv/g-adapter';
 import { upperFirst } from '@antv/util';
 import { ShapeOptions, ShapeDefine } from '../interface/shape';
 import { IPoint, Item, ModelConfig, NodeConfig, EdgeConfig, UpdateType } from '../types';

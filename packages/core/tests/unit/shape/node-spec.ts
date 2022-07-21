@@ -5,7 +5,7 @@
 
 import Shape from '../../../src/element/shape';
 import Global from '../../../src/global';
-import { Canvas, IGroup } from '@antv/g6-g-adapter';
+import { Canvas, IGroup } from '@antv/g-adapter';
 import Node from '../../../src/item/node';
 import { translate } from '../../../src/util/math';
 import '../../../src/element/node';

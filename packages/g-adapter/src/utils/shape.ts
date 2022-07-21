@@ -33,6 +33,8 @@ const getPathBySymbol = (attrs) => {
 }
 
 const createShape = (shapeType, param, canvas) => {
+  const { visible } = param;
+  delete param.visible;
   param.style.x = param.style.x || 0;
   param.style.y = param.style.y || 0;
   if (shapeType === 'circle' || shapeType === 'ellipse') {
@@ -51,6 +53,7 @@ const createShape = (shapeType, param, canvas) => {
   }
   if (param.style.draggable !== false) shape.attr('draggable', true);
   if (param.style.droppable !== false) shape.attr('droppable', true);
+  if (visible === false) shape.hide();
   return shape;
 }
 
@@ -103,7 +106,7 @@ const attr = (param1, param2, target) => {
   if (isObject(paramObj)) {
     // 第一个参数是对象 -> 设置对象中的所有值，忽略后面的参数
     Object.keys(paramObj).forEach(key => {
-      let value = paramObj[key];
+      let value = formatAttrValue(key, paramObj[key]);
       if (key === 'text') value = `${value}`;
       target.style[key] = value;
     });
@@ -118,6 +121,10 @@ const attr = (param1, param2, target) => {
 
 const clearByUndefinedKeys = ['shadowColor'];
 const formatAttrValue = (key, value) => {
+  if (key === 'lineDash') {
+    if (!value?.length) return 0;
+    return value.map(item => item || 0);
+  }
   if (value === undefined) {
     if (clearByUndefinedKeys.includes(key)) {
       return '';
@@ -126,9 +133,11 @@ const formatAttrValue = (key, value) => {
   return value;
 }
 
-// const attrKeyMap = {
-//   startArrow
-// };
-// const getFormatAttrKey = (key: string) => attrKeyMap[key] || key;
+const formatAttributes = (attrs) => {
+  Object.keys(attrs).forEach(key => {
+    attrs[key] = formatAttrValue(key, attrs[key]);
+  });
+  return attrs;
+}
 
-export { getPathBySymbol, createShape, isArrowKey, isCombinedShapeSharedAttr, getLineTangent, attr, createClipShape, formatAttrValue };
+export { getPathBySymbol, createShape, isArrowKey, isCombinedShapeSharedAttr, getLineTangent, attr, createClipShape, formatAttrValue, formatAttributes };

@@ -1,6 +1,6 @@
 import { CustomEvent as GEvent } from '@antv/g';
 import Canvas from './canvas';
-import Group from './Group';
+import Group from './group';
 import { ShapeAttrs, ShapeCfg, ArrowCfg, ClipCfg, ElementCfg, ElementAttrs, Cursor, Renderer, OnFrame, AnimateCfg, BBox, Point } from './types';
 import { IShape, IElement, IGroup, ICanvas } from './interface';
 import { Circle, Rect, Ellipse, Text, Polygon, Marker, HTML, Image, LineWithArrow, PolylineWithArrow, PathWithArrow } from './shapes';

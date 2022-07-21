@@ -1,6 +1,6 @@
 import EventEmitter from '@antv/event-emitter';
 // import { IGroup, Point } from '@antv/g-base';
-import { IGroup, Point } from '@antv/g6-g-adapter';
+import { IGroup, Point } from '@antv/g-adapter';
 import Graph from '../graph/graph';
 import {
   EdgeConfig,

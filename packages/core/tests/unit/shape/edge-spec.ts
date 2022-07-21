@@ -1,4 +1,4 @@
-import { Canvas } from '@antv/g6-g-adapter';
+import { Canvas } from '@antv/g-adapter';
 import '../../../src/element/node';
 import '../../../src/element/nodes';
 import '../../../src/element/edge';

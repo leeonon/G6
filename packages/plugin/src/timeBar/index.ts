@@ -1,7 +1,7 @@
 /**
  * 基于 G 的时间轴组件
  */
-import { Canvas, ICanvas } from '@antv/g6-g-adapter';
+import { Canvas, ICanvas } from '@antv/g-adapter';
 import { createDom, modifyCSS } from '@antv/dom-util';
 import Base, { IPluginBaseConfig } from '../base';
 import TrendTimeBar, { TickCfg, SliderOption } from './trendTimeBar';

@@ -1,4 +1,4 @@
-import { IGroup, IShape } from '@antv/g6-g-adapter';
+import { IGroup, IShape } from '@antv/g-adapter';
 import { registerNode, Item, NodeConfig, ShapeStyle, BaseGlobal as Global, UpdateType } from '@antv/g6-core';
 import { mix } from '@antv/util';
 

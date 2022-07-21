@@ -1,5 +1,5 @@
 // import { AbstractCanvas, Point, IGroup } from '@antv/g-base';
-import { ICanvas, Point, IGroup } from '@antv/g6-g-adapter';
+import { ICanvas, Point, IGroup } from '@antv/g-adapter';
 import { isNumber, isString } from '@antv/util';
 import { Item, Matrix, Padding, GraphAnimateConfig, IEdge, FitViewRules } from '../../types';
 import { formatPadding } from '../../util/base';
@@ -19,8 +19,8 @@ export default class ViewController {
   private getViewCenter(): Point {
     const padding = this.getFormatPadding();
     const { graph } = this;
-    const width: number = this.graph.get('width');
-    const height: number = graph.get('height');
+    const width: number = graph.get('width') || 0;
+    const height: number = graph.get('height') || 0;
     return {
       x: (width - padding[1] - padding[3]) / 2 + padding[3],
       y: (height - padding[0] - padding[2]) / 2 + padding[0],
@@ -53,6 +53,7 @@ export default class ViewController {
 
     if (!bbox || bbox.width === 0 || bbox.height === 0) return;
     const viewCenter = this.getViewCenter();
+    const viewCenterPoint = graph.getPointByCanvas(viewCenter.x, viewCenter.y);
 
     const groupCenter: Point = {
       x: bbox.x + bbox.width / 2,
@@ -86,7 +87,7 @@ export default class ViewController {
       }
     }
 
-    graph.translate(viewCenter.x - groupCenter.x, viewCenter.y - groupCenter.y, animate, animateConfig);
+    graph.translate(viewCenterPoint.x - groupCenter.x, viewCenterPoint.y - groupCenter.y, animate, animateConfig);
     const zoomCenter = graph.get('canvas').getCamera().getPosition();
     if (!animate && !graph.zoom(ratio, { x: zoomCenter[0], y: zoomCenter[1] })) {
       console.warn('zoom failed, ratio out of range, ratio: %f', ratio);

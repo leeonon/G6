@@ -1,4 +1,4 @@
-import { Canvas, ICanvas } from '@antv/g6-g-adapter';
+import { Canvas, ICanvas } from '@antv/g-adapter';
 import { ext } from '@antv/matrix-util';
 import { clone, deepMix, each, isString, isNumber } from '@antv/util';
 import { IGraph, DataUrlType } from '../interface/graph';
@@ -57,7 +57,7 @@ export default class Graph extends AbstractGraph implements IGraph {
       throw new Error('invalid container');
     }
 
-    const { clientWidth, clientHeight } = container
+    const { clientWidth, clientHeight } = container;
     const width: number = this.get('width') || clientWidth;
     const height: number = this.get('height') || clientHeight;
 

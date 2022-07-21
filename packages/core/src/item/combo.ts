@@ -1,5 +1,5 @@
 // import { IGroup } from '@antv/g-base';
-import { IGroup } from '@antv/g6-g-adapter';
+import { IGroup } from '@antv/g-adapter';
 import { ICombo, INode, IItemBaseConfig } from '../interface/item';
 import Node from './node';
 import { IBBox, IShapeBase, ModelConfig, UpdateType } from '../types';

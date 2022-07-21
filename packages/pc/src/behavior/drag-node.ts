@@ -5,7 +5,7 @@
  * @LastEditTime: 2019-08-22 18:41:45
  * @Description: 拖动节点的Behavior
  */
-import { Point } from '@antv/g6-g-adapter';
+import { Point } from '@antv/g-adapter';
 import { deepMix, clone, debounce } from '@antv/util';
 import { G6Event, IG6GraphEvent, Item, NodeConfig, INode, ICombo } from '@antv/g6-core';
 import { IGraph } from '../interface/graph';

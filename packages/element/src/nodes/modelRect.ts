@@ -1,5 +1,5 @@
 import { mix, isString } from '@antv/util';
-import { IGroup, IShape } from '@antv/g6-g-adapter';
+import { IGroup, IShape } from '@antv/g-adapter';
 import {
   registerNode,
   Item,

@@ -1,5 +1,5 @@
 // import { Point, IGroup } from '@antv/g-base';
-import { Point, IGroup } from '@antv/g6-g-adapter';
+import { Point, IGroup } from '@antv/g-adapter';
 import { mat3, vec3, ext, vec2 } from '@antv/matrix-util';
 import { isArray, each, clone } from '@antv/util';
 import {

@@ -1,7 +1,7 @@
 import Base, { IPluginBaseConfig } from '../base';
 import { isString, isNil } from '@antv/util';
 import { modifyCSS, createDom } from '@antv/dom-util';
-import { Point } from '@antv/g6-g-adapter';
+import { Point } from '@antv/g-adapter';
 import { IAbstractGraph as IGraph, ShapeStyle, Util, Matrix, IG6GraphEvent as GraphEvent } from '@antv/g6-core';
 import { mat3 } from '@antv/matrix-util';
 

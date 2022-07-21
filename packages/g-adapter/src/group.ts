@@ -1,4 +1,4 @@
-import { Group as GGroup, CustomEvent } from '@antv/g';
+import { Group as GGroup, CustomEvent, CanvasEvent } from '@antv/g';
 import { isString, uniqueId, mix } from '@antv/util';
 import EventEmitter from '@antv/event-emitter';
 import { attr, createShape } from './utils/shape';
@@ -27,6 +27,11 @@ export default class Group extends EventEmitter implements IGroup {
     this.adaptedEle = gGroup;
     this.set('children', []);
     this.cfg = cfg;
+    if (cfg.visible === true) {
+      delete cfg.visible;
+    } else {
+      this.set('visible', cfg.visible);
+    }
   }
 
   getDefaultCfg() {
@@ -62,13 +67,14 @@ export default class Group extends EventEmitter implements IGroup {
     // if (this.adaptedEle.id === 'g-root' && this.adaptedEle.parentNode?.nodeName === 'document') {
     //   await (this.adaptedEle.parentNode as any)?.defaultView?.ready
     // }
+    const children = this.getChildren() || [];
+    ele.set('parent', this);
+    if (children.indexOf(ele) > -1) return;
     if (ele instanceof Group) {
       this.adaptedEle.appendChild(ele.adaptedEle);
     } else {
       this.adaptedEle.appendChild(ele as any);
     }
-    ele.set('parent', this);
-    const children = this.getChildren() || [];
     this.set('children', children.concat([ele]));
   }
 
@@ -107,7 +113,7 @@ export default class Group extends EventEmitter implements IGroup {
    * @returns {ICanvas} the canvas
    */
   public getCanvas(): ICanvas {
-    return this.get('canvas');
+    return this.canvas;
   }
 
   /**
@@ -181,6 +187,7 @@ export default class Group extends EventEmitter implements IGroup {
     if (index > -1) {
       children.splice(index, 1);
     }
+    if (!element) return;
     element.remove(destroy);
   }
 
@@ -256,7 +263,7 @@ export default class Group extends EventEmitter implements IGroup {
    * the matrix of the group
    * @returns {number[]} the matrix 
    */
-  public getMatrix() {
+  public getMatrix(): number[] {
     const matrix = this.adaptedEle.getLocalMatrix() || unitMatrix;
     return Array.from(matrix);
   }
@@ -557,7 +564,7 @@ export default class Group extends EventEmitter implements IGroup {
    */
   public clone(): IGroup {
     const { className, id } = this.cfg;
-    const tree = new Group({
+    const tree: IGroup = new Group({
       className: `cloned-${className}`,
       id: `cloned-${id || ''}`
     });
@@ -570,15 +577,14 @@ export default class Group extends EventEmitter implements IGroup {
       origin.getChildren().forEach((child) => {
         let ele;
         if (child instanceof Group) {
-          ele = new Group({ id: child.cfg.id }); // , attrs: child.attr()
+          ele = new Group({ id: child.cfg.id, visible: child.get('visible') });
+          stack.push([child, ele]);
         } else {
-          ele = createShape((child as IShape).shapeType, { style: child.attr() }, this.getCanvas());
+          ele = createShape((child as IShape).shapeType, { style: child.attr(), visible: child.get('visible') }, this.getCanvas());
         }
-        // const ele = this.createEle({ ...child.cfg, attrs: child.attrs, children: [] });
         const matrix = child.getMatrix();
         setMatrixStack.push({ ele, matrix });
         parent.appendChild(ele);
-        stack.push([child, ele]);
       });
     }
     // 需要先设置外层 group 矩阵，再设置内层。避免出现矩阵叠加效果
@@ -587,7 +593,7 @@ export default class Group extends EventEmitter implements IGroup {
       const { ele, matrix } = setMatrixStack.pop();
       ele.setMatrix(matrix);
     }
-    const groupMatrix = this.getMatrix();
+    const groupMatrix = this.getMatrix() as number[];
     tree.setMatrix(groupMatrix);
     return tree;
   }
@@ -620,9 +626,11 @@ export default class Group extends EventEmitter implements IGroup {
       case 'capture':
         return this.adaptedEle.interactive;
       case 'visible':
-        return this.adaptedEle.attributes.visibility === 'visible';
+        return this.adaptedEle.attributes.visibility !== 'hidden';
       case 'zIndex':
         return this.adaptedEle.style.zIndex;
+      case 'canvas':
+        return this.canvas;
       default:
         return this.adaptedEle.get(key);
     }
@@ -643,11 +651,14 @@ export default class Group extends EventEmitter implements IGroup {
         this.adaptedEle.interactive = value;
         break;
       case 'visible':
-        if (value) this.show();
-        else this.hide();
+        if (value === false) this.hide();
+        else this.show();
         break;
       case 'zIndex':
         this.adaptedEle.style[name] = value;
+        break;
+      case 'canvas':
+        this.canvas = value;
         break;
     }
     this.cfg[name] = value;
@@ -657,14 +668,24 @@ export default class Group extends EventEmitter implements IGroup {
    * show the group
    */
   public show() {
-    this.adaptedEle.show();
+    this.adaptedEle.setAttribute('visibility', '');
+    this.getChildren()?.forEach(child => {
+      if (child.isGroup()) {
+        child.show();
+      } else {
+        (child as any).setAttribute('visibility', '');
+      }
+    });
   }
 
   /**
-   * hide the group
+   * hide the group and its chidren
    */
   public hide() {
-    this.adaptedEle.hide();
+    this.adaptedEle.setAttribute('visibility', 'hidden');
+    this.getChildren()?.forEach(child => {
+      child.hide();
+    });
   }
 
   /**
@@ -678,14 +699,32 @@ export default class Group extends EventEmitter implements IGroup {
    * front the group
    */
   public toFront() {
-    this.adaptedEle.toFront();
+    const canvas = this.getCanvas();
+    const { adaptedEle } = this;
+    if (!canvas || canvas.isReady) {
+      adaptedEle.toFront();
+    } else {
+      const { canvasEle } = canvas;
+      canvasEle.addEventListener(CanvasEvent.READY, e => {
+        adaptedEle.toFront();
+      }, { once: true });
+    }
   }
 
   /**
    * back the group
    */
   public toBack() {
-    this.adaptedEle.toBack();
+    const canvas = this.getCanvas();
+    const { adaptedEle } = this;
+    if (!canvas || canvas.isReady) {
+      adaptedEle.toBack();
+    } else {
+      const { canvasEle } = canvas;
+      canvasEle.addEventListener(CanvasEvent.READY, e => {
+        adaptedEle.toBack();
+      }, { once: true });
+    }
   }
 
   /**
@@ -705,7 +744,12 @@ export default class Group extends EventEmitter implements IGroup {
     const siblings = this.get('parent').getChildren() || [];
     const idx = siblings.indexOf(this);
     if (idx > -1) {
-      siblings.splice(siblings.indexOf(this), 1);
+      siblings.splice(idx, 1);
+    }
+    const canvasChildren = this.get('canvas')?.getChildren() || [];
+    const canvasChildrenIdx = canvasChildren.indexOf(this);
+    if (canvasChildrenIdx > -1) {
+      canvasChildren.splice(canvasChildrenIdx, 1);
     }
     if (destroy) {
       this.destroy();

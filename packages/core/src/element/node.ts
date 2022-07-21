@@ -3,7 +3,7 @@
  * @author huangtonger@aliyun.com
  */
 // import { IGroup, IShape, IElement } from '@antv/g-base';
-import { IGroup, IShape, IElement } from '@antv/g6-g-adapter';
+import { IGroup, IShape, IElement } from '@antv/g-adapter';
 import { isArray, isNil, mix } from '@antv/util';
 import { ILabelConfig, ShapeOptions } from '../interface/shape';
 import { Item, LabelStyle, NodeConfig, ModelConfig, UpdateType } from '../types';

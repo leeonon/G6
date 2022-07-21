@@ -5,6 +5,7 @@ const EVENTS = [
   'click',
   'dblclick',
   'rightup',
+  'rightdown',
   'dragstart',
   'drag',
   'dragend',

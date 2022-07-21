@@ -10,12 +10,13 @@ import {
   Polyline as GPolyline,
   Text as GText,
   HTML as GHTML,
-  decompose
+  decompose,
+  CanvasEvent
 } from '@antv/g';
 import { Arrow as GArrow } from '@antv/g-components';
 import { ext, mat3, vec3 } from '@antv/matrix-util';
 import { unitMatrix } from './utils/matrix';
-import { attr, createClipShape, getLineTangent, getPathBySymbol, isArrowKey, isCombinedShapeSharedAttr, formatAttrValue } from './utils/shape';
+import { attr, createClipShape, getLineTangent, getPathBySymbol, isArrowKey, isCombinedShapeSharedAttr, formatAttrValue, formatAttributes } from './utils/shape';
 import { getArrowHead, updateArrow } from './utils/arrow';
 import { processAnimate } from './utils/animate';
 
@@ -35,11 +36,17 @@ const getBBox = (shape, type = 'bBox') => {
   let min, max;
   if (type === 'bBox') {
     // bbox 为图形自身包围盒，不考虑自身及父容器矩阵
-    const clonedShape = shape.clone()
+    const clonedShape = shape.replica || shape.clone()
+    if (!shape.replica) {
+      shape.replica = clonedShape;
+      clonedShape.setMatrix(unitMatrix);
+    }
+    const shapeAttr = shape.attr();
+    Object.keys(shapeAttr).forEach(attrKey => {
+      clonedShape.style[attrKey] = shape.style[attrKey]
+    })
     const { x, y } = shape.style;
-    clonedShape.setMatrix(unitMatrix);
-    clonedShape.style.x = x;
-    clonedShape.style.y = y;
+
     // 克隆一个无矩阵变换的图形，得到原始包围盒
     const { min: oriMin, max: oriMax } = clonedShape.getBounds();
     max = [oriMax[0] + x, oriMax[1] + y];
@@ -65,8 +72,8 @@ const getBBox = (shape, type = 'bBox') => {
 const varNames = [
   'cfg',
   'clone',
-  'attrs',
   'attr',
+  'attrs',
   'getParent',
   'getCanvas',
   'applyMatrix',
@@ -88,7 +95,13 @@ const varNames = [
 ];
 
 const handlerFunctionMap = {
-  'cfg': target => target.config,
+  'cfg': target => {
+    return {
+      ...target.config,
+      name: target.name,
+      className: target.className
+    }
+  },
   'clone': target => () => {
     const clonedShape = target.cloneNode(true);
     const oriId = target.get('id');
@@ -157,7 +170,7 @@ const handler = {
     if (handlerFunctionMap[prop]) {
       return handlerFunctionMap[prop](target);
     }
-    return target[prop];
+    return prop === 'attrs' ? target.attr() : target[prop];
   }
 }
 
@@ -234,13 +247,13 @@ const lineHandlerFunctionMap = {
       // 直线
       return getLineTangent(bodyShape, 'end');
     }
-  }
+  },
 }
 const lineHandler = {
-  get: (target, prop) => {
-    const func = lineHandlerFunctionMap[prop] || handlerFunctionMap[prop];
+  get: (target, funcName) => {
+    const func = lineHandlerFunctionMap[funcName] || handlerFunctionMap[funcName];
     if (func) return func(target);
-    return target[prop];
+    return funcName === 'attrs' ? target.style : target[funcName];
   }
 }
 
@@ -250,11 +263,19 @@ const setFunc = (shape, name, value) => {
       shape.interactive = value;
       break;
     case 'visible':
-      if (value) shape.show();
-      else shape.hide();
+      if (value === false) {
+        shape.hide();
+        shape.getBody?.()?.hide();
+      } else {
+        shape.show();
+        shape.getBody?.()?.show();
+      }
       break;
     case 'zIndex':
       shape.config[name] = value;
+      break;
+    case 'canvas':
+      shape.canvas = value;
       break;
   }
   shape.cfg[name] = value;
@@ -263,13 +284,17 @@ const setFunc = (shape, name, value) => {
 const getFunc = (shape, name, superValue) => {
   switch (name) {
     case 'children':
-      return shape.childNodes;
+      return undefined;
+    case 'parent':
+      return shape.getParent();
     case 'capture':
       return shape.interactive;
     case 'visible':
-      return shape.attributes.visibility === 'visible' || shape.attributes.visibility === '';
+      return shape.attributes.visibility !== 'hidden';
     case 'zIndex':
       return shape.config.zIndex;
+    case 'canvas':
+      return shape.canvas;
     case 'type':
       if (superValue === 'arrow') return shape.style?.body?.get('type') || superValue;
     default:
@@ -277,10 +302,23 @@ const getFunc = (shape, name, superValue) => {
   }
 }
 
+const toFrontBackFunc = (canvas, superFunc) => {
+  if (!canvas || canvas.isReady) {
+    superFunc();
+  } else {
+    const { canvasEle } = canvas;
+    canvasEle.addEventListener(CanvasEvent.READY, e => {
+      superFunc();
+    });
+  }
+  return this;
+}
+
 
 class Circle extends GCircle {
   public shapeType: string;
   constructor(cfg) {
+    formatAttributes(cfg.style);
     super(cfg);
     const proxy = new Proxy(this, handler);
     varNames.forEach(funcName => {
@@ -329,10 +367,29 @@ class Circle extends GCircle {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 class Rect extends GRect {
   public shapeType: string;
   constructor(cfg) {
+    formatAttributes(cfg.style);
     super(cfg);
     const proxy = new Proxy(this, handler);
     varNames.forEach(funcName => {
@@ -381,10 +438,29 @@ class Rect extends GRect {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 class Ellipse extends GEllipse {
   public shapeType: string;
   constructor(cfg) {
+    formatAttributes(cfg.style);
     super(cfg);
     const proxy = new Proxy(this, handler);
     varNames.forEach(funcName => {
@@ -433,10 +509,29 @@ class Ellipse extends GEllipse {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 class Text extends GText {
   public shapeType: string;
   constructor(cfg) {
+    formatAttributes(cfg.style);
     super(cfg);
     const proxy = new Proxy(this, handler);
     varNames.forEach(funcName => {
@@ -485,11 +580,30 @@ class Text extends GText {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 
 class Polygon extends GPolygon {
   public shapeType: string;
   constructor(cfg) {
+    formatAttributes(cfg.style);
     super(cfg);
     const proxy = new Proxy(this, handler);
     varNames.forEach(funcName => {
@@ -538,11 +652,30 @@ class Polygon extends GPolygon {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 
 class Image extends GImage {
   public shapeType: string;
   constructor(cfg) {
+    formatAttributes(cfg.style);
     super(cfg);
     const proxy = new Proxy(this, handler);
     varNames.forEach(funcName => {
@@ -591,11 +724,30 @@ class Image extends GImage {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 
 class Line extends GLine {
   public shapeType: string;
   constructor(cfg) {
+    formatAttributes(cfg.style);
     super(cfg);
     const proxy = new Proxy(this, handler);
     varNames.forEach(funcName => {
@@ -644,11 +796,30 @@ class Line extends GLine {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 
 class Polyline extends GPolyline {
   public shapeType: string;
   constructor(cfg) {
+    formatAttributes(cfg.style);
     super(cfg);
     const proxy = new Proxy(this, handler);
     varNames.forEach(funcName => {
@@ -697,12 +868,31 @@ class Polyline extends GPolyline {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 class Path extends GPath {
   public shapeType: string;
   constructor(cfg) {
     delete cfg.style.x;
     delete cfg.style.y;
+    formatAttributes(cfg.style);
     super(cfg);
     const proxy = new Proxy(this, handler);
     varNames.forEach(funcName => {
@@ -751,6 +941,24 @@ class Path extends GPath {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 
 class Marker extends Path {
@@ -764,6 +972,7 @@ class Marker extends Path {
     cfg.style.path = path;
     delete cfg.style.x;
     delete cfg.style.y;
+    formatAttributes(cfg.style);
     super(cfg);
     this.shapeType = 'marker';
   }
@@ -773,6 +982,7 @@ class Marker extends Path {
 class HTML extends GHTML {
   public shapeType: string;
   constructor(cfg) {
+    formatAttributes(cfg.style);
     super(cfg);
     const proxy = new Proxy(this, handler);
     varNames.forEach(funcName => {
@@ -811,6 +1021,24 @@ class HTML extends GHTML {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 
 const getLineConstructCfg = (cfg, Shape) => {
@@ -823,15 +1051,15 @@ const getLineConstructCfg = (cfg, Shape) => {
       })
     })
   }
-
   // 分离 body 的样式和共享样式
   const sharedStyle = {};
   const bodyStyle = {};
   Object.keys(otherAttrs).forEach(key => {
+    const value = formatAttrValue(key, otherAttrs[key]);
     if (isCombinedShapeSharedAttr(key)) {
-      sharedStyle[key] = otherAttrs[key];
+      sharedStyle[key] = value;
     } else {
-      bodyStyle[key] = otherAttrs[key];
+      bodyStyle[key] = value;
     }
   })
   const increasedLineWidthForHitTesting = lineAppendWidth || style.lineWidth || 1;
@@ -905,6 +1133,24 @@ class LineWithArrow extends GArrow {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 
 class PathWithArrow extends GArrow {
@@ -945,12 +1191,29 @@ class PathWithArrow extends GArrow {
     processAnimate(args, this, callAnimate);
     return callAnimate;
   }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
 }
 
 class PolylineWithArrow extends GArrow {
   public shapeType: string;
   constructor(cfg) {
-
     super(getLineConstructCfg(cfg, Polyline));
 
     const { startArrow, endArrow } = cfg?.style || {};
@@ -985,6 +1248,24 @@ class PolylineWithArrow extends GArrow {
     this.getBody().animate(...args);
     processAnimate(args, this, callAnimate);
     return callAnimate;
+  }
+
+  public toFront() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toFront();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
+  }
+
+  public toBack() {
+    const canvas = this.get('canvas');
+    const callSuper = () => {
+      super.toBack();
+    }
+    toFrontBackFunc(canvas, callSuper);
+    return this;
   }
 }
 

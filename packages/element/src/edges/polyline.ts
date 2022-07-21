@@ -1,4 +1,4 @@
-import { Point, IGroup } from '@antv/g6-g-adapter';
+import { Point, IGroup } from '@antv/g-adapter';
 import { mix, each, isArray, isString } from '@antv/util';
 import {
   registerEdge,

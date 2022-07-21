@@ -1,4 +1,4 @@
-import { Canvas, Group } from '../../src';
+import { Canvas } from '../../src';
 // TODO: 暂时先从 node_modules 引入避免引用到最外层的 node_modules
 import { Renderer } from '@antv/g-canvas';
 
@@ -76,7 +76,6 @@ describe('canvas test', () => {
     canvas.emit('click', {});
     canvas.emit('click', {});
     expect(clickCount).toBe(2);
-
 
     // destroyed
     expect(canvas.destroyed).toBe(false);

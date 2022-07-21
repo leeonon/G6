@@ -1,4 +1,4 @@
-import { IGroup } from '@antv/g6-g-adapter';
+import { IGroup } from '@antv/g-adapter';
 import { dataToPath, linePathToAreaPath, dataToRectPath } from './path';
 import { ShapeStyle } from '@antv/g6-core';
 

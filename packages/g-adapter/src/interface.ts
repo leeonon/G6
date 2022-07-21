@@ -426,6 +426,7 @@ export interface ICanvas extends IBase {
   adaptedEle: GGroup;
   canvasEle: GCanvas;
   isPaused: boolean;
+  isReady: boolean;
   /**
    * 获取当前的渲染引擎
    * @return {'svg' | 'canvas' | 'webgl'} 返回当前的渲染引擎类型 'svg' | 'canvas' | 'webgl'
@@ -479,7 +480,7 @@ export interface ICanvas extends IBase {
    * add a child to the root group of the canvas
    * @param ele a shape or a group instance
    */
-  appendChild(ele: IElement): Promise<IElement>;
+  appendChild(ele: IElement): IElement;
   /**
    * 获取所有的子元素
    * @return {IElement[]} 子元素的集合

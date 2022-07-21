@@ -1,6 +1,6 @@
 import { modifyCSS, createDom } from '@antv/dom-util';
 import { IAbstractGraph as IGraph, ViewPortEventParam } from '@antv/g6-core';
-import { ICanvas } from '@antv/g6-g-adapter';
+import { ICanvas } from '@antv/g-adapter';
 import Base from '../base';
 
 interface GridConfig {

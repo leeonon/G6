@@ -58,21 +58,18 @@ export default class Canvas extends EventEmitter implements ICanvas {
     }));
     cfg.renderer = renderer;
     cfg.devicePixelRatio = cfg.devicePixelRatio || cfg.pixelRatio;
-    this.canvasEle = new GCanvas(cfg);
-    this.canvasEle.addEventListener(CanvasEvent.READY, e => this.isReady = true);
+    this.canvasEle = new GCanvas({
+      ...cfg,
+      width: Math.max(cfg.width || 0, 10),
+      height: Math.max(cfg.height || 0, 10),
+    });
+    this.canvasEle.addEventListener(CanvasEvent.READY, () => {
+      this.isReady = true
+    }, { once: true });
     this.adaptedEle = this.canvasEle.getRoot();
     this.rootGroup = new Group({ adaptedEle: this.adaptedEle }) as IGroup;
+    this.rootGroup.set('canvas', this);
     this.set('children', []);
-
-    // passive 为 false 才可以 e.preventDefault()
-    this.canvasEle
-      .getContextService()
-      .getDomElement() // g-canvas/webgl 为 <canvas>，g-svg 为 <svg>
-      .addEventListener(
-        'wheel',
-        (e) => e.preventDefault(),
-        { passive: false },
-      );
   }
 
   /**
@@ -91,14 +88,16 @@ export default class Canvas extends EventEmitter implements ICanvas {
    * add a child to the root group of the canvas
    * @param ele a shape or a group instance
    */
-  public async appendChild(ele: IElement) {
+  public appendChild(ele: IElement) {
     // TODO: canvas 初始化之前 appendChild 可能导致错误，但 await 就需要后续所有与画布内容的操作都要 await
     // await this.canvasEle.ready;
     this.rootGroup.appendChild(ele);
     ele.set('parent', this.rootGroup);
     ele.set('canvas', this);
     const children = this.getChildren() || [];
-    this.set('children', children.concat([ele]));
+    if (children.indexOf(ele) <= -1) {
+      this.set('children', children.concat([ele]));
+    }
     return ele;
   }
 
@@ -150,6 +149,10 @@ export default class Canvas extends EventEmitter implements ICanvas {
       default:
         return this.canvasEle.document?.[key];
     }
+  }
+
+  public getContextService(): any {
+    return this.canvasEle.getContextService();
   }
 
   /**
@@ -232,6 +235,10 @@ export default class Canvas extends EventEmitter implements ICanvas {
   public off(eventname: string, callback: Function) {
     if (eventname === '*' || !eventname) {
       this.canvasEle.removeAllEventListeners();
+      // 不能解除下面事件
+      this.canvasEle.addEventListener(CanvasEvent.READY, () => {
+        this.isReady = true;
+      }, { once: true })
     } else {
       this.canvasEle.removeEventListener(eventname, callback as any);
     }

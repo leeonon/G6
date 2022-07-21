@@ -1,4 +1,4 @@
-import { IGroup } from '@antv/g6-g-adapter';
+import { IGroup } from '@antv/g-adapter';
 import { clone, deepMix, each, isArray, isObject, isString, upperFirst, throttle } from '@antv/util';
 import Edge from '../../item/edge';
 import Node from '../../item/node';
@@ -137,13 +137,13 @@ export default class ItemController {
         target,
         styles,
         linkCenter: graph.get('linkCenter'),
-        group: parent.addGroup(),
+        group: parent.addGroup({ id: `edge-${model.id}` }),
       });
     } else if (type === NODE) {
       item = new Node({
         model,
         styles,
-        group: parent.addGroup(),
+        group: parent.addGroup({ id: `node-${model.id}` }),
       });
     } else if (type === COMBO) {
       const children: ComboTree[] = (model as ComboConfig).children;
@@ -166,7 +166,7 @@ export default class ItemController {
         this.updateComboSucceeds(model.id, dx, dy, children);
       }
 
-      const comboGroup = parent.addGroup();
+      const comboGroup = parent.addGroup({ id: `combo-${model.id}` });
       comboGroup.setZIndex((model as ComboConfig).depth as number);
       item = new Combo({
         model,

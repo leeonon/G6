@@ -1,6 +1,6 @@
 /* eslint @typescript-eslint/no-use-before-define: 0 */
 // import { IGroup, Event as GraphEvent, BBox, AnimateCfg, ICanvas, IShape } from '@antv/g-base';
-import { IGroup, BBox, AnimateCfg, ICanvas, IShape } from '@antv/g6-g-adapter';
+import { IGroup, BBox, AnimateCfg, ICanvas, IShape } from '@antv/g-adapter';
 import Node from '../item/node';
 import { IAbstractGraph } from '../interface/graph';
 import { IEdge, INode, ICombo } from '../interface/item';
@@ -217,7 +217,7 @@ export interface ArrowCfg {
   path?: string;
   stroke?: string;
   fill?: string;
-  lineDash?: number[];
+  lineDash?: number[] | number | undefined;
   strokeOpacity?: number;
   opacity?: number;
   fillOpacity?: number;
@@ -238,7 +238,7 @@ export type ShapeStyle = Partial<{
   fillOpacity: number;
   lineWidth: number;
   lineAppendWidth: number;
-  lineDash: number[];
+  lineDash: number[] | number | undefined;
   path: string | object[];
   points: object[];
   matrix: number[];

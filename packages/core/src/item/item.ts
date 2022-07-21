@@ -1,5 +1,5 @@
 // import { IGroup } from '@antv/g-base';
-import { IGroup, IElement } from '@antv/g6-g-adapter';
+import { IGroup, IElement } from '@antv/g-adapter';
 import { each, isPlainObject, isString, isBoolean, mix, deepMix, clone } from '@antv/util';
 import { IItemBase, IItemBaseConfig } from '../interface/item';
 import Shape from '../element/shape';
@@ -228,11 +228,11 @@ export default class ItemBase implements IItemBase {
       while (shapes.length) {
         const child = shapes.pop();
         const name = child.get('name');
-        const shapeAttrs = child.attr();
         if (child.isGroup?.()) {
           shapes = shapes.concat(child.get('children') || []);
           continue;
         }
+        const shapeAttrs = child.attr();
         if (name && name !== keyShapeName) {
           // 有 name 的非 keyShape 图形
           const shapeStateStyle = currentStatesStyle[name];
@@ -247,7 +247,6 @@ export default class ItemBase implements IItemBase {
               child.get('type') !== 'image' ? clone(shapeAttrs) : self.getShapeStyleByName(name);
           }
         } else {
-          const shapeAttrs = child.attr();
           const keyShapeStateStyles = {};
           Object.keys(currentStatesStyle).forEach(styleKey => {
             const subStyle = currentStatesStyle[styleKey];
@@ -258,7 +257,6 @@ export default class ItemBase implements IItemBase {
           Object.keys(shapeAttrs).forEach((key) => {
             const value = shapeAttrs[key];
             // 如果是对象且不是 arrow，则是其他 shape 的样式
-            // if (isPlainObject(value) && ARROWS.indexOf(name) === -1) return;
             if (keyShapeStateStyles[key] !== value) {
               if (keyShapeName) styles[keyShapeName][key] = value;
               else styles[key] = value;

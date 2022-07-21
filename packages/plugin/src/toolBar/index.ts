@@ -2,7 +2,7 @@ import { modifyCSS, createDom } from '@antv/dom-util';
 import { clone, isString } from '@antv/util';
 import Base, { IPluginBaseConfig } from '../base';
 import { IAbstractGraph as IGraph } from '@antv/g6-core';
-import { Point } from '@antv/g6-g-adapter';
+import { Point } from '@antv/g-adapter';
 import insertCss from 'insert-css';
 
 const DELTA = 0.05;
@@ -74,7 +74,7 @@ const getEventPath = (evt: MouseEvent) => {
 };
 
 export default class ToolBar extends Base {
-  constructor (config?: ToolBarConfig) {
+  constructor(config?: ToolBarConfig) {
     super(config);
   }
   public getDefaultCfgs(): ToolBarConfig {

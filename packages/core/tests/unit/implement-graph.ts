@@ -1,6 +1,6 @@
 // import { Canvas as GCanvas } from '@antv/g';
 // import { Renderer as CanvasRenderer } from '@antv/g-canvas';
-import { Canvas } from '@antv/g6-g-adapter';
+import { Canvas } from '@antv/g-adapter';
 import { AbstractGraph } from '../../src';
 
 export default class Graph extends AbstractGraph {

@@ -1,7 +1,7 @@
-import { Canvas, ICanvas, Point } from '@antv/g6-g-adapter';
-import { isString, isNil, each, debounce } from '@antv/util';
+import { Canvas, ICanvas, IGroup, Point } from '@antv/g-adapter';
+import { isString, isNil, each, debounce, throttle } from '@antv/util';
 import { createDom, modifyCSS } from '@antv/dom-util';
-import { Matrix, ShapeStyle, IAbstractGraph as IGraph, IG6GraphEvent as GraphEvent } from '@antv/g6-core';
+import { Matrix, ShapeStyle, IAbstractGraph as IGraph, IG6GraphEvent as GraphEvent, Item, INode } from '@antv/g6-core';
 import { ext } from '@antv/matrix-util';
 import Base, { IPluginBaseConfig } from '../base';
 
@@ -23,8 +23,16 @@ interface MiniMapConfig extends IPluginBaseConfig {
 }
 
 export default class MiniMap extends Base {
+  // 缓存需要更新的元素，debounce 并差量更新
+  private itemsToUpdate: { [key: string]: { action: string, item?: Item, type?: 'node' | 'edge' | 'combo', model?: any } };
+  // 存储 minimap 挂载的 graph 事件，方便在 destroy 时销毁
+  private graphEvents: any;
+  // 缓存 comboGroup 引用
+  private comboGroup: IGroup;
   constructor(config?: MiniMapConfig) {
     super(config);
+    this.itemsToUpdate = {};
+    this.graphEvents = [];
   }
   this: IGraph;
   public getDefaultCfgs(): MiniMapConfig {
@@ -49,7 +57,6 @@ export default class MiniMap extends Base {
       beforepaint: 'updateViewport',
       beforeanimate: 'disableRefresh',
       afteranimate: 'enableRefresh',
-      viewportchange: 'disableOneRefresh',
     };
   }
 
@@ -61,10 +68,6 @@ export default class MiniMap extends Base {
   protected enableRefresh() {
     this.set('refresh', true);
     this.updateCanvas();
-  }
-
-  protected disableOneRefresh() {
-    this.set('viewportChange', true);
   }
 
   private initViewport() {
@@ -264,71 +267,156 @@ export default class MiniMap extends Base {
   /**
    * 将主图上的图形完全复制到小图
    */
-  private updateGraphShapes() {
+  private updateGraphShapes(incremental) {
     const { graph } = this._cfgs;
     const canvas: ICanvas = this.get('canvas');
     const graphGroup = graph!.get('group');
     if (graphGroup.destroyed) return;
-    const clonedGroup = graphGroup.clone();
 
-    clonedGroup.resetMatrix();
+    if (incremental) {
+      // 增量更新
+      let shouldUpdateCanvas = false;
+      Object.keys(this.itemsToUpdate).forEach((id) => {
+        const { action, item, model } = this.itemsToUpdate[id];
+        let groupId, itemGroup;
+        if (item) {
+          itemGroup = item.getContainer();
+          groupId = itemGroup.get('id');
+        } else {
+          groupId = model.id;
+        }
+        const rootGroup = canvas.findById('minimap-cloned-root-group') as IGroup;
+        let clonedItemGroup = rootGroup.findById(groupId);
 
-    canvas.clear();
-    canvas.appendChild(clonedGroup);
+        switch (action) {
+          case 'add':
+            clonedItemGroup = itemGroup.clone();
+            clonedItemGroup.set('id', itemGroup.get('id'));
+            let parentGroupId = itemGroup.getParent().get('id');
+            let clonedParentGroup = rootGroup.findById(parentGroupId) as IGroup;
+            if (!clonedParentGroup) clonedParentGroup = rootGroup
+            clonedParentGroup.appendChild(clonedItemGroup);
+            // 新增元素，导致图范围变化，需要重新适配 minimap 画布并更新 viewport
+            shouldUpdateCanvas = true;
+            break;
+          case 'remove':
+            if (clonedItemGroup) {
+              clonedItemGroup.remove(true);
+              // 删除元素，导致图范围变化，需要重新适配 minimap 画布并更新 viewport
+              shouldUpdateCanvas = true;
+            }
+            break;
+          case 'update':
+            if (!item.destroyed) {
+              this.cloneAndApplyAttr(clonedItemGroup, itemGroup);
+              if (item.getType() === 'node') {
+                const edgeGroups = (item as INode).getEdges().map(edge => edge.getContainer());
+                edgeGroups.forEach(edgeGroup => {
+                  const clonedEdgeGroup = rootGroup.findById(edgeGroup.get('id')) as IGroup;
+                  this.cloneAndApplyAttr(clonedEdgeGroup, edgeGroup);
+                })
+              }
+            }
+            // 更新元素，导致图范围变化，需要重新适配 minimap 画布并更新 viewport
+            shouldUpdateCanvas = true;
+            break;
+          case 'statechange':
+          default:
+            if (!item.destroyed) this.cloneAndApplyAttr(clonedItemGroup, itemGroup);
+            break;
+        }
+        delete this.itemsToUpdate[id];
+      });
+      if (shouldUpdateCanvas) {
+        this.fitView();
+        this.updateViewport();
+      }
+    } else {
+      // 全量复制
+      const clonedGroup = graphGroup.clone();
+      clonedGroup.resetMatrix();
+      clonedGroup.set('id', 'minimap-cloned-root-group');
 
-    // 当 renderer 是 svg，由于渲染引擎的 bug，这里需要将 visible 为 false 的元素手动隐藏
-    const renderer = graph.get('renderer');
-    if (renderer === SVG) {
-      // 递归更新子元素
-      this.updateVisible(clonedGroup);
+      canvas.clear();
+      canvas.appendChild(clonedGroup);
+
+      // 当 renderer 是 svg，由于渲染引擎的 bug，这里需要将 visible 为 false 的元素手动隐藏
+      const renderer = graph.get('renderer');
+      if (renderer === SVG) {
+        // 递归更新子元素
+        this.updateVisible(clonedGroup, graphGroup);
+      }
+    }
+  }
+
+  private cloneAndApplyAttr(clonedElement, oriElement) {
+    if (!clonedElement || !oriElement) return;
+    if (clonedElement.isGroup()) {
+      const originChildren = oriElement.getChildren();
+      clonedElement.getChildren().forEach((child, i) => {
+        this.cloneAndApplyAttr(child, originChildren[i]);
+      })
+      clonedElement.setMatrix(oriElement.getMatrix());
+      return;
+    }
+    clonedElement.attr(oriElement.attr());
+    if (!clonedElement.nodeName.includes('arrow')) {
+      clonedElement.setMatrix(oriElement.getMatrix());
     }
   }
 
   // svg 在 canvas.appendChild(clonedGroup) 之后会出现 visible 为 false 的元素被展示出来，需要递归更新
-  private updateVisible(ele) {
-    if (!ele.isGroup() && !ele.get('visible')) {
-      ele.hide();
-    } else {
+  private updateVisible(ele, oriEle) {
+    const visible = oriEle.get('visible');
+    if (visible || visible === undefined) ele.show();
+    else ele.hide();
+    if (ele.isGroup()) {
       const children = ele.get('children');
       if (!children || !children.length) return;
-      children.forEach((child) => {
-        if (!child.get('visible')) child.hide();
-        this.updateVisible(child);
+      const oriChildren = oriEle.get('children');
+      children.forEach((child, i) => {
+        this.updateVisible(child, oriChildren[i]);
       });
     }
   }
 
   // 仅在 minimap 上绘制 keyShape
   // FIXME 如果用户自定义绘制了其他内容，minimap上就无法画出
-  private updateKeyShapes() {
+  private updateKeyShapes(incremental) {
     const { graph } = this._cfgs;
 
     const canvas: ICanvas = this.get('canvas');
     const group = canvas.get('children')[0] || canvas.addGroup();
 
-    each(graph!.getEdges(), (edge) => {
-      this.updateOneEdgeKeyShape(edge, group);
-    });
-    each(graph!.getNodes(), (node) => {
-      this.updateOneNodeKeyShape(node, group);
-    });
-    const combos = graph!.getCombos();
-    if (combos && combos.length) {
-      const comboGroup = group.find(e => e.get('name') === 'comboGroup') ||
-        group.addGroup({
-          name: 'comboGroup'
-        });
-      setTimeout(() => {
-        if (this.destroyed) return;
-        each(combos, (combo) => {
-          this.updateOneComboKeyShape(combo, comboGroup);
-        });
-        comboGroup?.sort();
-        comboGroup?.toBack();
-        this.updateCanvas();
-      }, 250)
+    this.comboGroup = this.comboGroup ||
+      group.addGroup({
+        name: 'comboGroup'
+      });
+
+    if (incremental) {
+      // 增量更新
+      this.incrementalUpdateItems(group);
+    } else {
+      each(graph!.getEdges(), (edge) => {
+        this.updateOneEdgeKeyShape(edge, group);
+      });
+      each(graph!.getNodes(), (node) => {
+        this.updateOneNodeKeyShape(node, group);
+      });
+      const combos = graph!.getCombos();
+      if (combos && combos.length) {
+        setTimeout(() => {
+          if (this.destroyed) return;
+          each(combos, (combo) => {
+            this.updateOneComboKeyShape(combo, this.comboGroup);
+          });
+          this.comboGroup?.sort();
+          this.comboGroup?.toBack();
+          this.updateCanvas();
+        }, 250)
+      }
+      this.clearDestroyedShapes();
     }
-    this.clearDestroyedShapes();
   }
 
   /**
@@ -338,9 +426,10 @@ export default class MiniMap extends Base {
   private updateOneComboKeyShape(item, comboGroup) {
     if (this.destroyed) return;
     const itemMap = this.get('itemMap') || {};
+    const id = item.get('id');
 
     // 差量更新 minimap 上的一个节点，对应主图的 item
-    let mappedItem = itemMap[item.get('id')];
+    let mappedItem = itemMap[id];
     const bbox = item.getBBox(); // 计算了节点父组矩阵的 bbox
     const cKeyShape = item.get('keyShape').clone();
     const keyShapeStyle = cKeyShape.attr();
@@ -365,7 +454,7 @@ export default class MiniMap extends Base {
     mappedItem.exist = true;
     const zIndex = item.getModel().depth;
     if (!isNaN(zIndex)) mappedItem.set('zIndex', zIndex)
-    itemMap[item.get('id')] = mappedItem;
+    itemMap[id] = mappedItem;
     this.set('itemMap', itemMap);
   }
 
@@ -377,7 +466,8 @@ export default class MiniMap extends Base {
     const itemMap = this.get('itemMap') || {};
 
     // 差量更新 minimap 上的一个节点，对应主图的 item
-    let mappedItem = itemMap[item.get('id')];
+    const id = item.get('id');
+    let mappedItem = itemMap[id];
     const bbox = item.getBBox(); // 计算了节点父组矩阵的 bbox
     const cKeyShape = item.get('keyShape').clone();
     const keyShapeStyle = cKeyShape.attr();
@@ -402,43 +492,72 @@ export default class MiniMap extends Base {
     mappedItem.exist = true;
     const zIndex = item.getModel().depth;
     if (!isNaN(zIndex)) mappedItem.set('zIndex', zIndex)
-    itemMap[item.get('id')] = mappedItem;
+    itemMap[id] = mappedItem;
     this.set('itemMap', itemMap);
   }
 
   /**
+   * 设置只显示 edge 的 keyShape
+   * @param item IEdge 实例
+   */
+  private updateOneEdgeKeyShape(item, group) {
+    const itemMap = this.get('itemMap') || {};
+    // 差量更新 minimap 上的一个节点，对应主图的 item
+    const id = item.get('id')
+    let mappedItem = itemMap[id];
+    if (mappedItem) {
+      const path = item.get('keyShape').attr('path');
+      mappedItem.attr('path', path);
+    } else {
+      mappedItem = item.get('keyShape').clone();
+      group.appendChild(mappedItem);
+    }
+    if (!item.isVisible()) mappedItem.hide();
+    else mappedItem.show();
+    mappedItem.exist = true;
+    itemMap[id] = mappedItem;
+    this.set('itemMap', itemMap);
+  }
+
+
+  /**
    * Minimap 中展示自定义的rect，支持用户自定义样式和节点大小
    */
-  private updateDelegateShapes() {
+  private updateDelegateShapes(incremental) {
     const { graph } = this._cfgs;
 
     const canvas: ICanvas = this.get('canvas');
     const group = canvas.get('children')[0] || canvas.addGroup();
+    this.comboGroup = this.comboGroup ||
+      group.addGroup({
+        name: 'comboGroup'
+      });
 
-    // 差量更新 minimap 上的节点和边
-    each(graph!.getEdges(), (edge) => {
-      this.updateOneEdgeKeyShape(edge, group);
-    });
-    each(graph!.getNodes(), (node) => {
-      this.updateOneNodeDelegateShape(node, group);
-    });
-    const combos = graph!.getCombos();
-    if (combos && combos.length) {
-      const comboGroup = group.find(e => e.get('name') === 'comboGroup') ||
-        group.addGroup({
-          name: 'comboGroup'
-        });
-      setTimeout(() => {
-        if (this.destroyed) return;
-        each(combos, (combo) => {
-          this.updateOneComboKeyShape(combo, comboGroup);
-        });
-        comboGroup?.sort();
-        comboGroup?.toBack();
-        this.updateCanvas();
-      }, 250)
+    if (incremental) {
+      // 增量更新
+      this.incrementalUpdateItems(group);
+    } else {
+      // 差量更新 minimap 上的节点和边
+      each(graph!.getEdges(), (edge) => {
+        this.updateOneEdgeKeyShape(edge, group);
+      });
+      each(graph!.getNodes(), (node) => {
+        this.updateOneNodeDelegateShape(node, group);
+      });
+      const combos = graph!.getCombos();
+      if (combos && combos.length) {
+        setTimeout(() => {
+          if (this.destroyed) return;
+          each(combos, (combo) => {
+            this.updateOneComboKeyShape(combo, this.comboGroup);
+          });
+          this.comboGroup?.sort();
+          this.comboGroup?.toBack();
+          this.updateCanvas();
+        }, 250)
+      }
+      this.clearDestroyedShapes();
     }
-    this.clearDestroyedShapes();
   }
 
   private clearDestroyedShapes() {
@@ -459,28 +578,6 @@ export default class MiniMap extends Base {
         delete itemMap[keys[i]];
       }
     }
-  }
-
-  /**
-   * 设置只显示 edge 的 keyShape
-   * @param item IEdge 实例
-   */
-  private updateOneEdgeKeyShape(item, group) {
-    const itemMap = this.get('itemMap') || {};
-    // 差量更新 minimap 上的一个节点，对应主图的 item
-    let mappedItem = itemMap[item.get('id')];
-    if (mappedItem) {
-      const path = item.get('keyShape').attr('path');
-      mappedItem.attr('path', path);
-    } else {
-      mappedItem = item.get('keyShape').clone();
-      group.appendChild(mappedItem);
-    }
-    if (!item.isVisible()) mappedItem.hide();
-    else mappedItem.show();
-    mappedItem.exist = true;
-    itemMap[item.get('id')] = mappedItem;
-    this.set('itemMap', itemMap);
   }
 
   /**
@@ -523,28 +620,102 @@ export default class MiniMap extends Base {
   }
 
   /**
+   * 增量更新元素
+   * @param group 
+   * @param type 
+   */
+  private incrementalUpdateItems(group) {
+    const type: string = this.get('type'); // minimap 的类型
+    const updateNodeShapeFuncName = type === DELEGATE_MODE ? 'updateOneNodeDelegateShape' : 'updateOneNodeKeyShape';
+    let shouldUpdateCanvas = false;
+    Object.keys(this.itemsToUpdate).forEach((id) => {
+      const { action, item, model } = this.itemsToUpdate[id];
+      const itemMap = this.get('itemMap') || {};
+      switch (action) {
+        case 'remove':
+          const mappedItem = itemMap[model.id];
+          if (mappedItem && !mappedItem.destroyed) {
+            mappedItem.remove(true);
+            shouldUpdateCanvas = true;
+          }
+          break;
+        case 'add':
+        case 'update':
+          // 更新/新增元素，导致图范围变化，需要重新适配 minimap 画布并更新 viewport
+          shouldUpdateCanvas = true;
+        case 'statechange':
+        default:
+          if (item.getType() === 'edge') {
+            this.updateOneEdgeKeyShape(item, group);
+          } else if (item.getType() === 'node') {
+            this[updateNodeShapeFuncName](item, group);
+            (item as INode).getEdges().forEach(edge => {
+              this.updateOneEdgeKeyShape(edge, group);
+            })
+          } else {
+            this.updateOneComboKeyShape(item, this.comboGroup);
+          }
+          break;
+      }
+      delete this.itemsToUpdate[id];
+    });
+    if (shouldUpdateCanvas) {
+      this.fitView();
+      this.updateViewport();
+    }
+  }
+
+  /**
    * 主图更新的监听函数，使用 debounce 减少渲染频率
-   * e.g. 拖拽节点只会在松手后的 100ms 后执行 updateCanvas
+   * e.g. 拖拽节点只会在松手后的 500ms 后执行 updateCanvas
    * e.g. render 时大量 addItem 也只会执行一次 updateCanvas
    */
   private handleUpdateCanvas = debounce(
-    (event) => {
+    () => {
       const self = this;
       if (self.destroyed) return;
       self.updateCanvas();
     },
-    100,
-    false,
+    500,
+    false
+  );
+  private handleIncrementalUpdateCanvas = debounce(
+    () => {
+      const self = this;
+      if (self.destroyed) return;
+      self.updateCanvas(true);
+    },
+    500,
+    false
   );
 
   public init() {
     this.initContainer();
-    this.get('graph').on('afterupdateitem', this.handleUpdateCanvas);
-    this.get('graph').on('afteritemstatechange', this.handleUpdateCanvas);
-    this.get('graph').on('afteradditem', this.handleUpdateCanvas);
-    this.get('graph').on('afterremoveitem', this.handleUpdateCanvas);
-    this.get('graph').on('afterrender', this.handleUpdateCanvas);
-    this.get('graph').on('afterlayout', this.handleUpdateCanvas);
+    const graph = this.get('graph');
+    this.graphEvents = {
+      'afterupdateitem': ({ item }) => {
+        this.itemsToUpdate[item.getID()] = { action: 'update', item }
+        this.handleIncrementalUpdateCanvas()
+      },
+      'afteritemstatechange': ({ item }) => {
+        this.itemsToUpdate[item.getID()] = { action: 'statechange', item }
+        this.handleIncrementalUpdateCanvas()
+      },
+      'afteradditem': ({ item }) => {
+        this.itemsToUpdate[item.getID()] = { action: 'add', item }
+        this.handleIncrementalUpdateCanvas()
+      },
+      'afterremoveitem': ({ item: model, type }) => {
+        this.itemsToUpdate[model.id] = { action: 'remove', model, type }
+        this.handleIncrementalUpdateCanvas()
+      },
+      'afterrender': this.handleUpdateCanvas,
+      'afterlayout': this.handleUpdateCanvas,
+      'aftergraphrefreshposition': this.handleUpdateCanvas,
+    };
+    Object.keys(this.graphEvents).forEach(evtName => {
+      graph.on(evtName, this.graphEvents[evtName]);
+    });
   }
 
   /**
@@ -596,48 +767,44 @@ export default class MiniMap extends Base {
     self.updateCanvas();
   }
 
-  public updateCanvas() {
+  public updateCanvas(incremental: boolean = false) {
     if (this.destroyed) return;
     // 如果是在动画，则不刷新视图
     const isRefresh: boolean = this.get('refresh');
-    if (!isRefresh) {
-      return;
-    }
+    if (!isRefresh) return;
     const graph: IGraph = this.get('graph');
-    if (graph.get('destroyed')) {
-      return;
-    }
+    if (graph.get('destroyed')) return;
 
-    // 如果是视口变换，也不刷新视图，但是需要重置视口大小和位置
-    if (this.get('viewportChange')) {
-      this.set('viewportChange', false);
-      this.updateViewport();
-    }
-
-    const size: number[] = this.get('size'); // 用户定义的 minimap size
     const canvas: ICanvas = this.get('canvas'); // minimap 的 canvas
     const type: string = this.get('type'); // minimap 的类型
-    const padding: number = this.get('padding'); // 用户额定义的 minimap 的 padding
 
-    if (canvas.destroyed) {
-      return;
-    }
+    if (canvas.destroyed) return;
 
     switch (type) {
       case DEFAULT_MODE:
-        this.updateGraphShapes();
+        this.updateGraphShapes(incremental);
         break;
       case KEYSHAPE_MODE:
-        this.updateKeyShapes();
+        this.updateKeyShapes(incremental);
         break;
       case DELEGATE_MODE:
         // 得到的节点直接带有 x 和 y，每个节点不存在父 group，即每个节点位置不由父 group 控制
-        this.updateDelegateShapes();
+        this.updateDelegateShapes(incremental);
         break;
       default:
         break;
     }
 
+    if (incremental) return;
+
+    this.fitView();
+    this.updateViewport();
+  }
+
+  private fitView() {
+    const size: number[] = this.get('size'); // 用户定义的 minimap size
+    const canvas: ICanvas = this.get('canvas'); // minimap 的 canvas
+    const padding: number = this.get('padding'); // 用户额定义的 minimap 的 padding
     const group = canvas.get('children')[0];
     if (!group) return;
 
@@ -645,10 +812,9 @@ export default class MiniMap extends Base {
     // 该 bbox 是准确的，不计算 matrix 的包围盒
     const bbox = group.getCanvasBBox();
 
+    const graph: IGraph = this.get('graph');
     const graphBBox = graph.get('canvas').getCanvasBBox(); // 主图的 bbox
-    const graphZoom = graph.getZoom() || 1;
-    let width = graphBBox.width / graphZoom;
-    let height = graphBBox.height / graphZoom;
+    let { width, height } = graphBBox;
 
     if (Number.isFinite(bbox.width)) {
       // 刷新后bbox可能会变，需要重置画布矩阵以缩放到合适的大小
@@ -690,7 +856,6 @@ export default class MiniMap extends Base {
     this.set('totaldy', dy + minY * ratio);
     this.set('dx', dx);
     this.set('dy', dy);
-    this.updateViewport();
   }
 
   /**
@@ -718,6 +883,11 @@ export default class MiniMap extends Base {
   }
 
   public destroy() {
+    const graph = this.get('graph');
+    Object.keys(this.graphEvents).forEach(evtName => {
+      graph.on(evtName, this.graphEvents[evtName]);
+    })
+
     this.get('canvas')?.destroy();
 
     const container = this.get('container');

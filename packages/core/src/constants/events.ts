@@ -1,2 +1,2 @@
-import { EVENTS } from '@antv/g6-g-adapter';
+import { EVENTS } from '@antv/g-adapter';
 export { EVENTS };

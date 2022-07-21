@@ -1,4 +1,4 @@
-import { GEvent } from '@antv/g6-g-adapter';
+import { GEvent } from '@antv/g-adapter';
 import Simulate from 'event-simulate';
 import G6 from '../../../../src';
 

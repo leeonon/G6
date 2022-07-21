@@ -1,4 +1,4 @@
-import { Canvas } from '@antv/g6-g-adapter';
+import { Canvas } from '@antv/g-adapter';
 import { Shape } from '@antv/g6-core';
 import { Graph } from '../../../src';
 import '../../../src';

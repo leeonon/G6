@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Point } from '@antv/g6-g-adapter';
+import { Point } from '@antv/g-adapter';
 import Hierarchy from '@antv/hierarchy';
 import { each, isObject, isString } from '@antv/util';
 import {

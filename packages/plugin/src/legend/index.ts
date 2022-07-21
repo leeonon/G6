@@ -3,7 +3,7 @@ import { IAbstractGraph as IGraph, GraphData, ShapeStyle } from '@antv/g6-core';
 import Base from '../base';
 import { isArray, isNumber, uniqueId } from '@antv/util';
 import { Util } from '@antv/g6-core';
-import { Canvas, IElement } from '@antv/g6-g-adapter';
+import { Canvas, IElement } from '@antv/g-adapter';
 
 const ALLOW_EVENTS = ['click', 'mouseenter'];
 

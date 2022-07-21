@@ -1,4 +1,4 @@
-import { GEvent, IGroup, ICanvas, IShape } from '@antv/g6-g-adapter';
+import { GEvent, IGroup, ICanvas, IShape } from '@antv/g-adapter';
 import { get, size, assign, each, isNumber } from '@antv/util';
 import { ext } from '@antv/matrix-util';
 import Trend, { TrendCfg } from './trend';

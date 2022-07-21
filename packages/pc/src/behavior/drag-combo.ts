@@ -4,7 +4,7 @@
  * @Description: 拖动 Combo
  */
 import { each } from '@antv/util';
-import { IGroup } from '@antv/g6-g-adapter';
+import { IGroup } from '@antv/g-adapter';
 import { G6Event, IG6GraphEvent, Item, ComboConfig, ICombo, INode } from '@antv/g6-core';
 import { IGraph } from '../interface/graph';
 import Util from '../util';

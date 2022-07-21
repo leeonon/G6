@@ -1,4 +1,4 @@
-import { Canvas } from '@antv/g6-g-adapter';
+import { Canvas } from '@antv/g-adapter';
 import { AbstractGraph } from '../../../src';
 import '../../../src/behavior';
 import { scale, translate } from '../../../src/util/math';

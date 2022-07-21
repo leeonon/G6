@@ -36,15 +36,22 @@ const getArrowHead = (arrow) => {
 
 const updateArrow = (combinedShape, key, value) => {
   if (!combinedShape) return;
-  const { d = 0, ...arrowStyle } = value;
-  const newArrow = getArrowHead(arrowStyle);
-  if (key === 'startArrow') {
-    combinedShape.style.startHead = newArrow;
-    combinedShape.style.startHeadOffset = - 2 * d;
-  } else {
-    combinedShape.style.endHead = newArrow;
-    combinedShape.style.endHeadOffset = - 2 * d;
+  if (!value) {
+    key === 'startArrow' ? combinedShape.style.startHead = false : combinedShape.style.endHead = false;
+    return;
   }
+  const { d = 0, ...arrowStyle } = value;
+  const arrow = key === 'startArrow' ? combinedShape.getStartHead() : combinedShape.getEndHead();
+  // TODO: 需要确定 G 更新箭头的方法 https://codesandbox.io/s/how-to-update-arrow-head-f2qbl3?file=/index.js
+  // arrow.attr(arrowStyle);
+  // // const newArrow = getArrowHead(arrowStyle);
+  // if (key === 'startArrow') {
+  //   // combinedShape.style.startHead = newArrow;
+  //   combinedShape.style.startHeadOffset = - 2 * d;
+  // } else {
+  //   // combinedShape.style.endHead = newArrow;
+  //   combinedShape.style.endHeadOffset = - 2 * d;
+  // }
 }
 
 export { getDefaultArrow, getArrowHead, updateArrow };

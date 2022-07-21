@@ -1,5 +1,5 @@
 // import { Event as GraphEvent, ICanvas } from '@antv/g-base';
-import { ICanvas, GEvent } from '@antv/g6-g-adapter';
+import { ICanvas, GEvent } from '@antv/g-adapter';
 import { clone } from '@antv/util';
 import { G6Event, IG6GraphEvent, IShapeBase, Item, BehaviorOption } from '../types';
 import { IAbstractGraph } from './graph';
